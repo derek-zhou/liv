@@ -24,7 +24,7 @@ defmodule LivWeb.Endpoint do
     at: "/",
     from: :liv,
     gzip: false,
-    only: ~w(css fonts images js favicon.ico robots.txt)
+    only: ~w(css fonts images js favicon.ico robots.txt web_modules _snowpack)
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.

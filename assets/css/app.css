@@ -1,0 +1,128 @@
+@tailwind base;
+
+@tailwind components;
+
+@tailwind utilities;
+
+@layer base {
+    body {
+        @apply mx-1;
+    }
+    a {
+        @apply text-blue-600;
+    }
+    a:focus, a:hover {
+        @apply text-gray-600;
+    }
+    span {
+        @apply whitespace-nowrap;
+    }
+    @screen md {
+        body {
+            @apply mx-0;
+        }
+    }
+}
+
+/* my own styles, use tailwind as much as possible */
+@layer components {
+    /* this is for classless content, eg: from markdown */
+    .content {
+        h1 {
+            @apply text-4xl mb-4 leading-relaxed text-center;
+        }
+        h2 {
+            @apply text-3xl mb-3 leading-relaxed;
+        }
+        h3 {
+            @apply text-2xl mb-2 leading-relaxed;
+        }
+        h4 {
+            @apply text-xl mb-1 leading-relaxed;
+        }
+        h5 {
+            @apply text-lg mb-1 leading-relaxed;
+        }
+        h6 {
+            @apply font-bold mb-1 leading-relaxed;
+        }
+        p {
+            @apply mb-4;
+        }
+        ol {
+            @apply mb-4 pl-2 list-inside list-decimal;
+        }
+        ul {
+            @apply mb-4 pl-2 list-inside list-disc;
+        }
+        figure {
+            @apply mb-4;
+        }
+        textarea {
+            @apply mb-4 w-full h-24 text-xs border rounded border-gray-600;
+        }
+        table {
+            @apply mb-4 border-collapse border-2 border-gray-400;
+            th, td {
+                @apply p-3 align-top border border-gray-400;
+            }
+            thead {
+                th {
+                    @apply align-bottom border-2;
+                }
+	    }
+            tr.odd {
+                @apply bg-gray-100;
+            }
+        }
+        blockquote {
+            @apply mb-4 border-l-4 border-gray-400 p-2;
+            p {
+                @apply mb-0;
+            }
+        }
+        pre {
+            @apply mb-4 border-l-4 border-purple-500 p-2;
+            > code {
+                @apply whitespace-pre;
+            }
+        }
+        dd,
+        dt,
+        li {
+            @apply mb-1;
+        }
+    }
+}
+
+@layer components {
+    /* Alerts and form errors */
+    .alert-info {
+        @apply p-2 rounded bg-yellow-300 text-blue-700;
+    }
+    .alert-warning {
+        @apply p-2 rounded bg-yellow-300 text-purple-700;
+    }
+    .alert-error {
+        @apply p-2 rounded bg-yellow-300 text-red-700;
+    }
+    .alert-info:empty {
+        @apply hidden;
+    }
+    .alert-warning:empty {
+        @apply hidden;
+    }
+    .alert-error:empty {
+        @apply hidden;
+    }
+    .button {
+        @apply flex-none px-6 py-1 text-purple-600 inline-block rounded appearance-none
+        font-bold whitespace-nowrap text-lg text-center uppercase;
+    }
+    .button:focus, .button:hover {
+        @apply text-gray-600;
+    }
+    .button[disabled] {
+        @apply cursor-default opacity-50;
+    }
+}
