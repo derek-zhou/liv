@@ -33,6 +33,7 @@ defmodule Liv.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+       {:surface, "~> 0.3.2"},
       {:phoenix, "~> 1.5.8"},
       {:phoenix_live_view, "~> 0.15.1"},
       {:floki, ">= 0.27.0", only: :test},

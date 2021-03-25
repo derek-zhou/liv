@@ -50,6 +50,7 @@ config :liv, LivWeb.Endpoint,
       ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
       ~r"lib/liv_web/(live|views)/.*(ex)$",
+      ~r"lib/liv_web/live/.*(sface)$",
       ~r"lib/liv_web/templates/.*(eex)$"
     ]
   ]
