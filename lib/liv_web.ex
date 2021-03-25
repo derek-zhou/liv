@@ -32,7 +32,7 @@ defmodule LivWeb do
       use Phoenix.View,
         root: "lib/liv_web/templates",
         namespace: LivWeb
- 
+
       import Surface
       # Import convenience functions from controllers
       import Phoenix.Controller,
