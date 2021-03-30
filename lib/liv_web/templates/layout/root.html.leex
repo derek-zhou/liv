@@ -5,27 +5,24 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <%= csrf_meta_tag() %>
-    <%= live_title_tag assigns[:page_title] || "Liv", suffix: " · Phoenix Framework" %>
-    <link phx-track-static rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
+    <%= live_title_tag assigns[:page_title] || "Live Inbox View", suffix: " · Liv" %>
+    <link phx-track-static rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/index.css") %>"/>
     <script defer phx-track-static type="module" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
 
   </head>
   <body>
-    <header>
-      <section class="container">
-        <nav role="navigation">
-          <ul>
-            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
-            <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
-              <li><%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home) %></li>
-            <% end %>
-          </ul>
-        </nav>
-        <a href="https://phoenixframework.org/" class="phx-logo">
-          <img src="<%= Routes.static_path(@conn, "/images/phoenix.png") %>" alt="Phoenix Framework Logo"/>
-        </a>
-      </section>
-    </header>
-    <%= @inner_content %>
+    <div class="progress-bar" id="app-progress-bar"></div>
+    <div class="viewport">
+      <%= @inner_content %>
+      <div class="footer">
+	<div class="links">
+	  <a href="https://roastidio.us/roast"
+	     referrerpolicy="no-referrer-when-downgrade">feedback</a>
+	</div>
+	<div class="copyright">
+	  © <a href="https://blog.roastidio.us">roastidio.us</a>, 2021
+	</div>
+      </div>
+    </div>
   </body>
 </html>

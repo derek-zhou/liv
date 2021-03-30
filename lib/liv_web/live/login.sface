@@ -1,0 +1,11 @@
+<Main id="main" messages={{ @flash }}>
+    <h1>Welcome, <span class="name">derek</span></h1>
+    <Form for={{ :login }} submit="submit">
+	<Field name="passcode" class="field">
+	    <Label>Passcode: </Label>
+	    <div class="control">
+		<PasswordInput />
+	    </div>
+	</Field>
+    </Form>
+</Main>

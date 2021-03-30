@@ -1,0 +1,301 @@
+@tailwind base;
+
+@tailwind components;
+
+@tailwind utilities;
+
+@layer base {
+    body {
+        @apply mx-1;
+    }
+    a {
+        @apply text-blue-600;
+    }
+    a:focus, a:hover {
+        @apply text-gray-600;
+    }
+    span {
+        @apply whitespace-nowrap;
+    }
+    @screen md {
+        body {
+            @apply mx-0;
+        }
+    }
+}
+
+/* my own styles, use tailwind as much as possible */
+@layer components {
+    /* this is for classless content, eg: from markdown */
+    .content {
+        h1 {
+            @apply text-4xl mb-4 leading-relaxed text-center;
+        }
+        h2 {
+            @apply text-3xl mb-3 leading-relaxed;
+        }
+        h3 {
+            @apply text-2xl mb-2 leading-relaxed;
+        }
+        h4 {
+            @apply text-xl mb-1 leading-relaxed;
+        }
+        h5 {
+            @apply text-lg mb-1 leading-relaxed;
+        }
+        h6 {
+            @apply font-bold mb-1 leading-relaxed;
+        }
+        p {
+            @apply mb-4;
+        }
+        ol {
+            @apply mb-4 pl-2 list-inside list-decimal;
+        }
+        ul {
+            @apply mb-4 pl-2 list-inside list-disc;
+        }
+        figure {
+            @apply mb-4;
+        }
+        textarea {
+            @apply mb-4 w-full h-24 text-xs border rounded border-gray-600;
+        }
+        table {
+            @apply mb-4 border-collapse border-2 border-gray-400;
+            th, td {
+                @apply p-3 align-top border border-gray-400;
+            }
+            thead {
+                th {
+                    @apply align-bottom border-2;
+                }
+	    }
+            tr.odd {
+                @apply bg-gray-100;
+            }
+        }
+        blockquote {
+            @apply mb-4 border-l-4 border-gray-400 p-2;
+            p {
+                @apply mb-0;
+            }
+        }
+        pre {
+            @apply mb-4 border-l-4 border-purple-500 p-2;
+            > code {
+                @apply whitespace-pre;
+            }
+        }
+        dd,
+        dt,
+        li {
+            @apply mb-1;
+        }
+    }
+}
+
+@layer components {
+    /* Alerts and form errors */
+    .alert-info {
+        @apply p-2 rounded bg-yellow-300 text-blue-700;
+    }
+    .alert-warning {
+        @apply p-2 rounded bg-yellow-300 text-purple-700;
+    }
+    .alert-danger {
+        @apply p-2 rounded bg-yellow-300 text-red-700;
+    }
+    .alert-info:empty {
+        @apply hidden;
+    }
+    .alert-warning:empty {
+        @apply hidden;
+    }
+    .alert-danger:empty {
+        @apply hidden;
+    }
+    .name {
+	@apply capitalize italic;
+    }
+    .button {
+        @apply flex-none px-6 py-1 text-purple-600 inline-block rounded appearance-none
+        font-bold whitespace-nowrap text-lg text-center uppercase;
+    }
+    .button:focus, .button:hover {
+        @apply text-gray-600;
+    }
+    .button[disabled] {
+        @apply cursor-default opacity-50;
+    }
+    .viewport {
+	@apply relative;
+	.header {
+	    @apply sticky top-0 bg-gray-200 p-2 flex;
+	    .brand-title {
+                @apply flex-auto text-3xl text-indigo-500 font-bold;
+                img {
+                    @apply inline-block;
+                }
+	    }
+            .nav {
+                @apply flex-auto text-right;
+                .button {
+                    @apply text-xl ml-1 py-1 mt-1 px-1;
+                }
+            }
+	}
+	.content {
+	    @apply border border-gray-200 rounded;
+	    form {
+		@apply p-2 bg-gray-100 flex flex-col;
+		.field {
+		    @apply mb-2 flex flex-row flex-wrap justify-center;
+		}
+		.toolbar {
+		    @apply pt-2 flex flex-row flex-wrap justify-center border-t-2 border-gray-200;
+                    .button[type="reset"] {
+			@apply flex-none cursor-pointer text-white bg-pink-600 mr-1;
+                    }
+                    .button[type="submit"] {
+			@apply flex-none cursor-pointer text-white bg-purple-600 mr-1;
+                    }
+		}
+                label {
+                    @apply flex-none mx-2 leading-relaxed;
+		    .focus {
+			@apply font-bold italic;
+		    }
+                }
+		.footnote {
+		    @apply text-xs text-gray-700 py-2 flex justify-center;
+		}
+		select {
+		    @apply border rounded border-gray-600;
+		}
+                input[type="text"] {
+                    @apply w-80 leading-relaxed border rounded border-gray-600;
+                }
+                input[type="password"] {
+                    @apply w-40 leading-relaxed border rounded border-purple-600;
+                }
+	    }
+	    .box {
+                @apply bg-white p-2 mb-2 flow-root w-full;
+                .thumbnail {
+                    img {
+                        @apply w-auto max-w-full h-48;
+                    }
+                }
+                .thumbnail-missing {
+                    @apply float-left mr-2;
+                    img {
+                        @apply w-16 h-16;
+                    }
+                }
+                .title {
+                    @apply font-bold my-2 text-base leading-tight w-full;
+                }
+		.tag-line {
+		    @apply leading-tight;
+                    .site {
+			@apply text-sm text-gray-400 whitespace-nowrap;
+                    }
+		}
+                .desc {
+                    @apply text-sm leading-tight mb-2;
+                }
+		.toolbar {
+                    @apply flex flex-wrap justify-between w-full;
+                    .button {
+			@apply text-white bg-purple-600 mt-2;
+                    }
+                    .button-danger {
+			@apply bg-pink-600;
+                    }
+                    .button:focus, .button:hover {
+			@apply border-gray-600;
+                    }
+		}
+	    }
+	}
+	.footer {
+	    @apply text-xs text-gray-700 p-2 flex text-center;
+	    .links {
+		@apply w-1/2 text-left;
+	    }
+	    .copyright {
+                @apply w-1/2 text-right;
+            }
+	}
+    }
+    @screen sm {
+	.viewport {
+	    .header {
+		.nav {
+                    .button {
+			@apply px-4;
+                    }
+		}
+	    }
+	    .content {
+		.box {
+                    .title {
+                        @apply text-2xl w-auto;
+                    }
+                    .thumbnail {
+			@apply float-right ml-2;
+                    }
+                    .url {
+                        @apply text-base;
+                    }
+                    .desc {
+                        @apply text-base leading-snug;
+                    }
+		    .toolbar {
+			@apply w-auto justify-start;
+			.button {
+			    @apply mr-1;
+			}
+		    }
+                }
+	    }
+	}
+    }
+    @screen md {
+	.viewport {
+            @apply max-w-screen-md mx-auto;
+	    .content {
+		.box {
+		    .thumbnail {
+                        img {
+                            @apply h-64;
+                        }
+                    }
+                    .url {
+                        @apply w-auto;
+                    }
+                }
+	    }
+	}
+    }
+    @screen lg {
+	.viewport {
+            @apply max-w-screen-lg;
+	    .content {
+		.box {
+                    .thumbnail {
+                        img {
+                            @apply h-96;
+                        }
+                    }
+		}
+	    }
+	}
+    }
+    @screen xl {
+	.viewport {
+            @apply max-w-screen-xl;
+	}
+    }
+}

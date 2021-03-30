@@ -1,0 +1,8 @@
+<div class="content" phx-hook="Main">
+    <p role="alert" :for={{ type <- Map.keys(@messages) }}
+       class={{ "alert", alert_class(type) }}
+       phx-value-key={{ type }} phx-click="lv:clear-flash">
+	{{ @messages[type] }}
+    </p>
+    <slot />
+</div>

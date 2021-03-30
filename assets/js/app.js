@@ -1,28 +1,44 @@
-// We need to import the CSS so that webpack will load it.
-// The MiniCssExtractPlugin is used to separate it out into
-// its own CSS file.
-
-// webpack automatically bundles all modules in your
-// entry points. Those entry points can be configured
-// in "webpack.config.js".
-//
-// Import deps with the dep name or local files with a relative path, for example:
-//
-//     import {Socket} from "phoenix"
-//     import socket from "./socket"
-//
 import "./phoenix_html.js"
 import {Socket} from "./phoenix.js"
-import topbar from "topbar"
 import {LiveSocket} from "./phoenix_live_view.js"
 
+function show_progress_bar() {
+    var bar = document.querySelector("div#app-progress-bar");
+    bar.style.width = "100%";
+    bar.style.opacity = "1";
+}
+
+function hide_progress_bar() {
+    var bar = document.querySelector("div#app-progress-bar");
+    bar.style.width = "0%";
+    bar.style.opacity = "0";
+}
+
+let Hooks = new Object();
+Hooks.Main = {
+    mounted() {
+	this.handleEvent("get_value", ({key}) => {
+	    let value = localStorage.getItem(key) || "";
+	    let ret = new Object();
+	    ret[key] = value;
+	    this.pushEvent("get_value", ret);
+	});
+	this.handleEvent("set_value", ({key, value}) => {
+	    localStorage.setItem(key, value);
+	});
+	this.handleEvent("redirect", ({href}) => {
+	    let url = new URL(href, location.href);
+	    liveSocket.historyRedirect(url.toString(), "push");
+	});
+    }
+};
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
+
+let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: Hooks})
 
 // Show progress bar on live navigation and form submits
-topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
-window.addEventListener("phx:page-loading-start", info => topbar.show())
-window.addEventListener("phx:page-loading-stop", info => topbar.hide())
+window.addEventListener("phx:page-loading-start", info => show_progress_bar())
+window.addEventListener("phx:page-loading-stop", info => hide_progress_bar())
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()

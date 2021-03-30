@@ -1,6 +1,6 @@
 defmodule LivWeb.Router do
   use LivWeb, :router
-
+  
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -17,7 +17,9 @@ defmodule LivWeb.Router do
   scope "/", LivWeb do
     pipe_through :browser
 
-    live "/", PageLive, :index
+    live "/", Welcome
+    live "/login", Login
+    # live "/", PageLive, :index
   end
 
   # Other scopes may use custom stacks.

@@ -1,0 +1,8 @@
+<Main id="main" messages={{ @flash }}>
+    <p :if={{ @auth == nil }}>
+	loading...
+    </p>
+    <p :if={{ @auth == :ok }}>
+	Welcome
+    </p>
+</Main>
