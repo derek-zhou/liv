@@ -1,0 +1,18 @@
+<Form for={{ :search }} submit={{ @submit }}>
+    <Field name="query" class="field">
+	<Label>Enter your query:</Label>
+	<TextInput value={{ @default_query }} />
+    </Field>
+</Form>
+<div class="form-help">
+    <p>
+	Or click one of the following examples:
+    </p>
+    <ul class="examples">
+	<li :for={{ {text, query} <- @examples }}>
+	    <button :on-click={{ @pick_example }} phx-value-query={{ query }}>
+		{{ text }}
+	    </button>
+	</li>
+    </ul>
+</div>

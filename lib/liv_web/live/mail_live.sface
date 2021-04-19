@@ -1,0 +1,14 @@
+<Main :props={{ messages: @flash, title: @title, info: @info, buttons: @buttons }}>
+    <Login :if={{ @auth == :logged_out || @live_action == :set_password }}
+	   :props={{ prompt: @password_prompt, submit: "pw_submit" }}/>
+    <Find :if={{ @auth == :logged_in && @live_action == :find }}
+	  :props={{ mail_client: @mail_client, tz_offset: @tz_offset }}>
+    </Find>
+    <Search :if={{ @auth == :logged_in && @live_action == :search }}
+	    :props={{ default_query: @last_query,
+		submit: "search", pick_example: "pick_search_example" }}>
+    </Search>
+    <View :if={{ @auth == :logged_in && @live_action == :view }}
+	  :props={{ mail_client: @mail_client }}>
+    </View>
+</Main>

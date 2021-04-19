@@ -23,6 +23,19 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# for guardian
+config :liv, LivWeb.Guardian,
+      issuer: "liv",
+      secret_key: "suNeNgK+B/Wut5YKZ5TxTm7qGaBL3p0mTyhuUUKebt1+0RKlGlZ+K4Xsd8KrJQXb",
+      token_ttl: %{
+        "access" => {30, :days}
+      }
+
+# go easier for argon
+config :argon2_elixir,
+  m_cost: 14,
+  parallelism: 1
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"

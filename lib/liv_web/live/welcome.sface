@@ -1,8 +1,7 @@
-<Main id="main" messages={{ @flash }}>
-    <p :if={{ @auth == nil }}>
-	loading...
-    </p>
-    <p :if={{ @auth == :ok }}>
-	Welcome
-    </p>
-</Main>
+<div class="box">
+    <slot/>
+    <div class="toolbar">
+	<button class="button button-danger" :on-click={{ @reset_password }}>reset</button>
+	<button class="button" :on-click={{ @logout }}>logout</button>
+    </div>
+</div>

@@ -1,0 +1,10 @@
+<div class="node-container"
+     :for={{ docid <- MailClient.children_of(@mail_client, @root) }}>
+    <MailNode :props={{ docid: docid,
+		     meta: MailClient.mail_meta(@mail_client, docid),
+		     tz_offset: @tz_offset }} />
+    <div class="children-container">
+	{{ render(%{root: docid, tz_offset: @tz_offset,
+	mail_client: @mail_client}) }}
+    </div>
+</div>

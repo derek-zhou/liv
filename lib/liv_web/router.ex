@@ -17,9 +17,13 @@ defmodule LivWeb.Router do
   scope "/", LivWeb do
     pipe_through :browser
 
-    live "/", Welcome
-    live "/login", Login
-    # live "/", PageLive, :index
+    live "/", MailLive, :welcome
+    live "/login", MailLive, :login
+    live "/set_password", MailLive, :set_password
+    live "/find/:query", MailLive, :find
+    live "/view/:docid", MailLive, :view
+    live "/search", MailLive, :search
+  
   end
 
   # Other scopes may use custom stacks.

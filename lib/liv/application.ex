@@ -11,6 +11,8 @@ defmodule Liv.Application do
       LivWeb.Telemetry,
       # Start the PubSub system
       {Phoenix.PubSub, name: Liv.PubSub},
+      # configer to persis configuration
+      {:self_configer, name: Liv.Configer},
       # Start the Endpoint (http/https)
       LivWeb.Endpoint
       # Start a worker by calling: Liv.Worker.start_link(arg)

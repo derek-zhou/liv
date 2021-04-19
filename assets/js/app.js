@@ -17,6 +17,15 @@ function hide_progress_bar() {
 let Hooks = new Object();
 Hooks.Main = {
     mounted() {
+	// dump everthing from localStorage to the server side
+	let ret = new Object();
+	ret.timezoneOffset = new Date().getTimezoneOffset();
+	for (let i = 0; i < localStorage.length; i++) {
+	    let key = localStorage.key(i);
+	    let value = localStorage.getItem(key);
+	    ret[key] = value;
+	}
+	this.pushEvent("get_value", ret);
 	this.handleEvent("get_value", ({key}) => {
 	    let value = localStorage.getItem(key) || "";
 	    let ret = new Object();
@@ -24,11 +33,10 @@ Hooks.Main = {
 	    this.pushEvent("get_value", ret);
 	});
 	this.handleEvent("set_value", ({key, value}) => {
-	    localStorage.setItem(key, value);
-	});
-	this.handleEvent("redirect", ({href}) => {
-	    let url = new URL(href, location.href);
-	    liveSocket.historyRedirect(url.toString(), "push");
+	    if (value)
+		localStorage.setItem(key, value);
+	    else
+		localStorage.removeItem(key);
 	});
     }
 };
