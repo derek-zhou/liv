@@ -11,12 +11,23 @@ secret_key_base =
     You can generate one by calling: mix phx.gen.secret
     """
 
+guardian_key =
+  System.get_env("GUARDIAN_KEY") ||
+    raise """
+    environment variable GUARDIAN_KEY is missing.
+    You can generate one by calling: mix guardian.gen.secret
+    """
+
 config :liv, LivWeb.Endpoint,
   http: [
-    port: String.to_integer(System.get_env("PORT") || "4000"),
-    transport_options: [socket_opts: [:inet6]]
+    ip: {127, 0, 0, 1},
+    port: String.to_integer(System.get_env("PORT") || "4001")
   ],
   secret_key_base: secret_key_base
+
+# for guardian
+config :liv, LivWeb.Guardian,
+  secret_key: guardian_key
 
 # ## Using releases (Elixir v1.9+)
 #

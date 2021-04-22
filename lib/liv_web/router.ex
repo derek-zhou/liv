@@ -14,7 +14,7 @@ defmodule LivWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", LivWeb do
+  scope "/" <> System.get_env("USER"), LivWeb do
     pipe_through :browser
 
     live "/", MailLive, :welcome
