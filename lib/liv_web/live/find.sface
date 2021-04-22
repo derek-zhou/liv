@@ -4,7 +4,7 @@
 		     meta: MailClient.mail_meta(@mail_client, docid),
 		     tz_offset: @tz_offset }} />
     <div class="children-container">
-	{{ render(%{root: docid, tz_offset: @tz_offset,
+	{{ render(%{root: docid, tz_offset: @tz_offset, socket: @socket,
 	mail_client: @mail_client}) }}
     </div>
 </div>
