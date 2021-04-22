@@ -225,7 +225,7 @@
 		    .subject {
 			@apply w-full whitespace-nowrap overflow-hidden;
 		    }
-		    .from {
+		    .email-addr {
 			@apply text-sm italic flex-grow whitespace-nowrap overflow-hidden;
 		    }
 		    .date {
@@ -243,6 +243,21 @@
 	    }
 	    .box {
                 @apply bg-white p-2 flow-root w-full overflow-x-hidden;
+		.line {
+		    @apply w-full;
+		    .email-addr {
+			@apply text-sm italic;
+		    }
+		    .date {
+			@apply font-bold text-sm;
+		    }
+		    .flags {
+			@apply font-bold text-sm;
+		    }
+		}
+		.mail-body {
+		    @apply w-full h-screen;
+		}
                 .thumbnail {
                     img {
                         @apply w-auto max-w-full h-48;
@@ -333,7 +348,7 @@
 			.subject {
 			    @apply flex-grow;
 			}
-			.from {
+			.email-addr {
 			    @apply border-l border-gray-200 w-40 flex-none pl-2;
 			}
 			.date {

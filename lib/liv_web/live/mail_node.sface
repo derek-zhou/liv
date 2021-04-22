@@ -3,6 +3,7 @@
 	       class="subject">
 	{{ @meta.subject }}
     </LivePatch>
-    <div class="from">{{ from_name(@meta.from) }}</div>
+    <Link to={{ "mailto:#{tl(@meta.from)}" }}
+	  class="email-addr">{{ email_name(@meta.from) }}</Link>
     <div class="date">{{ date_string(@meta.date, @tz_offset) }}</div>
 </div>

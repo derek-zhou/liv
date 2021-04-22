@@ -1,3 +1,35 @@
 <div class="box">
-    {{ @docid }}
+    <div class="line">
+	From:
+	<Link to={{ "mailto:#{tl(@meta.from)}" }}
+	      class="email-addr">{{ email_name(@meta.from) }}</Link>
+    </div>
+    <div class="line">
+	To:
+	<Link :for={{ addr <- @meta.to }}
+	      to={{ "mailto:#{tl(addr)}" }}
+	      class="email-addr">{{ email_name(addr) }}</Link>
+    </div>
+    <div class="line" :if={{ length(@meta.cc) > 0 }}>
+	Cc:
+	<Link :for={{ addr <- @meta.cc }}
+	      to={{ "mailto:#{tl(addr)}" }}
+	      class="email-addr">{{ email_name(addr) }}</Link>
+    </div>
+    <div class="line" :if={{ length(@meta.bcc) > 0 }}>
+	Bcc:
+	<Link :for={{ addr <- @meta.bcc }}
+	      to={{ "mailto:#{tl(addr)}" }}
+	      class="email-addr">{{ email_name(addr) }}</Link>
+    </div>
+    <div class="line">
+	Subject: <span class="subject">{{ @meta.subject }}</span>
+    </div>
+    <div class="line">
+	Flags: <span class="flags">{{ flags_string(@meta.flags) }}</span>
+    </div>
+    <div class="line">
+	Date: <span class="date">{{ date_string(@meta.date, @tz_offset) }}</span>
+    </div>
+    <iframe class="mail-body" srcdoc={{ @content }} sandbox />
 </div>

@@ -30,6 +30,10 @@ defmodule LivWeb.MailLive do
   data info, :string, default: "Loading..."
   data buttons, :list, default: []
 
+  # for the viewer
+  data mail_meta, :map
+  data mail_html, :string
+
   # to refer back
   data last_query, :string, default: ""
   data last_docid, :integer, default: 0
@@ -101,19 +105,31 @@ defmodule LivWeb.MailLive do
     case Integer.parse(docid) do
       {docid, ""} ->
 	mc = MailClient.seen(mc, docid)
-	{
-	  :noreply,
-	  socket
-	  |> clear_flash()
-	  |> assign(title: "LivMail",
-	    info: info_mc(mc),
-	    mail_client: mc,
-	    last_docid: docid,
-	    buttons: [
-	      {"\u{1f50d}", Routes.mail_path(socket, :search), false},
-	      {"\u{1f6aa}", Routes.mail_path(socket, :login), false}
-	    ])
-	}
+	case MailClient.mail_meta(mc, docid) do
+	  nil ->
+	    {:noreply, put_flash(socket, :error, "Mail not found")}
+	  meta ->
+	    next = MailClient.next(mc, docid) || 0
+	    prev = MailClient.previous(mc, docid) || 0
+	    html = MailClient.html_content(mc, docid)
+	    {
+	      :noreply,
+	      socket
+	      |> clear_flash()
+	      |> assign(title: "LivMail",
+		info: info_mc(mc),
+		mail_client: mc,
+		last_docid: docid,
+		last_query: "msgid:#{meta.msgid}",
+		mail_meta: meta,
+		mail_html: html,
+		buttons: [
+		  {"\u{1f50d}", Routes.mail_path(socket, :search), false},
+		  {"\u25c0", Routes.mail_path(socket, :view, prev), prev == 0},
+		  {"\u25b6", Routes.mail_path(socket, :view, next), next == 0},
+		])
+	    }
+	end
       _ ->
 	{:noreply, put_flash(socket, :error, "Illegal docid")}
     end

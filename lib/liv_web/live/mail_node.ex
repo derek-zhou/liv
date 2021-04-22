@@ -2,7 +2,7 @@ defmodule LivWeb.MailNode do
   use Surface.Component
 
   alias LivWeb.Router.Helpers, as: Routes
-  alias Surface.Components.LivePatch
+  alias Surface.Components.{LivePatch, Link}
 
   prop meta, :map, required: true
   prop tz_offset, :integer, default: 0
@@ -10,8 +10,8 @@ defmodule LivWeb.MailNode do
   
   defp unread?(flags), do: !Enum.member?(flags, :seen)
 
-  defp from_name([nil | addr]), do: addr
-  defp from_name([name | addr]), do: name
+  defp email_name([nil | addr]), do: addr
+  defp email_name([name | _addr]), do: name
 
   defp date_string(datei, tz_offset) do
     utc = NaiveDateTime.add(~N[1970-01-01 00:00:00], datei)

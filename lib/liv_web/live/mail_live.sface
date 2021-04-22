@@ -9,6 +9,7 @@
 		submit: "search", pick_example: "pick_search_example" }}>
     </Search>
     <View :if={{ @auth == :logged_in && @live_action == :view }}
-	  :props={{ mail_client: @mail_client }}>
+	  :props={{ meta: @mail_meta, content: @mail_html,
+	      tz_offset: @tz_offset }}>
     </View>
 </Main>
