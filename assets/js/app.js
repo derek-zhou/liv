@@ -14,18 +14,23 @@ function hide_progress_bar() {
     bar.style.opacity = "0";
 }
 
+function local_state() {
+    let ret = new Object();
+    ret.timezoneOffset = new Date().getTimezoneOffset();
+    ret.language = navigator.language;
+    // dump everthing from localStorage to the server side
+    for (let i = 0; i < localStorage.length; i++) {
+	let key = localStorage.key(i);
+	let value = localStorage.getItem(key);
+	ret[key] = value;
+    }
+    return ret;
+}
+
 let Hooks = new Object();
 Hooks.Main = {
     mounted() {
-	// dump everthing from localStorage to the server side
-	let ret = new Object();
-	ret.timezoneOffset = new Date().getTimezoneOffset();
-	for (let i = 0; i < localStorage.length; i++) {
-	    let key = localStorage.key(i);
-	    let value = localStorage.getItem(key);
-	    ret[key] = value;
-	}
-	this.pushEvent("get_value", ret);
+	this.pushEvent("get_value", local_state());
 	this.handleEvent("get_value", ({key}) => {
 	    let value = localStorage.getItem(key) || "";
 	    let ret = new Object();
@@ -38,6 +43,9 @@ Hooks.Main = {
 	    else
 		localStorage.removeItem(key);
 	});
+    },
+    reconnected() {
+	this.pushEvent("get_value", local_state());
     }
 };
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")

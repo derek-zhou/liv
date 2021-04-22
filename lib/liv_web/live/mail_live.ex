@@ -157,6 +157,7 @@ defmodule LivWeb.MailLive do
       socket
       |> fetch_token(values)
       |> fetch_tz_offset(values)
+      |> fetch_locale(values)
       |> patch_action()
     }
   end
@@ -283,6 +284,16 @@ defmodule LivWeb.MailLive do
     assign(socket, tz_offset: offset)
   end
   defp fetch_tz_offset(socket, _), do: socket
+
+  defp fetch_locale(socket, %{"language" => locale}) do
+    Gettext.put_locale(LivWeb.Gettext, locale)
+    socket
+  end
+
+  defp fetch_locale(socket, _) do
+    Gettext.put_locale(LivWeb.Gettext, "en")
+    socket
+  end
 
   defp info_mc(mc) do
     "#{MailClient.unread_count(mc)}/#{MailClient.mail_count(mc)}"
