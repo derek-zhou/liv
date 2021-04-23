@@ -171,6 +171,12 @@
 		@apply p-2 bg-gray-100 flex flex-col;
 		.field {
 		    @apply mb-2 flex flex-row flex-wrap justify-center;
+                    .button[type="reset"] {
+			@apply flex-none cursor-pointer text-white bg-pink-600 ml-1;
+                    }
+                    .button[type="submit"] {
+			@apply flex-none cursor-pointer text-white bg-purple-600 ml-1;
+                    }
 		}
 		.toolbar {
 		    @apply pt-2 flex flex-row flex-wrap justify-center border-t-2 border-gray-200;

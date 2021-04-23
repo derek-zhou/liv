@@ -2,6 +2,7 @@
     <Field name="query" class="field">
 	<Label>Enter your query:</Label>
 	<TextInput value={{ @default_query }} />
+	<input class="button" type="submit" value="&#128076;">
     </Field>
 </Form>
 <div class="form-help">
