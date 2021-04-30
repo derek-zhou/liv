@@ -13,6 +13,8 @@ defmodule Liv.Application do
       {Phoenix.PubSub, name: Liv.PubSub},
       # configer to persis configuration
       {:self_configer, name: Liv.Configer},
+      # address vault
+      Liv.AddressVault,
       # Start the Endpoint (http/https)
       LivWeb.Endpoint
       # Start a worker by calling: Liv.Worker.start_link(arg)

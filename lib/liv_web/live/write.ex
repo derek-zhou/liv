@@ -3,13 +3,14 @@ defmodule LivWeb.Write do
 
   alias LivWeb.Recipient
   alias Surface.Components.Form
-  alias Surface.Components.Form.{Field, /Users/derek TextInput, TextArea}
+  alias Surface.Components.Form.{Field, TextInput, TextArea}
 
   prop submit, :event, required: true
   prop change, :event, required: true
   prop subject, :string, default: ""
   prop recipients, :list, default: []
   prop mail_text, :string, default: ""
+  prop addr_options, :list, default: []
 
   defp email_addr(nil, addr), do: addr
   defp email_addr(name, addr), do: "#{name} <#{addr}>"

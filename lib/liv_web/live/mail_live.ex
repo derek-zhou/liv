@@ -9,6 +9,7 @@ defmodule LivWeb.MailLive do
   alias :self_configer, as: SelfConfiger
   alias Liv.Configer
   alias Liv.MailClient
+  alias Liv.AddressVault
 
   # client side state
   data auth, :atom, default: nil
@@ -39,6 +40,7 @@ defmodule LivWeb.MailLive do
 
   # for write
   data recipients, :list, default: []
+  data addr_options, :list, default: []
   data subject, :string, default: ""
   data mail_text, :string, default: ""
   data preview_html, :string, default: ""
@@ -160,6 +162,12 @@ defmodule LivWeb.MailLive do
   def handle_params(%{"to" => to}, _url,
     %Socket{assigns: %{live_action: :write,
 		       mail_client: mc}} = socket) do
+    close_action = cond do
+      mc == nil -> default_action(socket)
+      mc.docid == 0 -> default_action(socket)
+      true -> Routes.mail_path(socket, :view, mc.docid)
+    end
+
     {
       :noreply,
       socket
@@ -170,12 +178,7 @@ defmodule LivWeb.MailLive do
       mail_text: MailClient.quoted_text(mc),
       buttons: [
 	{:button, "\u{1F4EC}", "send", false},
-	cond do
-	  mc == nil -> {:patch, "\u{2716}", "#", false}
-	  mc.docid == 0 -> {:patch, "\u{2716}", "#", false}
-	  true ->
-	    {:patch, "\u{2716}", Routes.mail_path(socket, :view, mc.docid), false}
-	end
+	{:patch, "\u{2716}", close_action, false}
       ])
     }
   end		      
@@ -277,9 +280,16 @@ defmodule LivWeb.MailLive do
   end
 
   def handle_event("write_change",
-    %{"mail" => %{"subject" => subject,
+    %{"_target" => [target | _],
+      "mail" => %{"subject" => subject,
 		  "text" => text}} = mail,
     %Socket{assigns: %{recipients: recipients}} = socket) do
+    completion_list = cond do
+      ! String.starts_with?(target, "addr_") -> []
+      String.length(mail[target]) < 2 -> []
+      true -> AddressVault.start_with(mail[target])
+    end
+
     recipients =
     (0 .. length(recipients) - 1)
     |> Enum.map(fn i ->
@@ -288,7 +298,8 @@ defmodule LivWeb.MailLive do
     |> MailClient.normalize_recipients()
     {
       :noreply,
-      assign(socket, recipients: recipients, subject: subject, mail_text: text)
+      assign(socket, recipients: recipients, subject: subject,
+	addr_options: completion_list, mail_text: text)
     }
   end
 

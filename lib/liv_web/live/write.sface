@@ -5,7 +5,8 @@
 		       opts={{ "phx-debounce": "blur" }} />
 	</Field>
 	<Recipient :for.with_index={{ {{type, [name | addr]}, i} <- @recipients }}
-		   :props={{ index: i, type: type, addr: email_addr(name, addr) }} />
+		   :props={{ index: i, type: type, options: @addr_options,
+				   addr: email_addr(name, addr) }} />
     </div>
     <div class="mail-body">
 	<Field name="text">

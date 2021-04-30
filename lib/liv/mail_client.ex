@@ -1,6 +1,7 @@
 defmodule Liv.MailClient do
   require Logger
   alias Liv.Configer
+  alias Liv.AddressVault
 
   @moduledoc """
   The core MailClient state mamangment abstracted from the UI. 
@@ -211,6 +212,7 @@ defmodule Liv.MailClient do
   def send_mail(subject, [{:to, _} | _] = recipients, text) do
     Logger.notice("Subject: #{subject}")
     Enum.each(recipients, fn {type, [name | addr]} ->
+      AddressVault.add(name, addr)
       Logger.notice("#{type}: #{name} <#{addr}>")
     end)
     Logger.notice(text)
@@ -308,4 +310,3 @@ defmodule Liv.MailClient do
   end
 
 end
-
