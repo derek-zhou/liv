@@ -1,4 +1,7 @@
 defmodule Liv.MailClient do
+  require Logger
+  alias Liv.Configer
+
   @moduledoc """
   The core MailClient state mamangment abstracted from the UI. 
   """
@@ -7,7 +10,7 @@ defmodule Liv.MailClient do
   alias :mc_tree, as: MCTree
 
   defstruct [
-    :tree, :mails, :contents
+    :tree, mails: %{}, docid: 0, contents: {}
   ]
 
   @doc """
@@ -18,7 +21,7 @@ defmodule Liv.MailClient do
 	String.match?(query, ~r/^msgid:/)) do
       {:error, msg} -> raise(msg)
       {:ok, tree, mails} ->
-	%__MODULE__{tree: MCTree.collapse(tree), mails: mails, contents: %{}}
+	%__MODULE__{tree: MCTree.collapse(tree), mails: mails}
     end
   end
 
@@ -37,21 +40,28 @@ defmodule Liv.MailClient do
 	end
 	%__MODULE__{ tree: MCTree.single(docid),
 		     mails: %{docid => meta},
-		     contents: %{docid => html_mail(text, html)} }
+		     docid: docid,
+		     contents: {text, html} }
     end
   end
+
+  def seen(%__MODULE__{docid: docid} = mc, docid), do: mc
 
   def seen(%__MODULE__{mails: mails} = mc, docid) do
     case Map.get(mails, docid) do
       nil -> mc
       %{flags: flags} = headers ->
+	{_, text, html} = MaildirCommander.full_mail(docid)
+	mc = %{ mc |
+		docid: docid,
+		contents: {text, html} }
 	case Enum.member?(flags, :seen) do
 	  true -> mc
 	  false ->
 	    MaildirCommander.flag(docid, "+S")
 	    headers = %{headers |
 			flags: [:seen | Enum.reject(flags, &(&1 == :unread))]}
-	    %{mc | mails: %{mails | docid => headers}}
+	    %{ mc | mails: %{mails | docid => headers}}
 	end
     end
   end	
@@ -64,14 +74,29 @@ defmodule Liv.MailClient do
   @doc """
   getter of the html content
   """
-  def html_content(%__MODULE__{contents: contents}, docid) do
-    case Map.get(contents, docid) do
-      nil ->
-	case MaildirCommander.full_mail(docid) do
-	  {:error, msg} -> raise(msg)
- 	  {_, text, html} -> html_mail(text, html)
-	end
-      content -> content
+  def html_content(%__MODULE__{contents: {text, html}}), do: html_mail(text, html)
+  def html_content(_), do: html_mail("", "")
+
+  @doc """
+  getter of the text content
+  """
+  def text_content(%__MODULE__{contents: {text, _}}), do: text
+  def text_content(_), do: ""
+
+  @doc """
+  getter of the text content in quote
+  """
+  def quoted_text(mc) do
+    case text_content(mc) do
+      "" -> ""
+      text ->
+	meta = mc.mails[mc.docid]
+	{:ok, date} = DateTime.from_unix(meta.date)
+	IO.chardata_to_string([
+	  "On #{date}, #{hd(meta.from)} wrote:\n",
+	  text
+	  |> String.split(~r/\n/)
+	  |> Enum.map(fn str -> "> #{str}\n" end)])
     end
   end
 
@@ -132,6 +157,131 @@ defmodule Liv.MailClient do
     MCTree.children(docid || :undefined, tree) 
   end
 
+  @doc """
+  getter of default to, cc and bcc for this email
+  """
+  def default_recipients(mc, to_addr) do
+    addr_map = addresses_map(mc)
+    List.flatten([
+      {:to, default_to(addr_map, to_addr)},
+      Enum.map(default_cc(addr_map, to_addr), &({:cc, &1})),
+      Enum.map(default_bcc(addr_map, to_addr,
+	    Configer.default(:my_address)),
+	&({:bcc, &1})),
+      {nil, [nil | ""]}
+    ])
+  end
+
+  @doc """
+  normalize recipients, in the orfer of to, cc, bcc and one blank
+  """
+  def normalize_recipients(recipients) do
+    List.flatten([
+      Enum.filter(recipients, fn {type, _} -> type == :to end),
+      Enum.filter(recipients, fn {type, _} -> type == :cc end),
+      Enum.filter(recipients, fn {type, _} -> type == :bcc end),
+      {nil, [nil | ""]}
+    ])
+  end
+  
+  @doc """
+  finalize recipients, in the orfer of to, cc, bcc and one blank
+  """
+  def finalize_recipients(recipients) do
+    List.flatten([
+      Enum.filter(recipients, fn {type, _} -> type == :to end),
+      Enum.filter(recipients, fn {type, _} -> type == :cc end),
+      Enum.filter(recipients, fn {type, _} -> type == :bcc end)
+    ])
+  end
+
+  @doc """
+  parse an addr to a {type, [name | addr]} tuple
+  """
+  def parse_recipient("to", addr), do: {:to, parse_addr(addr)} 
+  def parse_recipient("cc", addr), do: {:cc, parse_addr(addr)} 
+  def parse_recipient("bcc", addr), do: {:bcc, parse_addr(addr)} 
+  def parse_recipient("nil", _), do: {nil, [nil | ""]}
+  
+  @doc """
+  send a mail
+  """
+  def send_mail("", _, _), do: {:error, "no subject"}
+  def send_mail(_, _, ""), do: {:error, "no text"}
+  def send_mail(subject, [{:to, _} | _] = recipients, text) do
+    Logger.notice("Subject: #{subject}")
+    Enum.each(recipients, fn {type, [name | addr]} ->
+      Logger.notice("#{type}: #{name} <#{addr}>")
+    end)
+    Logger.notice(text)
+  end
+  def send_mail(_, _, _), do: {:error, "no To: recipient"}
+  
+  @doc """
+  getter of the default reply subject
+  """
+  def reply_subject(nil), do: ""
+  def reply_subject(%__MODULE__{docid: 0}), do: ""
+
+  def reply_subject(%__MODULE__{ docid: docid,
+				 mails: mails }) do
+    case mails[docid].subject do
+      sub = <<"Re: ", _rest>> -> sub
+      sub -> "Re: " <> sub
+    end
+  end
+
+  @doc """
+  getter of to name from relevent addresses
+  """
+  def find_address(mc, to_addr) do
+    [ Map.get(addresses_map(mc), to_addr) | to_addr ]
+  end
+
+  defp addresses_map(nil), do: %{}
+  
+  defp addresses_map(%__MODULE__{docid: 0}), do: %{}
+
+  defp addresses_map(%__MODULE__{ docid: docid,
+				  mails: mails } ) do
+    %{ from: from,
+       to: to,
+       cc: cc } = Map.fetch!(mails, docid)
+
+    [ from | (to ++ cc) ]
+    |> Enum.map(fn [n | a] -> {a, n} end)
+    |> Enum.into(%{})
+  end
+
+  # to is whatever I can find from the map
+  defp default_to(addr_map, to_addr), do: [Map.get(addr_map, to_addr) | to_addr]
+
+  # cc is addr_map sans to and sans my addresses
+  defp default_cc(addr_map, to_addr) do
+    my_addresses = default_set(:my_addresses)
+    addr_map
+    |> Enum.reject(fn {a, _n} ->
+      (a == to_addr) || MapSet.member?(my_addresses, a)
+    end)
+    |> Enum.map(fn {a, n} -> [n | a] end)
+  end
+  
+  # bcc is my address, unless to is one of my addresses, or a list is invloved
+  defp default_bcc(_, to_addr, [_ | to_addr ]), do: []
+  defp default_bcc(addr_map, _, my_address) do
+    my_lists = default_set(:my_email_lists)
+    if Enum.any?(addr_map, fn {a, _n} ->
+	  MapSet.member?(my_lists, a)
+	end), do: [], else: [my_address]
+  end
+
+  defp default_set(atom) do
+    atom
+    |> Configer.default()
+    |> Enum.map(fn [_n | a ] -> a end)
+    |> MapSet.new()
+  end
+
   defp html_mail("", "") do
     ~s"""
     <!DOCTYPE html><html>
@@ -148,7 +298,14 @@ defmodule Liv.MailClient do
     """
   end
 
-  defp html_mail(_text, html), do: html
+  defp html_mail(_, html), do: html
+
+  defp parse_addr(str) do
+    case Regex.run(~r/(.*)\s+<(.*)>$/, str) do
+      [_, name, addr] -> [String.trim(name, "\"") | addr]
+      _ -> [nil | str]
+    end
+  end
 
 end
 

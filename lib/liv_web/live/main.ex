@@ -1,7 +1,7 @@
 defmodule LivWeb.Main do
   use Surface.Component
-  alias Surface.Components.LivePatch
-  
+  alias LivWeb.Button
+
   slot default, required: true
   prop messages, :map, default: %{}
   prop title, :string, default: ""

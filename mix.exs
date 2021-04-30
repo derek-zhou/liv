@@ -36,6 +36,7 @@ defmodule Liv.MixProject do
       {:self_configer, path: "../self_configer", override: true},
       {:maildir_commander, path: "../maildir_commander"},
       {:argon2_elixir, "~> 2.4"},
+      {:earmark, "~> 1.4"},
       {:guardian, "~> 2.1"},
       {:surface, path: "../surface"},
       {:phoenix, "~> 1.5.8"},

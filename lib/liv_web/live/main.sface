@@ -10,10 +10,9 @@
 	    <span class="info">{{ @info }}</span>
 	</div>
 	<div class="nav">
-	    <LivePatch :for={{ {text, action, disabled} <- @buttons }}
-		       to={{ action }}
-		       class={{ "button", disabled: disabled }}>
-		{{ text }}</LivePatch>
+	    <Button :for={{ {type, text, action, disabled} <- @buttons }}
+		    :props={{ type: type, text: text,
+			 path_or_msg: action, disabled: disabled }} />
 	</div>
     </div>
     <slot />

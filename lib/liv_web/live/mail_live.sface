@@ -2,14 +2,15 @@
     <Login :if={{ @auth == :logged_out || @live_action == :set_password }}
 	   :props={{ prompt: @password_prompt, submit: "pw_submit" }}/>
     <Find :if={{ @auth == :logged_in && @live_action == :find }}
-	  :props={{ mail_client: @mail_client, tz_offset: @tz_offset }}>
-    </Find>
+	  :props={{ mail_client: @mail_client, tz_offset: @tz_offset }} />
     <Search :if={{ @auth == :logged_in && @live_action == :search }}
 	    :props={{ default_query: @last_query,
-		submit: "search", pick_example: "pick_search_example" }}>
-    </Search>
+		submit: "search", pick_example: "pick_search_example" }} />
     <View :if={{ @auth == :logged_in && @live_action == :view }}
 	  :props={{ meta: @mail_meta, content: @mail_html,
-	      tz_offset: @tz_offset }}>
-    </View>
+	      tz_offset: @tz_offset }} />
+    <Write :if={{ @auth == :logged_in && @live_action == :write }}
+	   :props={{ submit: "write_submit", change: "write_change",
+	       subject: @subject, recipients: @recipients,
+	       mail_text: @mail_text }} />
 </Main>

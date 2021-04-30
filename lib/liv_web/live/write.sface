@@ -1,0 +1,20 @@
+<Form for={{ :mail }} change={{ @change }} submit={{ @submit }}>
+    <div class="mail-meta">
+	<Field name="subject" class="line">
+    	    <TextInput value={{ @subject }}
+		       opts={{ "phx-debounce": "blur" }} />
+	</Field>
+	<Recipient :for.with_index={{ {{type, [name | addr]}, i} <- @recipients }}
+		   :props={{ index: i, type: type, addr: email_addr(name, addr) }} />
+    </div>
+    <div class="mail-body">
+	<Field name="text">
+	    <TextArea rows="20"
+		      opts={{ "phx-debounce": 1000 }}
+		      value={{ @mail_text }} />
+	</Field>
+	<div class="preview">
+	    {{ raw(preview(@mail_text)) }}
+	</div>
+    </div>
+</Form>

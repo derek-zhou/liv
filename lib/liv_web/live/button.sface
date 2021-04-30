@@ -1,0 +1,8 @@
+<LivePatch :if={{ @type == :patch }}
+	   to={{ @path_or_msg }}
+	   class={{ "button", disabled: @disabled }}>
+    {{ @text }}</LivePatch>
+<button :if={{ @type == :button }}
+	phx-click={{ @path_or_msg }}
+	class={{ "button", disabled: @disabled }}>
+    {{ @text }}</button>

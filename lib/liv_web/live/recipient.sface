@@ -1,0 +1,8 @@
+<div id={{ "recipient_#{@index}" }} class="line">
+    <Select name={{ "type_#{@index}" }}
+	    options={{ "": "nil", "To:": "to", "Cc:": "cc", "Bcc:": "bcc" }}
+	    selected={{ to_string(@type) }} />
+    <TextInput name={{ "addr_#{@index}" }}
+	       opts={{ "phx-debounce": 500 }}
+	       value={{ @addr }} />
+</div>

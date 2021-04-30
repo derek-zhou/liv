@@ -23,7 +23,9 @@ defmodule LivWeb.Router do
     live "/find/:query", MailLive, :find
     live "/view/:docid", MailLive, :view
     live "/search", MailLive, :search
-  
+    live "/config", MailLive, :config
+    live "/write/:to", MailLive, :write
+ 
   end
 
   # Other scopes may use custom stacks.

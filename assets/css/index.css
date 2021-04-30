@@ -59,7 +59,7 @@
             @apply mb-4;
         }
         textarea {
-            @apply mb-4 w-full h-24 text-xs border rounded border-gray-600;
+            @apply p-1 w-full text-sm border rounded border-gray-600;
         }
         table {
             @apply mb-4 border-collapse border-2 border-gray-400;
@@ -169,6 +169,12 @@
 	    @apply border border-gray-200 rounded;
 	    form {
 		@apply p-2 bg-gray-100 flex flex-col;
+		.line {
+		    @apply w-full flex flex-row mb-2 space-x-2;
+		    input[type="text"] {
+			@apply flex-grow;
+		    }
+		}
 		.field {
 		    @apply mb-2 flex flex-row flex-wrap justify-center;
                     .button[type="reset"] {
@@ -179,7 +185,7 @@
                     }
 		}
 		.toolbar {
-		    @apply pt-2 flex flex-row flex-wrap justify-center border-t-2 border-gray-200;
+		    @apply pt-2 flex flex-row flex-wrap justify-center border-t border-gray-200;
                     .button[type="reset"] {
 			@apply flex-none cursor-pointer text-white bg-pink-600 mr-1;
                     }
@@ -188,7 +194,7 @@
                     }
 		}
                 label {
-                    @apply flex-none mx-2 leading-relaxed;
+                    @apply flex-none mr-2 leading-relaxed;
 		    .focus {
 			@apply font-bold italic;
 		    }
@@ -201,6 +207,9 @@
 		}
 		select {
 		    @apply border rounded border-gray-600;
+		}
+		.preview {
+		    @apply border rounded bg-yellow-100 p-2;
 		}
                 input[type="text"] {
                     @apply w-80 leading-relaxed border rounded border-gray-600;
@@ -379,6 +388,12 @@
 	.viewport {
             @apply max-w-screen-lg;
 	    .content {
+		.mail-meta {
+		    @apply grid grid-cols-2 gap-x-2;
+		}
+		.mail-body {
+		    @apply grid grid-cols-2 gap-x-2;
+		}
 		.box {
                     .thumbnail {
                         img {
