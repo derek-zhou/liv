@@ -1,6 +1,7 @@
 defmodule LivWeb.View do
   use Surface.Component
-  alias Surface.Components.Link
+  alias LivWeb.Router.Helpers, as: Routes
+  alias Surface.Components.LivePatch
   
   prop meta, :map, required: true
   prop content, :string, required: true

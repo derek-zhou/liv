@@ -161,11 +161,12 @@ defmodule LivWeb.MailLive do
 
   def handle_params(%{"to" => to}, _url,
     %Socket{assigns: %{live_action: :write,
+		       last_query: query,
 		       mail_client: mc}} = socket) do
     close_action = cond do
-      mc == nil -> default_action(socket)
-      mc.docid == 0 -> default_action(socket)
-      true -> Routes.mail_path(socket, :view, mc.docid)
+      mc && mc.docid > 0 -> Routes.mail_path(socket, :view, mc.docid)
+      query != "" -> Routes.mail_path(socket, :find, URI.encode(query))
+      true -> default_action(socket)
     end
 
     {
@@ -306,6 +307,7 @@ defmodule LivWeb.MailLive do
   def handle_event("send", _params,
     %Socket{assigns: %{subject: subject,
 		       recipients: recipients,
+		       last_query: query,
 		       mail_text: text,
 		       mail_client: mc}} = socket) do
     # last one is always empty
@@ -314,10 +316,10 @@ defmodule LivWeb.MailLive do
       {:error, msg} ->
 	{:noreply, put_flash(socket, :error, "Mail not sent: #{msg}")}
       :ok ->
-	dest = cond do
-	  mc == nil -> default_action(socket)
-	  mc.docid == 0 -> default_action(socket)
-	  true -> Routes.mail_path(socket, :view, mc.docid)
+	close_action = cond do
+	  mc && mc.docid > 0 -> Routes.mail_path(socket, :view, mc.docid)
+	  query != "" -> Routes.mail_path(socket, :find, URI.encode(query))
+	  true -> default_action(socket)
 	end
 
 	{
@@ -325,7 +327,7 @@ defmodule LivWeb.MailLive do
 	  socket
 	  |> put_flash(:info, "Mail sent.")
 	  |> assign(recipients: [], mail_text: "", subject: "")
-	  |> push_patch(to: dest)
+	  |> push_patch(to: close_action)
 	}
     end
   end

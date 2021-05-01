@@ -3,7 +3,7 @@
 	       class="subject">
 	{{ @meta.subject }}
     </LivePatch>
-    <Link to={{ "mailto:#{tl(@meta.from)}" }}
-	  class="email-addr">{{ email_name(@meta.from) }}</Link>
+    <LivePatch to={{ Routes.mail_path(@socket, :write, tl(@meta.from)) }}
+	  class="email-addr">{{ email_name(@meta.from) }}</LivePatch>
     <div class="date">{{ date_string(@meta.date, @tz_offset) }}</div>
 </div>

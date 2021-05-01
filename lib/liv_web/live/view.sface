@@ -1,26 +1,26 @@
 <div class="box">
     <div class="line">
 	From:
-	<Link to={{ "mailto:#{tl(@meta.from)}" }}
-	      class="email-addr">{{ email_name(@meta.from) }}</Link>
+	<LivePatch to={{ Routes.mail_path(@socket, :write, tl(@meta.from)) }}
+	      class="email-addr">{{ email_name(@meta.from) }}</LivePatch>
     </div>
     <div class="line">
 	To:
-	<Link :for={{ addr <- @meta.to }}
-	      to={{ "mailto:#{tl(addr)}" }}
-	      class="email-addr">{{ email_name(addr) }}</Link>
+	<LivePatch :for={{ addr <- @meta.to }}
+		   to={{ Routes.mail_path(@socket, :write, tl(addr)) }}
+		   class="email-addr">{{ email_name(addr) }}</LivePatch>
     </div>
     <div class="line" :if={{ length(@meta.cc) > 0 }}>
 	Cc:
-	<Link :for={{ addr <- @meta.cc }}
-	      to={{ "mailto:#{tl(addr)}" }}
-	      class="email-addr">{{ email_name(addr) }}</Link>
+	<LivePatch :for={{ addr <- @meta.cc }}
+		   to={{ Routes.mail_path(@socket, :write, tl(addr)) }}
+		   class="email-addr">{{ email_name(addr) }}</LivePatch>
     </div>
     <div class="line" :if={{ length(@meta.bcc) > 0 }}>
 	Bcc:
-	<Link :for={{ addr <- @meta.bcc }}
-	      to={{ "mailto:#{tl(addr)}" }}
-	      class="email-addr">{{ email_name(addr) }}</Link>
+	<LivePatch :for={{ addr <- @meta.bcc }}
+		   to={{ Routes.mail_path(@socket, :write, tl(addr)) }}
+		   class="email-addr">{{ email_name(addr) }}</LivePatch>
     </div>
     <div class="line">
 	Subject: <span class="subject">{{ @meta.subject }}</span>
