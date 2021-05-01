@@ -10,7 +10,10 @@
 	  :props={{ meta: @mail_meta, content: @mail_html,
 	      tz_offset: @tz_offset }} />
     <Write :if={{ @auth == :logged_in && @live_action == :write }}
-	   :props={{ submit: "write_submit", change: "write_change",
+	   :props={{ change: "write_change",
 	       subject: @subject, recipients: @recipients,
 	       addr_options: @addr_options, mail_text: @mail_text }} />
+    <Config :if={{ @auth == :logged_in && @live_action == :config }}
+	    :props={{ change: "config_change",
+		my_addr: @my_addr, my_addrs: @my_addrs, my_lists: @my_lists }} />
 </Main>

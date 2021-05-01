@@ -2,7 +2,7 @@ defmodule LivWeb.MailLive do
   use Surface.LiveView
   require Logger
 
-  alias LivWeb.{Main, Find, Search, View, Login, Guardian, Write}
+  alias LivWeb.{Main, Find, Search, View, Login, Guardian, Write, Config}
   alias Phoenix.LiveView.Socket
   alias LivWeb.Router.Helpers, as: Routes
   alias Argon2
@@ -44,6 +44,11 @@ defmodule LivWeb.MailLive do
   data subject, :string, default: ""
   data mail_text, :string, default: ""
   data preview_html, :string, default: ""
+
+  # for config
+  data my_addr, :list, default: [nil | "you@example.com"]
+  data my_addrs, :list, default: []
+  data my_lists, :list, default: []
   
   # for the initial mount before login
   def handle_params(_params, _url,
@@ -99,8 +104,9 @@ defmodule LivWeb.MailLive do
       mail_client: mc,
       last_query: query,
       buttons: [
+	{:patch, "\u{1f527}", Routes.mail_path(socket, :config), false},
 	{:patch, "\u{1f50d}", Routes.mail_path(socket, :search), false},
-	{:patch, "\u{1f6aa}", Routes.mail_path(socket, :login), false}
+	{:patch, "\u{1f4a4}", Routes.mail_path(socket, :login), false}
       ])
     }
   end
@@ -159,6 +165,28 @@ defmodule LivWeb.MailLive do
     }
   end
 
+  def handle_params(_params, _url,
+    %Socket{assigns: %{live_action: :config,
+		       last_query: query }} = socket) do
+    close_action = cond do
+      query != "" -> Routes.mail_path(socket, :find, URI.encode(query))
+      true -> default_action(socket)
+    end
+    {
+      :noreply,
+      socket
+      |> assign(title: "LivConfig",
+      info: "",
+      my_addr: Configer.default(:my_address),
+      my_addrs: Configer.default(:my_addresses),
+      my_lists: Configer.default(:my_email_lists),
+      buttons: [
+	{:button, "\u{1F4BE}", "config_save", false},
+	{:patch, "\u{2716}", close_action, false}
+      ])
+    }
+  end
+
   def handle_params(%{"to" => to}, _url,
     %Socket{assigns: %{live_action: :write,
 		       last_query: query,
@@ -185,7 +213,7 @@ defmodule LivWeb.MailLive do
   end		      
 
   def handle_params(_params, _url, socket) do
-    {:noreply, patch_action(socket)}
+    {:noreply, socket}
   end
   
   def handle_event("get_value", values, socket) do
@@ -332,6 +360,53 @@ defmodule LivWeb.MailLive do
     end
   end
   
+  def handle_event("config_change",
+    %{"config" => %{"my_name" => name,
+		    "my_addr" => addr,
+		    "my_addrs" => addrs,
+		    "my_lists" => lists }}, socket) do
+    my_addr = case name do
+		"" -> [ nil | addr ]
+		_ -> [name | addr ]
+	      end
+    my_addrs = String.split(String.trim(addrs), "\n")
+    my_lists = String.split(String.trim(lists), "\n")
+
+    socket = case my_addrs do
+	       [^addr | _] -> clear_flash(socket)
+	       _ ->
+		 put_flash(socket, :error,
+		   "Your list of address should has your primary address as the first one")
+	     end
+    {
+      :noreply,
+      assign(socket, my_addr: my_addr, my_addrs: my_addrs, my_lists: my_lists)
+    }
+  end
+
+  def handle_event("config_save", _params,
+    %Socket{assigns: %{last_query: query,
+		       my_addr: my_addr,
+		       my_addrs: my_addrs,
+		       my_lists: my_lists}} = socket) do
+    close_action = cond do
+      query != "" -> Routes.mail_path(socket, :find, URI.encode(query))
+      true -> default_action(socket)
+    end
+
+    Configer
+    |> SelfConfiger.set_env(:my_address, my_addr)
+    |> SelfConfiger.set_env(:my_addresses, my_addrs)
+    |> SelfConfiger.set_env(:my_email_lists, my_lists)
+
+    {
+      :noreply,
+      socket
+      |> put_flash(:info, "Config saved")
+      |> push_patch(to: close_action)
+    }
+  end
+
   # no password hash 
   defp patch_action(%Socket{assigns: %{auth: :logged_out,
 				       password_hash: nil}} = socket) do

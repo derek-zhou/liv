@@ -280,7 +280,6 @@ defmodule Liv.MailClient do
   defp default_set(atom) do
     atom
     |> Configer.default()
-    |> Enum.map(fn [_n | a ] -> a end)
     |> MapSet.new()
   end
 

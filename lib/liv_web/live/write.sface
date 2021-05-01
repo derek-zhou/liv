@@ -1,4 +1,4 @@
-<Form for={{ :mail }} change={{ @change }} submit={{ @submit }}>
+<Form for={{ :mail }} change={{ @change }}>
     <div class="mail-meta">
 	<Field name="subject" class="line">
     	    <TextInput value={{ @subject }}
