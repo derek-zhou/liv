@@ -15,6 +15,10 @@ config :liv, LivWeb.Endpoint,
   pubsub_server: Liv.PubSub,
   live_view: [signing_salt: "D/E1V/7c"]
 
+config :liv, Liv.Mailer,
+  adapter: Swoosh.Adapters.SMTP,
+  relay: "localhost"
+
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",

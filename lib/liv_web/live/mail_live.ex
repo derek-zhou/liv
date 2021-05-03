@@ -106,6 +106,7 @@ defmodule LivWeb.MailLive do
       buttons: [
 	{:patch, "\u{1f527}", Routes.mail_path(socket, :config), false},
 	{:patch, "\u{1f50d}", Routes.mail_path(socket, :search), false},
+	{:patch, "\u{2712}", Routes.mail_path(socket, :write, "#"), false},
 	{:patch, "\u{1f4a4}", Routes.mail_path(socket, :login), false}
       ])
     }
@@ -132,7 +133,7 @@ defmodule LivWeb.MailLive do
 		mail_html: MailClient.html_content(mc),
 		buttons: [
 		  {:patch, "\u{1f50d}", Routes.mail_path(socket, :search), false},
-		  {:patch, "\u{1f4ac}",
+		  {:patch, "\u{2712}",
 		   Routes.mail_path(socket, :write, tl(meta.from)),
 		   false},
 		  case MailClient.previous(mc, docid) do
@@ -210,10 +211,10 @@ defmodule LivWeb.MailLive do
 	{:patch, "\u{2716}", close_action, false}
       ])
     }
-  end		      
+  end
 
   def handle_params(_params, _url, socket) do
-    {:noreply, socket}
+    {:noreply, patch_action(socket)}
   end
   
   def handle_event("get_value", values, socket) do
@@ -340,7 +341,7 @@ defmodule LivWeb.MailLive do
 		       mail_client: mc}} = socket) do
     # last one is always empty
     recipients = Enum.drop(recipients, -1)
-    case MailClient.send_mail(subject, recipients, text) do
+    case MailClient.send_mail(mc, subject, recipients, text) do
       {:error, msg} ->
 	{:noreply, put_flash(socket, :error, "Mail not sent: #{msg}")}
       :ok ->

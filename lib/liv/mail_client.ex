@@ -1,6 +1,7 @@
 defmodule Liv.MailClient do
   require Logger
   alias Liv.Configer
+  alias Liv.Mailer
   alias Liv.AddressVault
 
   @moduledoc """
@@ -207,17 +208,26 @@ defmodule Liv.MailClient do
   @doc """
   send a mail
   """
-  def send_mail("", _, _), do: {:error, "no subject"}
-  def send_mail(_, _, ""), do: {:error, "no text"}
-  def send_mail(subject, [{:to, _} | _] = recipients, text) do
-    Logger.notice("Subject: #{subject}")
-    Enum.each(recipients, fn {type, [name | addr]} ->
-      AddressVault.add(name, addr)
-      Logger.notice("#{type}: #{name} <#{addr}>")
-    end)
-    Logger.notice(text)
+  def send_mail(_, "", _, _), do: {:error, "no subject"}
+  def send_mail(_, _, _, ""), do: {:error, "no text"}
+  def send_mail(mc, subject, [{:to, _} | _] = recipients, text) do
+    import Swoosh.Email
+    try do
+      new()
+      |> from(addr_to_swoosh(Configer.default(:my_address)))
+      |> subject(subject)
+      |> add_recipients(recipients)
+      |> add_references(mc)
+      |> header("X-Mailer", "LivMail 0.1.0")
+      |> text_body(text)
+      |> html_body(Earmark.as_html!(text))
+      |> Mailer.deliver()
+    rescue
+      RuntimeError -> {:error, "deliver failed"}
+    end
   end
-  def send_mail(_, _, _), do: {:error, "no To: recipient"}
+
+  def send_mail(_, _, _, _), do: {:error, "no To: recipient"}
   
   @doc """
   getter of the default reply subject
@@ -306,6 +316,39 @@ defmodule Liv.MailClient do
       [_, name, addr] -> [String.trim(name, "\"") | addr]
       _ -> [nil | str]
     end
+  end
+
+  defp addr_to_swoosh([nil | addr]), do: addr
+  defp addr_to_swoosh([name | addr]), do: {name, addr}
+
+  defp add_recipients(email, recipients) do
+    import Swoosh.Email
+    Enum.reduce(recipients, email, fn {type, recipient}, email ->
+      AddressVault.add(hd(recipient), tl(recipient))
+      case type do
+	:to -> to(email, addr_to_swoosh(recipient))
+	:cc -> cc(email, addr_to_swoosh(recipient))
+	:bcc -> bcc(email, addr_to_swoosh(recipient))
+      end
+    end)
+  end
+
+  defp add_references(email, nil), do: email
+  defp add_references(email, %__MODULE__{docid: 0}), do: email
+  defp add_references(email, %__MODULE__{ docid: docid,
+					  mails: mails } ) do
+    import Swoosh.Email
+    %{ msgid: msgid,
+       references: references } = Map.fetch!(mails, docid)
+
+    references =
+      (references ++ [msgid])
+      |> Enum.map(fn str -> "<#{str}>" end)
+      |> Enum.join(" ")
+
+    email
+    |> header("In-Reply-To", "<#{msgid}>")
+    |> header("References", references)
   end
 
 end
