@@ -7,6 +7,7 @@ defmodule LivWeb.MailLive do
   alias LivWeb.Router.Helpers, as: Routes
   alias Argon2
   alias :self_configer, as: SelfConfiger
+  alias :mc_configer, as: MCConfiger
   alias Liv.Configer
   alias Liv.MailClient
   alias Liv.AddressVault
@@ -344,7 +345,7 @@ defmodule LivWeb.MailLive do
     case MailClient.send_mail(mc, subject, recipients, text) do
       {:error, msg} ->
 	{:noreply, put_flash(socket, :error, "Mail not sent: #{msg}")}
-      :ok ->
+      {:ok, _} ->
 	close_action = cond do
 	  mc && mc.docid > 0 -> Routes.mail_path(socket, :view, mc.docid)
 	  query != "" -> Routes.mail_path(socket, :find, URI.encode(query))
@@ -399,6 +400,9 @@ defmodule LivWeb.MailLive do
     |> SelfConfiger.set_env(:my_address, my_addr)
     |> SelfConfiger.set_env(:my_addresses, my_addrs)
     |> SelfConfiger.set_env(:my_email_lists, my_lists)
+
+    # MC need the same set of config for archiving
+    SelfConfiger.set_env(MCConfiger, :my_addresses, my_addrs)
 
     {
       :noreply,

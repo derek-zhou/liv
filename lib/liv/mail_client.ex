@@ -238,7 +238,7 @@ defmodule Liv.MailClient do
   def reply_subject(%__MODULE__{ docid: docid,
 				 mails: mails }) do
     case mails[docid].subject do
-      sub = <<"Re: ", _rest>> -> sub
+      sub = <<"Re: ", _rest::binary>> -> sub
       sub -> "Re: " <> sub
     end
   end

@@ -25,4 +25,9 @@
 	              opts={{ "phx-debounce": 500 }}/>
 	</Field>
     </div>
+    <div class="alert alert-danger">
+	<span>Danger!</span>
+	<LivePatch to={{ Routes.mail_path(@socket, :set_password) }}
+		      class="button">Reset your password</LivePatch>
+    </div>
 </Form>
