@@ -69,6 +69,15 @@ defmodule Liv.MailClient do
   end	
 
   @doc """
+  close the current mail
+  """
+  def close(%__MODULE__{docid: docid} = mc) when docid > 0 do
+    %{mc | docid: 0, contents: {}}
+  end
+
+  def close(mc), do: mc
+
+  @doc """
   getter of a specific mail metadata
   """
   def mail_meta(%__MODULE__{mails: mails}, docid), do: Map.get(mails, docid)
@@ -232,16 +241,15 @@ defmodule Liv.MailClient do
   @doc """
   getter of the default reply subject
   """
-  def reply_subject(nil), do: ""
-  def reply_subject(%__MODULE__{docid: 0}), do: ""
-
   def reply_subject(%__MODULE__{ docid: docid,
-				 mails: mails }) do
+				 mails: mails }) when docid > 0 do
     case mails[docid].subject do
       sub = <<"Re: ", _rest::binary>> -> sub
       sub -> "Re: " <> sub
     end
   end
+
+  def reply_subject(_), do: ""
 
   @doc """
   getter of to name from relevent addresses
@@ -250,12 +258,8 @@ defmodule Liv.MailClient do
     [ Map.get(addresses_map(mc), to_addr) | to_addr ]
   end
 
-  defp addresses_map(nil), do: %{}
-  
-  defp addresses_map(%__MODULE__{docid: 0}), do: %{}
-
   defp addresses_map(%__MODULE__{ docid: docid,
-				  mails: mails } ) do
+				  mails: mails } ) when docid > 0 do
     %{ from: from,
        to: to,
        cc: cc } = Map.fetch!(mails, docid)
@@ -264,6 +268,8 @@ defmodule Liv.MailClient do
     |> Enum.map(fn [n | a] -> {a, n} end)
     |> Enum.into(%{})
   end
+
+  defp addresses_map(_), do: %{}
 
   # to is whatever I can find from the map
   defp default_to(addr_map, to_addr), do: [Map.get(addr_map, to_addr) | to_addr]
@@ -333,10 +339,8 @@ defmodule Liv.MailClient do
     end)
   end
 
-  defp add_references(email, nil), do: email
-  defp add_references(email, %__MODULE__{docid: 0}), do: email
   defp add_references(email, %__MODULE__{ docid: docid,
-					  mails: mails } ) do
+					  mails: mails } ) when docid > 0 do
     import Swoosh.Email
     %{ msgid: msgid,
        references: references } = Map.fetch!(mails, docid)
@@ -350,5 +354,7 @@ defmodule Liv.MailClient do
     |> header("In-Reply-To", "<#{msgid}>")
     |> header("References", references)
   end
+
+  defp add_references(email, _), do: email
 
 end

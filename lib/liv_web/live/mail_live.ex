@@ -97,9 +97,15 @@ defmodule LivWeb.MailLive do
   end
 
   def handle_params(%{"query" => query}, _url,
-    %Socket{assigns: %{live_action: :find}} = socket) do
+    %Socket{assigns: %{live_action: :find,
+		       mail_client: mc,
+		       last_query: last_query}} = socket) do
     query = URI.decode(query)
-    mc = MailClient.new_search(query)
+    mc = cond do
+      mc && query == last_query -> MailClient.close(mc)
+      true -> MailClient.new_search(query)
+    end
+
     {
       :noreply,
       socket
@@ -119,6 +125,7 @@ defmodule LivWeb.MailLive do
 
   def handle_params(%{"docid" => docid}, _url,
     %Socket{assigns: %{live_action: :view,
+		       last_query: query,
 		       mail_client: mc}} = socket) do
     case Integer.parse(docid) do
       {docid, ""} ->
@@ -134,7 +141,6 @@ defmodule LivWeb.MailLive do
 		info: info_mc(mc),
 		page_title: meta.subject,
 		mail_client: mc,
-		last_query: "msgid:#{meta.msgid}",
 		mail_meta: meta,
 		mail_html: MailClient.html_content(mc),
 		buttons: [
@@ -142,6 +148,12 @@ defmodule LivWeb.MailLive do
 		  {:patch, "\u{2712}",
 		   Routes.mail_path(socket, :write, tl(meta.from)),
 		   false},
+		  case query do
+		    "" -> {:patch, "\u{1f5c2}", "#", true}
+		    _ ->
+		      {:patch, "\u{1f5c2}", Routes.mail_path(socket, :find,
+			  URI.encode(query)), false}
+		  end,
 		  case MailClient.previous(mc, docid) do
 		    nil -> {:patch, "\u25c0", "#", true}
 		    prev -> {:patch, "\u25c0",
@@ -161,11 +173,20 @@ defmodule LivWeb.MailLive do
   end
 
   def handle_params(_params, _url,
-    %Socket{assigns: %{live_action: :search}} = socket) do
+    %Socket{assigns: %{live_action: :search,
+		       last_query: query,
+		       mail_client: mc}} = socket) do
+    default_query =
+      case mc.docid do
+	0 -> query
+	docid -> "msgid:#{mc.mails[docid].msgid}"
+      end
+
     {
       :noreply,
       socket
       |> assign(title: "LivSearch",
+      last_query: default_query,
       page_title: "Search",
       info: "",
       mail_client: nil,
@@ -303,14 +324,14 @@ defmodule LivWeb.MailLive do
     end
   end
 
-  def handle_event("search",
-    %{"search" => %{"query" => query}},
-    socket) do
-    Logger.notice("The query is #{query}.")
+  def handle_event("search", %{"search" => %{"query" => ""}}, socket) do
+    { :noreply, put_flash(socket, :error, "Query cannot be empty") }
+  end
+
+  def handle_event("search", %{"search" => %{"query" => query}}, socket) do
     {
       :noreply,
-      socket
-      |> push_patch(to: Routes.mail_path(socket, :find, URI.encode(query)))
+      push_patch(socket, to: Routes.mail_path(socket, :find, URI.encode(query)))
     }
   end
 
