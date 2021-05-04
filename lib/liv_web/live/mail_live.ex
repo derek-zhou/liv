@@ -22,8 +22,7 @@ defmodule LivWeb.MailLive do
   # for login
   # nil, logged_in, logged_out
   data saved_path, :string, default: ""
-  data password_hash, :string,
-    default: Application.get_env(:liv, :password_hash)
+  data password_hash, :string, default: ""
   data saved_password, :string, default: ""
   data password_prompt, :string, default: "Enter your password: "
   
@@ -54,15 +53,17 @@ defmodule LivWeb.MailLive do
   # for the initial mount before login
   def handle_params(_params, _url,
     %Socket{assigns: %{live_action: :login}} = socket) do
+    user = System.get_env("USER")
     {
       :noreply,
       socket
       |> clear_flash()
       |> push_event("set_value", %{key: "token", value: ""})
       |> assign(auth: :logged_out, title: "Login as",
+      page_title: "Login as #{user}",
       password_hash: Application.get_env(:liv, :password_hash),
       password_prompt: "Enter your password: ",
-      info: System.get_env("USER"),
+      info: user,
       buttons: [])
     }
   end
@@ -70,7 +71,12 @@ defmodule LivWeb.MailLive do
   def handle_params(_params, url,
     %Socket{assigns: %{auth: nil}} = socket) do
     %URI{path: path} = URI.parse(url)
-    {:noreply, assign(socket, saved_path: path)}
+    {
+      :noreply,
+      socket
+      |> assign(saved_path: path, page_title: "",
+      password_hash: Application.get_env(:liv, :password_hash))
+    }
   end
 
   def handle_params(_params, _url,
@@ -80,12 +86,14 @@ defmodule LivWeb.MailLive do
 
   def handle_params(_params, _url,
     %Socket{assigns: %{live_action: :set_password}} = socket) do
+    user = System.get_env("USER")
     {
       :noreply,
       socket
       |> clear_flash()
       |> assign(title: "Set password of",
-      info: System.get_env("USER"),
+      info: user,
+      page_title: "Set password of #{user}",
       password_hash: nil,
       saved_password: "",
       password_prompt: "Pick a password: ",
@@ -102,6 +110,7 @@ defmodule LivWeb.MailLive do
       socket
       |> assign(title: "LivBox",
       info: info_mc(mc),
+      page_title: query,
       mail_client: mc,
       last_query: query,
       buttons: [
@@ -128,6 +137,7 @@ defmodule LivWeb.MailLive do
 	      socket
 	      |> assign(title: "LivMail",
 		info: info_mc(mc),
+		page_title: meta.subject,
 		mail_client: mc,
 		last_query: "msgid:#{meta.msgid}",
 		mail_meta: meta,
@@ -161,6 +171,7 @@ defmodule LivWeb.MailLive do
       :noreply,
       socket
       |> assign(title: "LivSearch",
+      page_title: "Search",
       info: "",
       mail_client: nil,
       buttons: [])
@@ -178,6 +189,7 @@ defmodule LivWeb.MailLive do
       :noreply,
       socket
       |> assign(title: "LivConfig",
+      page_title: "Config",
       info: "",
       my_addr: Configer.default(:my_address),
       my_addrs: Configer.default(:my_addresses),
@@ -203,6 +215,7 @@ defmodule LivWeb.MailLive do
       :noreply,
       socket
       |> assign(title: "LivWrite",
+      page_title: "Write",
       info: "",
       recipients: MailClient.default_recipients(mc, to),
       subject: MailClient.reply_subject(mc),
