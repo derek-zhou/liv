@@ -71,12 +71,7 @@ defmodule LivWeb.MailLive do
   def handle_params(_params, url,
     %Socket{assigns: %{auth: nil}} = socket) do
     %URI{path: path} = URI.parse(url)
-    {
-      :noreply,
-      socket
-      |> assign(saved_path: path, page_title: "",
-      password_hash: Application.get_env(:liv, :password_hash))
-    }
+    {:noreply,assign(socket, saved_path: path, page_title: "")}
   end
 
   def handle_params(_params, _url,
@@ -425,17 +420,19 @@ defmodule LivWeb.MailLive do
     }
   end
 
-  # no password hash 
-  defp patch_action(%Socket{assigns: %{auth: :logged_out,
-				       password_hash: nil}} = socket) do
-    # temporarily log user in to set the password
-    socket
-    |> assign(auth: :logged_in)
-    |> push_patch(to: Routes.mail_path(socket, :set_password))
-  end
-
+  # not logged in
   defp patch_action(%Socket{assigns: %{auth: :logged_out}} = socket) do
-    push_patch(socket, to: Routes.mail_path(socket, :login))
+    case Application.get_env(:liv, :password_hash) do
+      nil ->
+	# temporarily log user in to set the password
+	socket
+	|> assign(auth: :logged_in)
+	|> push_patch(to: Routes.mail_path(socket, :set_password))
+      hash ->
+	socket
+	|> assign(password_hash: hash)
+	|> push_patch(to: Routes.mail_path(socket, :login))
+    end
   end
 
   # no saved url
