@@ -264,9 +264,11 @@ defmodule Liv.MailClient do
        to: to,
        cc: cc } = Map.fetch!(mails, docid)
 
-    [ from | (to ++ cc) ]
-    |> Enum.map(fn [n | a] -> {a, n} end)
-    |> Enum.into(%{})
+    map = %{tl(from) => hd(from)}
+    map = Enum.reduce(to, map, fn [n | a], m -> Map.put_new(m, a, n) end)
+    map = Enum.reduce(cc, map, fn [n | a], m -> Map.put_new(m, a, n) end)
+
+    map
   end
 
   defp addresses_map(_), do: %{}
