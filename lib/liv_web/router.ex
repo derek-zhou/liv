@@ -1,6 +1,6 @@
 defmodule LivWeb.Router do
   use LivWeb, :router
-  
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -25,7 +25,6 @@ defmodule LivWeb.Router do
     live "/search", MailLive, :search
     live "/config", MailLive, :config
     live "/write/:to", MailLive, :write
- 
   end
 
   # Other scopes may use custom stacks.

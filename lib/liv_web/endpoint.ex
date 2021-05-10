@@ -50,7 +50,7 @@ defmodule LivWeb.Endpoint do
   plug Plug.Head
   plug Plug.Session, @session_options
 
-  if Mix.env == :prod do
+  if Mix.env() == :prod do
     plug Plug.SSL,
       rewrite_on: [:x_forwarded_proto, :x_forwarded_host, :x_forwarded_port]
   end

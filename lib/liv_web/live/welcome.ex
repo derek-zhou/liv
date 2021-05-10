@@ -5,5 +5,4 @@ defmodule LivWeb.Welcome do
   prop logout, :event
 
   slot default
-
 end

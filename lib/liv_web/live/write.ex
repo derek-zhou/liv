@@ -19,10 +19,9 @@ defmodule LivWeb.Write do
       Earmark.as_html!(text)
     rescue
       RuntimeError ->
-	"""
-	<div class="alert alert-danger">Ilegal markdown</div>
-	"""
+        """
+        <div class="alert alert-danger">Ilegal markdown</div>
+        """
     end
   end
-
 end

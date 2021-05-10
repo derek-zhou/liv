@@ -13,12 +13,11 @@ defmodule LivWeb.Guardian do
       _ -> raise("cannot encode token")
     end
   end
-  
+
   def decode_token(token) do
     case resource_from_token(token) do
       {:ok, user, _claims} -> user
       _ -> nil
     end
   end
-  
 end

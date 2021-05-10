@@ -10,5 +10,4 @@ defmodule LivWeb.Config do
   prop my_addr, :list, required: true
   prop my_addrs, :list, required: true
   prop my_lists, :list, required: true
-
 end

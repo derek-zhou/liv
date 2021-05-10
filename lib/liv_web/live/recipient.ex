@@ -8,7 +8,6 @@ defmodule LivWeb.Recipient do
   prop addr, :string, default: ""
   prop options, :list, default: []
 
-  defp addr_string([ nil | addr]), do: addr
-  defp addr_string([ name | addr]), do: "#{name} <#{addr}>"
-
+  defp addr_string([nil | addr]), do: addr
+  defp addr_string([name | addr]), do: "#{name} <#{addr}>"
 end

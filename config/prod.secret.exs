@@ -26,8 +26,7 @@ config :liv, LivWeb.Endpoint,
   secret_key_base: secret_key_base
 
 # for guardian
-config :liv, LivWeb.Guardian,
-  secret_key: guardian_key
+config :liv, LivWeb.Guardian, secret_key: guardian_key
 
 # ## Using releases (Elixir v1.9+)
 #

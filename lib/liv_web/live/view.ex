@@ -2,7 +2,7 @@ defmodule LivWeb.View do
   use Surface.Component
   alias LivWeb.Router.Helpers, as: Routes
   alias Surface.Components.LivePatch
-  
+
   prop meta, :map, required: true
   prop content, :string, required: true
   prop tz_offset, :integer, default: 0
@@ -22,5 +22,4 @@ defmodule LivWeb.View do
     |> Enum.map(&to_string/1)
     |> Enum.join(", ")
   end
-
 end

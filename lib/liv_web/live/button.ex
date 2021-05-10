@@ -6,5 +6,4 @@ defmodule LivWeb.Button do
   prop type, :atom, required: true
   prop path_or_msg, :string, required: true
   prop disabled, :boolean, default: false
-
 end

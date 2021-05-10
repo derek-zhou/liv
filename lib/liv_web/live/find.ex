@@ -6,5 +6,4 @@ defmodule LivWeb.Find do
   prop mail_client, :map, required: true
   prop root, :integer
   prop tz_offset, :integer, default: 0
-
 end
