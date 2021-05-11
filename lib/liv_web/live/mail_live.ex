@@ -37,6 +37,7 @@ defmodule LivWeb.MailLive do
 
   # to refer back in later 
   data last_query, :string, default: ""
+  data default_query, :string, default: ""
 
   # for write
   data recipients, :list, default: []
@@ -190,9 +191,9 @@ defmodule LivWeb.MailLive do
         %Socket{assigns: %{live_action: :search, last_query: query, mail_client: mc}} = socket
       ) do
     default_query =
-      case mc.docid do
-        0 -> query
-        docid -> "msgid:#{mc.mails[docid].msgid}"
+      cond do
+        mc && mc.docid > 0 -> "msgid:#{mc.mails[mc.docid].msgid}"
+        true -> query
       end
 
     {
@@ -200,11 +201,12 @@ defmodule LivWeb.MailLive do
       socket
       |> assign(
         title: "LivSearch",
-        last_query: default_query,
+        default_query: default_query,
         page_title: "Search",
         info: "",
-        mail_client: nil,
-        buttons: []
+        buttons: [
+          {:button, "\u{2716}", "close_dialog", false}
+        ]
       )
     }
   end
@@ -212,14 +214,8 @@ defmodule LivWeb.MailLive do
   def handle_params(
         _params,
         _url,
-        %Socket{assigns: %{live_action: :config, last_query: query}} = socket
+        %Socket{assigns: %{live_action: :config}} = socket
       ) do
-    close_action =
-      cond do
-        query != "" -> Routes.mail_path(socket, :find, URI.encode(query))
-        true -> default_action(socket)
-      end
-
     {
       :noreply,
       socket
@@ -232,7 +228,7 @@ defmodule LivWeb.MailLive do
         my_lists: Configer.default(:my_email_lists),
         buttons: [
           {:button, "\u{1F4BE}", "config_save", false},
-          {:patch, "\u{2716}", close_action, false}
+          {:button, "\u{2716}", "close_dialog", false}
         ]
       )
     }
@@ -241,15 +237,8 @@ defmodule LivWeb.MailLive do
   def handle_params(
         %{"to" => to},
         _url,
-        %Socket{assigns: %{live_action: :write, last_query: query, mail_client: mc}} = socket
+        %Socket{assigns: %{live_action: :write, mail_client: mc}} = socket
       ) do
-    close_action =
-      cond do
-        mc && mc.docid > 0 -> Routes.mail_path(socket, :view, mc.docid)
-        query != "" -> Routes.mail_path(socket, :find, URI.encode(query))
-        true -> default_action(socket)
-      end
-
     {
       :noreply,
       socket
@@ -262,7 +251,7 @@ defmodule LivWeb.MailLive do
         mail_text: MailClient.quoted_text(mc),
         buttons: [
           {:button, "\u{1F4EC}", "send", false},
-          {:patch, "\u{2716}", close_action, false}
+          {:button, "\u{2716}", "close_dialog", false}
         ]
       )
     }
@@ -366,7 +355,9 @@ defmodule LivWeb.MailLive do
   def handle_event("search", %{"search" => %{"query" => query}}, socket) do
     {
       :noreply,
-      push_patch(socket, to: Routes.mail_path(socket, :find, URI.encode(query)))
+      socket
+      |> assign(mail_client: nil)
+      |> push_patch(to: Routes.mail_path(socket, :find, URI.encode(query)))
     }
   end
 
@@ -411,7 +402,6 @@ defmodule LivWeb.MailLive do
           assigns: %{
             subject: subject,
             recipients: recipients,
-            last_query: query,
             mail_text: text,
             mail_client: mc
           }
@@ -425,19 +415,12 @@ defmodule LivWeb.MailLive do
         {:noreply, put_flash(socket, :error, "Mail not sent: #{msg}")}
 
       {:ok, _} ->
-        close_action =
-          cond do
-            mc && mc.docid > 0 -> Routes.mail_path(socket, :view, mc.docid)
-            query != "" -> Routes.mail_path(socket, :find, URI.encode(query))
-            true -> default_action(socket)
-          end
-
         {
           :noreply,
           socket
           |> put_flash(:info, "Mail sent.")
           |> assign(recipients: [], mail_text: "", subject: "")
-          |> push_patch(to: close_action)
+          |> push_patch(to: close_action(socket))
         }
     end
   end
@@ -486,15 +469,9 @@ defmodule LivWeb.MailLive do
         "config_save",
         _params,
         %Socket{
-          assigns: %{last_query: query, my_addr: my_addr, my_addrs: my_addrs, my_lists: my_lists}
+          assigns: %{my_addr: my_addr, my_addrs: my_addrs, my_lists: my_lists}
         } = socket
       ) do
-    close_action =
-      cond do
-        query != "" -> Routes.mail_path(socket, :find, URI.encode(query))
-        true -> default_action(socket)
-      end
-
     Configer
     |> SelfConfiger.set_env(:my_address, my_addr)
     |> SelfConfiger.set_env(:my_addresses, my_addrs)
@@ -507,8 +484,12 @@ defmodule LivWeb.MailLive do
       :noreply,
       socket
       |> put_flash(:info, "Config saved")
-      |> push_patch(to: close_action)
+      |> push_patch(to: close_action(socket))
     }
+  end
+
+  def handle_event("close_dialog", _params, socket) do
+    {:noreply, push_patch(socket, to: close_action(socket))}
   end
 
   # not logged in
@@ -540,6 +521,14 @@ defmodule LivWeb.MailLive do
 
   defp default_action(socket) do
     Routes.mail_path(socket, :find, URI.encode("maildir:/"))
+  end
+
+  defp close_action(%Socket{assigns: %{mail_client: mc, last_query: query}} = socket) do
+    cond do
+      mc && mc.docid > 0 -> Routes.mail_path(socket, :view, mc.docid)
+      query != "" -> Routes.mail_path(socket, :find, URI.encode(query))
+      true -> default_action(socket)
+    end
   end
 
   defp fetch_token(socket, %{"token" => token}) do

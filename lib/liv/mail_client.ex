@@ -297,6 +297,7 @@ defmodule Liv.MailClient do
   defp addresses_map(_), do: %{}
 
   # to is whatever I can find from the map
+  defp default_to(_, "#"), do: [nil | ""]
   defp default_to(addr_map, to_addr), do: [Map.get(addr_map, to_addr) | to_addr]
 
   # cc is addr_map sans to and sans my addresses

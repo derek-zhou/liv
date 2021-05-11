@@ -4,7 +4,7 @@
     <Find :if={{ @auth == :logged_in && @live_action == :find }}
 	  :props={{ mail_client: @mail_client, tz_offset: @tz_offset }} />
     <Search :if={{ @auth == :logged_in && @live_action == :search }}
-	    :props={{ default_query: @last_query,
+	    :props={{ default_query: @default_query,
 		submit: "search", pick_example: "pick_search_example" }} />
     <View :if={{ @auth == :logged_in && @live_action == :view }}
 	  :props={{ meta: @mail_meta, content: @mail_html,
