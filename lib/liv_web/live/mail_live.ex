@@ -2,6 +2,8 @@ defmodule LivWeb.MailLive do
   use Surface.LiveView
   require Logger
 
+  @default_query "maildir:/"
+
   alias LivWeb.{Main, Find, Search, View, Login, Guardian, Write, Config}
   alias Phoenix.LiveView.Socket
   alias LivWeb.Router.Helpers, as: Routes
@@ -135,7 +137,7 @@ defmodule LivWeb.MailLive do
   def handle_params(
         %{"docid" => docid},
         _url,
-        %Socket{assigns: %{live_action: :view, last_query: query, mail_client: mc}} = socket
+        %Socket{assigns: %{live_action: :view, mail_client: mc}} = socket
       ) do
     case Integer.parse(docid) do
       {docid, ""} ->
@@ -159,22 +161,9 @@ defmodule LivWeb.MailLive do
                 buttons: [
                   {:patch, "\u{1f50d}", Routes.mail_path(socket, :search), false},
                   {:patch, "\u{2712}", Routes.mail_path(socket, :write, tl(meta.from)), false},
-                  case query do
-                    "" ->
-                      {:patch, "\u{1f5c2}", "#", true}
-
-                    _ ->
-                      {:patch, "\u{1f5c2}", Routes.mail_path(socket, :find, URI.encode(query)),
-                       false}
-                  end,
-                  case MailClient.previous(mc, docid) do
-                    nil -> {:patch, "\u25c0", "#", true}
-                    prev -> {:patch, "\u25c0", Routes.mail_path(socket, :view, prev), false}
-                  end,
-                  case MailClient.next(mc, docid) do
-                    nil -> {:patch, "\u25b6", "#", true}
-                    next -> {:patch, "\u25b6", Routes.mail_path(socket, :view, next), false}
-                  end
+                  {:button, "\u{1f5c2}", "back_to_list", false},
+                  {:button, "\u{25c0}", "backward_message", false},
+                  {:button, "\u{25b6}", "forward_message", false}
                 ]
               )
             }
@@ -362,7 +351,7 @@ defmodule LivWeb.MailLive do
   end
 
   def handle_event("pick_search_example", %{"query" => query}, socket) do
-    {:noreply, assign(socket, last_query: query)}
+    {:noreply, assign(socket, default_query: query)}
   end
 
   def handle_event(
@@ -492,6 +481,56 @@ defmodule LivWeb.MailLive do
     {:noreply, push_patch(socket, to: close_action(socket))}
   end
 
+  def handle_event(
+        "back_to_list",
+        _params,
+        %Socket{assigns: %{last_query: "", mail_client: mc}} = socket
+      ) do
+    {:noreply,
+     push_patch(socket,
+       to: Routes.mail_path(socket, :find, URI.encode("msgid:#{mc.mails[mc.docid].msgid}"))
+     )}
+  end
+
+  def handle_event(
+        "back_to_list",
+        _params,
+        %Socket{assigns: %{last_query: query}} = socket
+      ) do
+    {:noreply,
+     push_patch(socket,
+       to: Routes.mail_path(socket, :find, URI.encode(query))
+     )}
+  end
+
+  def handle_event(
+        "backward_message",
+        _params,
+        %Socket{assigns: %{mail_client: mc}} = socket
+      ) do
+    case MailClient.previous(mc, mc.docid) do
+      nil ->
+        {:noreply, put_flash(socket, :warning, "Already at the beginning")}
+
+      prev ->
+        {:noreply, push_patch(socket, to: Routes.mail_path(socket, :view, prev))}
+    end
+  end
+
+  def handle_event(
+        "forward_message",
+        _params,
+        %Socket{assigns: %{mail_client: mc}} = socket
+      ) do
+    case MailClient.next(mc, mc.docid) do
+      nil ->
+        {:noreply, put_flash(socket, :warning, "Already at the end")}
+
+      next ->
+        {:noreply, push_patch(socket, to: Routes.mail_path(socket, :view, next))}
+    end
+  end
+
   # not logged in
   defp patch_action(%Socket{assigns: %{auth: :logged_out}} = socket) do
     case Application.get_env(:liv, :password_hash) do
@@ -520,7 +559,7 @@ defmodule LivWeb.MailLive do
   end
 
   defp default_action(socket) do
-    Routes.mail_path(socket, :find, URI.encode("maildir:/"))
+    Routes.mail_path(socket, :find, URI.encode(@default_query))
   end
 
   defp close_action(%Socket{assigns: %{mail_client: mc, last_query: query}} = socket) do
