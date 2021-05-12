@@ -2,6 +2,39 @@ import "./phoenix_html.js"
 import {Socket} from "./phoenix.js"
 import {LiveSocket} from "./phoenix_live_view.js"
 
+let xDown = null;
+let yDown = null;
+let messageHook = null;
+
+function browseTouchStart(evt) {
+    xDown = evt.touches[0].clientX;
+    yDown = evt.touches[0].clientY;
+}
+
+function browseTouchMove(evt) {
+    if ( ! xDown || ! yDown ) {
+        return;
+    }
+    var xUp = evt.touches[0].clientX;
+    var yUp = evt.touches[0].clientY;
+    var xDiff = xDown - xUp;
+    var yDiff = yDown - yUp;
+
+    /*most significant*/
+    if ( Math.abs( xDiff ) > Math.abs( yDiff ) ) {
+	if ( xDiff > 0 ) {
+	    /* left swipe */
+	    messageHook.pushEvent("backward_message", null);
+	} else {
+	    /* right swipe */
+	    messageHook.pushEvent("forward_message", null);
+	}
+    }
+    /* reset values */
+    xDown = null;
+    yDown = null;
+}
+
 function show_progress_bar() {
     var bar = document.querySelector("div#app-progress-bar");
     bar.style.width = "100%";
@@ -28,6 +61,7 @@ function local_state() {
 }
 
 let Hooks = new Object();
+
 Hooks.Main = {
     mounted() {
 	this.pushEvent("get_value", local_state());
@@ -48,6 +82,15 @@ Hooks.Main = {
 	this.pushEvent("get_value", local_state());
     }
 };
+
+Hooks.View = {
+    mounted() {
+	messageHook = this;
+	this.el.addEventListener("touchstart", browseTouchStart);
+	this.el.addEventListener("touchmove", browseTouchMove);
+    }
+};
+
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 
 let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: Hooks})
