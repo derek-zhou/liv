@@ -83,15 +83,6 @@ defmodule Liv.MailClient do
   end
 
   @doc """
-  close the current mail
-  """
-  def close(%__MODULE__{docid: docid} = mc) when docid > 0 do
-    %{mc | docid: 0, contents: {}}
-  end
-
-  def close(mc), do: mc
-
-  @doc """
   getter of a specific mail metadata
   """
   def mail_meta(%__MODULE__{mails: mails}, docid), do: Map.get(mails, docid)
@@ -187,6 +178,8 @@ defmodule Liv.MailClient do
   @doc """
   getter of all children of docid. pass nil get the root list
   """
+  def children_of(nil, _), do: []
+
   def children_of(%__MODULE__{tree: tree}, docid) do
     MCTree.children(docid || :undefined, tree)
   end

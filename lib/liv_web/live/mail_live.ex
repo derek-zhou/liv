@@ -34,6 +34,7 @@ defmodule LivWeb.MailLive do
   data buttons, :list, default: []
 
   # for the viewer
+  data mail_opened, :boolean, default: false
   data mail_meta, :map, default: nil
   data mail_html, :string, default: ""
 
@@ -111,7 +112,7 @@ defmodule LivWeb.MailLive do
 
     mc =
       cond do
-        mc && query == last_query -> MailClient.close(mc)
+        mc && query == last_query -> mc
         true -> MailClient.new_search(query)
       end
 
@@ -124,6 +125,7 @@ defmodule LivWeb.MailLive do
         page_title: query,
         mail_client: mc,
         last_query: query,
+        mail_opened: false,
         buttons: [
           {:patch, "\u{1f527}", Routes.mail_path(socket, :config), false},
           {:patch, "\u{1f50d}", Routes.mail_path(socket, :search), false},
@@ -155,6 +157,7 @@ defmodule LivWeb.MailLive do
                 title: "LivMail",
                 info: info_mc(mc),
                 page_title: meta.subject,
+                mail_opened: true,
                 mail_client: mc,
                 mail_meta: meta,
                 mail_html: MailClient.html_content(mc),
@@ -177,12 +180,19 @@ defmodule LivWeb.MailLive do
   def handle_params(
         _params,
         _url,
-        %Socket{assigns: %{live_action: :search, last_query: query, mail_client: mc}} = socket
+        %Socket{
+          assigns: %{
+            live_action: :search,
+            last_query: query,
+            mail_opened: opened,
+            mail_client: mc
+          }
+        } = socket
       ) do
     default_query =
-      cond do
-        mc && mc.docid > 0 -> "msgid:#{mc.mails[mc.docid].msgid}"
-        true -> query
+      case opened do
+        true -> "msgid:#{mc.mails[mc.docid].msgid}"
+        false -> query
       end
 
     {
@@ -562,9 +572,11 @@ defmodule LivWeb.MailLive do
     Routes.mail_path(socket, :find, URI.encode(@default_query))
   end
 
-  defp close_action(%Socket{assigns: %{mail_client: mc, last_query: query}} = socket) do
+  defp close_action(
+         %Socket{assigns: %{mail_client: mc, mail_opened: opened, last_query: query}} = socket
+       ) do
     cond do
-      mc && mc.docid > 0 -> Routes.mail_path(socket, :view, mc.docid)
+      opened -> Routes.mail_path(socket, :view, mc.docid)
       query != "" -> Routes.mail_path(socket, :find, URI.encode(query))
       true -> default_action(socket)
     end

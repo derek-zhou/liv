@@ -1,4 +1,4 @@
-<div class="box" id="message-view" phx-hook="View">
+<div class="box" id="message-view" phx-hook="View" :if={{ @meta != nil }}>
     <div class="line">
 	From:
 	<LivePatch to={{ Routes.mail_path(@socket, :write, tl(@meta.from)) }}
