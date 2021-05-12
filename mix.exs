@@ -33,14 +33,14 @@ defmodule Liv.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:self_configer, path: "../self_configer", override: true},
-      {:maildir_commander, path: "../maildir_commander"},
+      {:self_configer, "~> 0.1.1"},
+      {:maildir_commander, "~> 0.1.1"},
       {:swoosh, "~> 1.3"},
       {:hackney, "~> 1.9"},
       {:argon2_elixir, "~> 2.4"},
       {:earmark, "~> 1.4"},
       {:guardian, "~> 2.1"},
-      {:surface, path: "../surface"},
+      {:surface, "~> 0.4.0"},
       {:phoenix, "~> 1.5.8"},
       {:phoenix_live_view, "~> 0.15.1"},
       {:floki, ">= 0.27.0", only: :test},
