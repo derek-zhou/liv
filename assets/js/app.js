@@ -24,10 +24,10 @@ function browseTouchMove(evt) {
     if ( Math.abs( xDiff ) > Math.abs( yDiff ) ) {
 	if ( xDiff > 0 ) {
 	    /* left swipe */
-	    messageHook.pushEvent("backward_message", null);
+	    messageHook.pushEvent("forward_message", null);
 	} else {
 	    /* right swipe */
-	    messageHook.pushEvent("forward_message", null);
+	    messageHook.pushEvent("backward_message", null);
 	}
     }
     /* reset values */
