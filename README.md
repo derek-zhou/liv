@@ -31,6 +31,13 @@ You don't have to have a IMAP server but it may be useful. Once you have a worki
 
 LIV is written in [Elixir](https://elixir-lang.org) so you need to install the tool chains for Erlang and Elixir. You will also need the basic tool chain for node.js to build the js and css. The Phoenix's [installation guide](https://hexdocs.pm/phoenix/installation.html) contains everything you need. LIV does not use a database, so the part of PostgreSQL is irrelevant. 
 
+LIV also need a couple of commandline tools to function. They are:
+
+* inotify-tools, to watch the new mail dir
+* socat, for local machine automation
+
+They can be installed in most Linux distributions.
+
 LIV uses the [mu email search engine](https://github.com/djcb/mu) so you will also need to install that. Please install the 1.4.x branch. Once installed please verify that mu is indeed working by building the index `mu init && mu index`
 
 If you use a IMAP server, you need to disable the automatic moving from `new/` to `cur/` directory by the IMAP server. This is because LIV need to be notified by email arrival and update the index. LIV will do the moving itself. If you are using `exim` and `dovecot` like me, you will need to make sure the exim's config has:
@@ -40,6 +47,12 @@ LOCAL_DELIVERY = maildir_home
 instead of:
 ```
 LOCAL_DELIVERY = dovecot_delivery
+```
+
+Also please turn off the auto movement of new mails in your IMAP server. In dovecot, it is controlled in `/etc/dovecot/conf.d/10-mail.conf` with a line as:
+
+```
+maildir_empty_new = no
 ```
 
 Now you are ready to install LIV itself. LIV is a standard [Phoenix LiveView](https://www.phoenixframework.org/) web application, so just clone it from here and do:
@@ -75,7 +88,7 @@ The first time you run LIV it will ask you to setup a password. This password is
 
 The query syntax is from `mu`, so you should familiar yourself with `man mu-query`
 
-If you want to run `mu4e` at the same time with LIV, you must configure `mu4e` to use the alternative `mu` binary. A simple wrapper script is provided [here (mc)](https://github.com/derek-zhou/maildir_commander/blob/main/scripts/mc). The script `mc` has one dependency `socat` which should be available in every Linux distribution. Please note `mc` is an incomplete wrapper of `mu`; it only does enough to mimic `mu server`, which is needed by `mu4e`. `mc` is also used for other purposes such as archiving. 
+If you want to run `mu4e` at the same time with LIV, you must configure `mu4e` to use the alternative `mu` binary. A simple wrapper script is provided [here (mc)](https://github.com/derek-zhou/maildir_commander/blob/main/scripts/mc). Please note `mc` is an incomplete wrapper of `mu`; it only does enough to mimic `mu server`, to satisfy `mu4e`. `mc` is also used for other purposes such as archiving. 
 
 ## Using LIV
 
