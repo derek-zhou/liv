@@ -179,10 +179,19 @@ defmodule Liv.MailClient do
   getter of all children of docid. pass nil get the root list
   """
   def children_of(nil, _), do: []
+  def children_of(tree, docid), do: MCTree.children(docid || :undefined, tree)
 
-  def children_of(%__MODULE__{tree: tree}, docid) do
-    MCTree.children(docid || :undefined, tree)
-  end
+  @doc """
+  getter of the tree
+  """
+  def tree_of(nil), do: nil
+  def tree_of(%__MODULE__{tree: tree}), do: tree
+
+  @doc """
+  getter of mails
+  """
+  def mails_of(nil), do: %{}
+  def mails_of(%__MODULE__{mails: mails}), do: mails
 
   @doc """
   getter of default to, cc and bcc for this email

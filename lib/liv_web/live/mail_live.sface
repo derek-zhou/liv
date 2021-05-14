@@ -13,7 +13,8 @@
 		my_addr: @my_addr, my_addrs: @my_addrs, my_lists: @my_lists }} />
     <div id="find_wrapper" :show={{ @live_action == :find }}>
 	<Find :if={{ @auth == :logged_in }}
-	      :props={{mail_client: @mail_client, tz_offset: @tz_offset }} />
+	      :props={{mails: @list_mails, tree: @list_tree,
+		  tz_offset: @tz_offset }} />
     </div>
     <div id="view_wrapper" :show={{ @live_action == :view }}>
 	<View :if={{ @auth == :logged_in }}

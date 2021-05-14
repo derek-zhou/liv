@@ -33,6 +33,10 @@ defmodule LivWeb.MailLive do
   data info, :string, default: "Loading..."
   data buttons, :list, default: []
 
+  # for finder
+  data list_mails, :map, default: %{}
+  data list_tree, :tuple, default: nil
+
   # for the viewer
   data mail_opened, :boolean, default: false
   data mail_meta, :map, default: nil
@@ -123,6 +127,8 @@ defmodule LivWeb.MailLive do
         title: "LivBox",
         info: info_mc(mc),
         page_title: query,
+        list_mails: MailClient.mails_of(mc),
+        list_tree: MailClient.tree_of(mc),
         mail_client: mc,
         last_query: query,
         mail_opened: false,
