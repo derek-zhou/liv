@@ -156,6 +156,16 @@ defmodule Liv.MailClient do
   end
 
   @doc """
+  predicate of first
+  """
+  def is_first(%__MODULE__{tree: tree}, docid), do: docid == MCTree.first(tree)
+
+  @doc """
+  predicate of last
+  """
+  def is_last(%__MODULE__{tree: tree}, docid), do: docid == MCTree.last(tree)
+
+  @doc """
   getter of the next docid
   """
   def next(%__MODULE__{tree: tree}, docid) do
