@@ -19,6 +19,7 @@
     <div id="view_wrapper" :show={{ @live_action == :view }}>
 	<View :if={{ @auth == :logged_in }}
 	      :props={{ meta: @mail_meta, content: @mail_html,
+		  attachments: @mail_attachment_metas,
 		  tz_offset: @tz_offset }} />
     </div>
 </Main>

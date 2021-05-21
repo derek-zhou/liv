@@ -1,10 +1,13 @@
 import "./phoenix_html.js"
 import {Socket} from "./phoenix.js"
 import {LiveSocket} from "./phoenix_live_view.js"
+import {toByteArray} from "base64-js"
 
 let xDown = null;
 let yDown = null;
 let messageHook = null;
+let attachments = [];
+let blobURLs = [];
 
 function browseTouchStart(evt) {
     xDown = evt.touches[0].clientX;
@@ -60,6 +63,20 @@ function local_state() {
     return ret;
 }
 
+function push_attachment_chunk(first, chunk) {
+    let binary = toByteArray(chunk);
+    if (first) {
+	attachments = [...attachments, [binary]];
+    } else {
+	let last = attachments.pop();
+	attachments = [...attachments, [...last, binary]];
+    }
+}
+
+function last_attachment_url() {
+    return URL.createObjectURL(new Blob(attachments[attachments.length - 1]));
+}
+
 let Hooks = new Object();
 
 Hooks.Main = {
@@ -88,6 +105,23 @@ Hooks.View = {
 	messageHook = this;
 	this.el.addEventListener("touchstart", browseTouchStart);
 	this.el.addEventListener("touchmove", browseTouchMove);
+	this.handleEvent("chear_attachments", () => {
+	    for (let url of blobURLs.values()) {
+		URL.revokeObjectURL(url);
+	    }
+	    blobURLs = [];
+	    attachments = [];
+	});
+	this.handleEvent("attachment_chunk", ({first, last, chunk}) => {
+	    push_attachment_chunk(first, chunk);
+	    if (last) {
+		let url = last_attachment_url();
+		blobURLs.push(url);
+		this.pushEvent("ack_attachment_chunk", {url: url});
+	    } else {
+		this.pushEvent("ack_attachment_chunk", {});
+	    }
+	});
     }
 };
 

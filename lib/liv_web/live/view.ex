@@ -2,9 +2,11 @@ defmodule LivWeb.View do
   use Surface.Component
   alias LivWeb.Router.Helpers, as: Routes
   alias Surface.Components.LivePatch
+  alias LivWeb.Attachment
 
   prop meta, :map, required: true
   prop content, :string, required: true
+  prop attachments, :list, default: []
   prop tz_offset, :integer, default: 0
 
   defp email_name([nil | addr]), do: addr

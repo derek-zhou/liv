@@ -3,6 +3,7 @@
 
 /** @type {import("snowpack").SnowpackUserConfig } */
 module.exports = {
+    exclude: ['**/node_modules/**/*', '**/\#*'],
     mount: {
 	"static": {url: "/", static: true, resolve: false},
 	"css": "/css",

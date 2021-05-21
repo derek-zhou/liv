@@ -10,6 +10,7 @@ defmodule Liv.MailClient do
 
   alias :maildir_commander, as: MaildirCommander
   alias :mc_tree, as: MCTree
+  alias :mc_mender, as: MCMender
 
   defstruct [
     :tree,
@@ -22,7 +23,14 @@ defmodule Liv.MailClient do
   run a query. query can be a query string or a docid integer
   """
   def new_search(query) do
-    case MaildirCommander.find(query, true, :":date", true, String.match?(query, ~r/^msgid:/)) do
+    case MaildirCommander.find(
+           query,
+           true,
+           :":date",
+           true,
+           true,
+           String.match?(query, ~r/^msgid:/)
+         ) do
       {:error, msg} ->
         raise(msg)
 
@@ -294,6 +302,32 @@ defmodule Liv.MailClient do
   """
   def find_address(mc, to_addr) do
     [Map.get(addresses_map(mc), to_addr) | to_addr]
+  end
+
+  @doc """
+  load attchments from path, into a list of {name, type, content} tupple
+  """
+  def load_attachments(path) do
+    Logger.notice("Looking at path: #{path}")
+
+    case MCMender.fetch_mime(path) do
+      {:error, _msg} ->
+        Logger.warn("#{path} fail to load")
+        []
+
+      mime ->
+        mime
+        |> MCMender.all_leaf_mime()
+        |> Enum.filter(&MCMender.is_attachment(&1))
+        |> Enum.map(&MCMender.attachment_info(&1))
+        |> Enum.map(fn
+          {:undefined, type, sub_type, body} ->
+            {"undefined", "#{type}/#{sub_type}", body}
+
+          {name, type, sub_type, body} ->
+            {name, "#{type}/#{sub_type}", body}
+        end)
+    end
   end
 
   defp addresses_map(%__MODULE__{docid: docid, mails: mails}) when docid > 0 do

@@ -308,6 +308,18 @@
 			@apply border-gray-600;
                     }
 		}
+		ul.attachments {
+		    @apply border rounded mb-0 py-1;
+		    li {
+			@apply text-sm inline;
+			.progress-box {
+			    @apply border h-2 w-16 inline-block;
+			    .progress {
+				@apply bg-indigo-700 h-full;
+			    }
+			}
+		    }
+		}
 	    }
 	}
 	.footer {

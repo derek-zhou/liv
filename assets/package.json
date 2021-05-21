@@ -1,22 +1,22 @@
 {
-			"scripts": {
-						"deploy": "snowpack build",
-						"watch": "snowpack build --watch"
-			},
-			"dependencies": {
-						"autoprefixer": "^10.2.4",
-						"morphdom": "^2.6.1",
-						"phoenix": "file:../deps/phoenix",
-						"phoenix_html": "file:../deps/phoenix_html",
-						"phoenix_live_view": "file:../deps/phoenix_live_view",
-						"postcss": "^8.2.6",
-						"postcss-cli": "^8.3.1",
-						"postcss-nested": "^5.0.3",
-						"tailwindcss": "^2.0.3",
-						"topbar": "^0.1.4"
-			},
-			"devDependencies": {
-						"@snowpack/plugin-postcss": "^1.1.0",
-						"snowpack": "^3.0.1"
-			}
+    "scripts": {
+	"deploy": "snowpack build",
+	"watch": "snowpack build --watch"
+    },
+    "dependencies": {
+	"autoprefixer": "^10.2.4",
+	"base64-js": "^1.5.1",
+	"morphdom": "^2.6.1",
+	"phoenix": "file:../deps/phoenix",
+	"phoenix_html": "file:../deps/phoenix_html",
+	"phoenix_live_view": "file:../deps/phoenix_live_view",
+	"postcss": "^8.2.6",
+	"postcss-cli": "^8.3.1",
+	"postcss-nested": "^5.0.3",
+	"tailwindcss": "^2.0.3"
+    },
+    "devDependencies": {
+	"@snowpack/plugin-postcss": "^1.1.0",
+	"snowpack": "^3.0.1"
+    }
 }

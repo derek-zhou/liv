@@ -3,6 +3,7 @@ defmodule LivWeb.MailLive do
   require Logger
 
   @default_query "maildir:/"
+  @chunk_size 65536
 
   alias LivWeb.{Main, Find, Search, View, Login, Guardian, Write, Config}
   alias Phoenix.LiveView.Socket
@@ -38,7 +39,11 @@ defmodule LivWeb.MailLive do
   data list_tree, :tuple, default: nil
 
   # for the viewer
+  data mail_view_timer, :any, default: nil
   data mail_opened, :boolean, default: false
+  data mail_attachments, :list, default: []
+  data mail_attachment_offset, :integer, default: 0
+  data mail_attachment_metas, :list, default: []
   data mail_meta, :map, default: nil
   data mail_html, :string, default: ""
 
@@ -123,6 +128,7 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
+      |> close_mail()
       |> assign(
         title: "LivBox",
         info: info_mc(mc),
@@ -131,7 +137,6 @@ defmodule LivWeb.MailLive do
         list_tree: MailClient.tree_of(mc),
         mail_client: mc,
         last_query: query,
-        mail_opened: false,
         buttons: [
           {:patch, "\u{1f527}", Routes.mail_path(socket, :config), false},
           {:patch, "\u{1f50d}", Routes.mail_path(socket, :search), false},
@@ -159,14 +164,12 @@ defmodule LivWeb.MailLive do
             {
               :noreply,
               socket
+              |> open_mail(meta, MailClient.html_content(mc))
               |> assign(
                 title: "LivMail",
                 info: info_mc(mc),
                 page_title: meta.subject,
-                mail_opened: true,
                 mail_client: mc,
-                mail_meta: meta,
-                mail_html: MailClient.html_content(mc),
                 buttons: [
                   {:patch, "\u{1f50d}", Routes.mail_path(socket, :search), false},
                   {:patch, "\u{2712}", Routes.mail_path(socket, :write, tl(meta.from)), false},
@@ -547,6 +550,34 @@ defmodule LivWeb.MailLive do
     end
   end
 
+  def handle_event("ack_attachment_chunk", %{"url" => url}, socket) do
+    {
+      :noreply,
+      socket
+      |> append_attachment_url(url)
+      |> stream_attachments()
+    }
+  end
+
+  def handle_event("ack_attachment_chunk", _params, socket) do
+    {:noreply, stream_attachments(socket)}
+  end
+
+  def handle_info(
+        :load_attachments,
+        %Socket{assigns: %{mail_meta: meta}} = socket
+      ) do
+    {
+      :noreply,
+      socket
+      |> assign(
+        mail_attachments: MailClient.load_attachments(meta.path),
+        mail_attachment_offset: 0
+      )
+      |> stream_attachments()
+    }
+  end
+
   # not logged in
   defp patch_action(%Socket{assigns: %{auth: :logged_out}} = socket) do
     case Application.get_env(:liv, :password_hash) do
@@ -618,5 +649,89 @@ defmodule LivWeb.MailLive do
 
   defp info_mc(mc) do
     "#{MailClient.unread_count(mc)}/#{MailClient.mail_count(mc)}"
+  end
+
+  defp close_mail(socket) do
+    if socket.assigns.mail_view_timer do
+      Process.cancel_timer(socket.assigns.mail_view_timer)
+    end
+
+    assign(socket, mail_opened: false, mail_view_timer: nil)
+  end
+
+  defp open_mail(socket, meta, html) do
+    socket = close_mail(socket)
+
+    timer =
+      cond do
+        Enum.member?(meta.flags, :attach) ->
+          Process.send_after(self(), :load_attachments, 3000)
+
+        true ->
+          nil
+      end
+
+    socket
+    |> push_event("clear_attachment", %{})
+    |> assign(
+      mail_opened: true,
+      mail_meta: meta,
+      mail_html: html,
+      mail_view_timer: timer,
+      mail_attachment_metas: []
+    )
+  end
+
+  defp stream_attachments(%Socket{assigns: %{mail_attachments: []}} = socket), do: socket
+
+  defp stream_attachments(
+         %Socket{
+           assigns: %{
+             mail_attachments: [{name, type, content} | tail] = list,
+             mail_attachment_metas: atts,
+             mail_attachment_offset: offset
+           }
+         } = socket
+       ) do
+    content_size = byte_size(content)
+
+    {atts, first} =
+      cond do
+        offset == 0 -> {atts, true}
+        true -> {Enum.drop(atts, -1), false}
+      end
+
+    push_size =
+      cond do
+        content_size - offset <= @chunk_size -> content_size - offset
+        true -> @chunk_size
+      end
+
+    atts = atts ++ [{name, type, content_size, offset, ""}]
+    chunk = Base.encode64(binary_part(content, offset, push_size))
+    offset = offset + push_size
+
+    {atts_in, offset, last} =
+      cond do
+        offset == content_size -> {tail, 0, true}
+        true -> {list, offset, false}
+      end
+
+    socket
+    |> push_event("attachment_chunk", %{first: first, last: last, chunk: chunk})
+    |> assign(
+      mail_attachments: atts_in,
+      mail_attachment_offset: offset,
+      mail_attachment_metas: atts
+    )
+  end
+
+  defp append_attachment_url(
+         %Socket{assigns: %{mail_attachment_metas: atts}} = socket,
+         url
+       ) do
+    {atts, [{name, type, size, _offset, _url}]} = Enum.split(atts, -1)
+    atts = atts ++ [{name, type, size, size, url}]
+    assign(socket, mail_attachment_metas: atts)
   end
 end

@@ -31,5 +31,10 @@
     <div class="line">
 	Date: <span class="date">{{ date_string(@meta.date, @tz_offset) }}</span>
     </div>
+    <ul class="attachments" :if={{ !Enum.empty?(@attachments) }}>
+	<Attachment :for={{ {name, type, size, offset, url} <- @attachments }}
+		    :props={{ name: name, type: type, size: size,
+			 offset: offset, url: url }} />
+    </ul>
     <iframe class="mail-body" srcdoc={{ @content }} sandbox />
 </div>
