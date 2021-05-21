@@ -308,8 +308,6 @@ defmodule Liv.MailClient do
   load attchments from path, into a list of {name, type, content} tupple
   """
   def load_attachments(path) do
-    Logger.notice("Looking at path: #{path}")
-
     case MCMender.fetch_mime(path) do
       {:error, _msg} ->
         Logger.warn("#{path} fail to load")

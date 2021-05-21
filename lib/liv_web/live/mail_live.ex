@@ -550,6 +550,12 @@ defmodule LivWeb.MailLive do
     end
   end
 
+  def handle_event("ack_attachment_chunk", _params,
+    %Socket{assigns: %{mail_attachment_metas: []}} = socket) do
+    # stale ack, just drop
+    {:noreply, socket}
+  end
+
   def handle_event("ack_attachment_chunk", %{"url" => url}, socket) do
     {
       :noreply,
@@ -656,7 +662,7 @@ defmodule LivWeb.MailLive do
       Process.cancel_timer(socket.assigns.mail_view_timer)
     end
 
-    assign(socket, mail_opened: false, mail_view_timer: nil)
+    assign(socket, mail_opened: false, mail_view_timer: nil, mail_attachments: [])
   end
 
   defp open_mail(socket, meta, html) do
