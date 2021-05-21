@@ -1,6 +1,6 @@
-import "./phoenix_html.js"
-import {Socket} from "./phoenix.js"
-import {LiveSocket} from "./phoenix_live_view.js"
+import "phoenix_html"
+import {Socket} from "phoenix/assets/js/phoenix.js"
+import {LiveSocket} from "phoenix_live_view/assets/js/phoenix_live_view.js"
 import {toByteArray} from "base64-js"
 
 let xDown = null;
