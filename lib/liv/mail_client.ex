@@ -10,12 +10,12 @@ defmodule Liv.MailClient do
 
   alias :maildir_commander, as: MaildirCommander
   alias :mc_tree, as: MCTree
-  alias :mc_mender, as: MCMender
 
   defstruct [
     :tree,
     mails: %{},
     docid: 0,
+    parts: [],
     contents: {}
   ]
 
@@ -47,7 +47,7 @@ defmodule Liv.MailClient do
       {:error, msg} ->
         raise(msg)
 
-      {meta, text, html} ->
+      {meta, text, html, parts} ->
         meta =
           case Enum.member?(meta.flags, :seen) do
             true ->
@@ -62,6 +62,7 @@ defmodule Liv.MailClient do
           tree: MCTree.single(docid),
           mails: %{docid => meta},
           docid: docid,
+          parts: parts,
           contents: {text, html}
         }
     end
@@ -75,8 +76,8 @@ defmodule Liv.MailClient do
         mc
 
       %{flags: flags} = headers ->
-        {_, text, html} = MaildirCommander.full_mail(docid)
-        mc = %{mc | docid: docid, contents: {text, html}}
+        {_, text, html, parts} = MaildirCommander.full_mail(docid)
+        mc = %{mc | docid: docid, parts: parts, contents: {text, html}}
 
         case Enum.member?(flags, :seen) do
           true ->
@@ -305,27 +306,21 @@ defmodule Liv.MailClient do
   end
 
   @doc """
-  load attchments from path, into a list of {name, type, content} tupple
+  load attchments into a list of {name, type, content} tupple
   """
-  def load_attachments(path) do
-    case MCMender.fetch_mime(path) do
-      {:error, _msg} ->
-        Logger.warn("#{path} fail to load")
-        []
+  def load_attachments(%__MODULE__{docid: docid, parts: parts}) do
+    temp = System.tmp_dir!() <> "/liv_temp_mail_" <> System.get_env("USER")
 
-      mime ->
-        mime
-        |> MCMender.all_leaf_mime()
-        |> Enum.filter(&MCMender.is_attachment(&1))
-        |> Enum.map(&MCMender.attachment_info(&1))
-        |> Enum.map(fn
-          {:undefined, type, sub_type, body} ->
-            {"undefined", "#{type}/#{sub_type}", body}
+    docid
+    |> MaildirCommander.extract(parts, temp)
+    |> Enum.filter(fn
+      {name, :error, msg} ->
+        Logger.warn("mail docid #{docid}, attachment #{name} fail to load: #{msg}")
+        false
 
-          {name, type, sub_type, body} ->
-            {name, "#{type}/#{sub_type}", body}
-        end)
-    end
+      _ ->
+        true
+    end)
   end
 
   defp addresses_map(%__MODULE__{docid: docid, mails: mails}) when docid > 0 do

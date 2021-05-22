@@ -550,8 +550,11 @@ defmodule LivWeb.MailLive do
     end
   end
 
-  def handle_event("ack_attachment_chunk", _params,
-    %Socket{assigns: %{mail_attachment_metas: []}} = socket) do
+  def handle_event(
+        "ack_attachment_chunk",
+        _params,
+        %Socket{assigns: %{mail_attachment_metas: []}} = socket
+      ) do
     # stale ack, just drop
     {:noreply, socket}
   end
@@ -569,15 +572,12 @@ defmodule LivWeb.MailLive do
     {:noreply, stream_attachments(socket)}
   end
 
-  def handle_info(
-        :load_attachments,
-        %Socket{assigns: %{mail_meta: meta}} = socket
-      ) do
+  def handle_info(:load_attachments, %Socket{assigns: %{mail_client: mc}} = socket) do
     {
       :noreply,
       socket
       |> assign(
-        mail_attachments: MailClient.load_attachments(meta.path),
+        mail_attachments: MailClient.load_attachments(mc),
         mail_attachment_offset: 0
       )
       |> stream_attachments()
@@ -671,7 +671,7 @@ defmodule LivWeb.MailLive do
     timer =
       cond do
         Enum.member?(meta.flags, :attach) ->
-          Process.send_after(self(), :load_attachments, 3000)
+          Process.send_after(self(), :load_attachments, 1000)
 
         true ->
           nil
