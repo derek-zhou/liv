@@ -38,12 +38,15 @@ defmodule LivWeb.MailLive do
   data list_mails, :map, default: %{}
   data list_tree, :tuple, default: nil
 
+  # if this is true, we should return to viewer instead of finder
+  data mail_opened, :boolean, default: false
+
   # for the viewer
   data mail_view_timer, :any, default: nil
-  data mail_opened, :boolean, default: false
   data mail_attachments, :list, default: []
   data mail_attachment_offset, :integer, default: 0
   data mail_attachment_metas, :list, default: []
+  data mail_chunk_outstanding, :boolean, default: false
   data mail_meta, :map, default: nil
   data mail_html, :string, default: ""
 
@@ -128,10 +131,10 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
-      |> close_mail()
       |> assign(
         title: "LivBox",
         info: info_mc(mc),
+        mail_opened: false,
         page_title: query,
         list_mails: MailClient.mails_of(mc),
         list_tree: MailClient.tree_of(mc),
@@ -550,26 +553,19 @@ defmodule LivWeb.MailLive do
     end
   end
 
-  def handle_event(
-        "ack_attachment_chunk",
-        _params,
-        %Socket{assigns: %{mail_attachment_metas: []}} = socket
-      ) do
-    # stale ack, just drop
-    {:noreply, socket}
-  end
+  def handle_event("ack_attachment_chunk", params, socket) do
+    socket =
+      case Map.get(params, "url") do
+        nil -> socket
+        url -> append_attachment_url(socket, url)
+      end
 
-  def handle_event("ack_attachment_chunk", %{"url" => url}, socket) do
     {
       :noreply,
       socket
-      |> append_attachment_url(url)
+      |> assign(mail_chunk_outstanding: false)
       |> stream_attachments()
     }
-  end
-
-  def handle_event("ack_attachment_chunk", _params, socket) do
-    {:noreply, stream_attachments(socket)}
   end
 
   def handle_info(:load_attachments, %Socket{assigns: %{mail_client: mc}} = socket) do
@@ -657,16 +653,14 @@ defmodule LivWeb.MailLive do
     "#{MailClient.unread_count(mc)}/#{MailClient.mail_count(mc)}"
   end
 
-  defp close_mail(socket) do
-    if socket.assigns.mail_view_timer do
-      Process.cancel_timer(socket.assigns.mail_view_timer)
-    end
-
-    assign(socket, mail_opened: false, mail_view_timer: nil, mail_attachments: [])
+  defp open_mail(%Socket{assigns: %{mail_meta: meta}} = socket, meta, _) do
+    assign(socket, mail_opened: true)
   end
 
-  defp open_mail(socket, meta, html) do
-    socket = close_mail(socket)
+  defp open_mail(%Socket{assigns: %{mail_view_timer: timer}} = socket, meta, html) do
+    if timer do
+      Process.cancel_timer(timer)
+    end
 
     timer =
       cond do
@@ -684,11 +678,31 @@ defmodule LivWeb.MailLive do
       mail_meta: meta,
       mail_html: html,
       mail_view_timer: timer,
+      mail_attachments: [],
+      mail_attachment_offset: 0,
       mail_attachment_metas: []
     )
   end
 
-  defp stream_attachments(%Socket{assigns: %{mail_attachments: []}} = socket), do: socket
+  defp stream_attachments(
+         %Socket{
+           assigns: %{
+             mail_chunk_outstanding: true
+           }
+         } = socket
+       ) do
+    socket
+  end
+
+  defp stream_attachments(
+         %Socket{
+           assigns: %{
+             mail_attachments: []
+           }
+         } = socket
+       ) do
+    socket
+  end
 
   defp stream_attachments(
          %Socket{
@@ -726,10 +740,18 @@ defmodule LivWeb.MailLive do
     socket
     |> push_event("attachment_chunk", %{first: first, last: last, chunk: chunk})
     |> assign(
+      mail_chunk_outstanding: true,
       mail_attachments: atts_in,
       mail_attachment_offset: offset,
       mail_attachment_metas: atts
     )
+  end
+
+  defp append_attachment_url(
+         %Socket{assigns: %{mail_attachment_metas: []}} = socket,
+         _url
+       ) do
+    socket
   end
 
   defp append_attachment_url(
