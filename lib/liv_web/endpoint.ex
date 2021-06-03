@@ -1,18 +1,7 @@
 defmodule LivWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :liv
 
-  # The session will be stored in the cookie and signed,
-  # this means its contents can be read but not tampered with.
-  # Set :encryption_salt if you would also like to encrypt it.
-  @session_options [
-    store: :cookie,
-    key: "_liv_key",
-    signing_salt: "BzIqN/AG"
-  ]
-
-  socket "/live", Phoenix.LiveView.Socket,
-    websocket: [connect_info: [session: @session_options]],
-    longpoll: false
+  socket "/live", Phoenix.LiveView.Socket, longpoll: false
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -46,7 +35,6 @@ defmodule LivWeb.Endpoint do
 
   plug Plug.MethodOverride
   plug Plug.Head
-  plug Plug.Session, @session_options
 
   if Mix.env() == :prod do
     plug Plug.SSL,

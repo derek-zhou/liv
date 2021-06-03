@@ -69,10 +69,11 @@ function local_state() {
 function push_attachment_chunk(first, chunk) {
     let binary = toByteArray(chunk);
     if (first) {
-	attachments = [...attachments, [binary]];
+	attachments.push([binary]);
     } else {
 	let last = attachments.pop();
-	attachments = [...attachments, [...last, binary]];
+	last.push(binary);
+	attachments.push(last);
     }
 }
 
@@ -162,9 +163,7 @@ Hooks.Write = {
     }
 };
 
-let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-
-let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: Hooks})
+let liveSocket = new LiveSocket("/live", Socket, {hooks: Hooks})
 
 // Show progress bar on live navigation and form submits
 window.addEventListener("phx:page-loading-start", info => show_progress_bar())
