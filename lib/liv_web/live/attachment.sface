@@ -8,7 +8,7 @@
     <a :if={{ @url != "" }}
        id={{ "attachment-#{@name}" }}
        class="attachment-download"
-       data-type={{ @type }} href={{ @url }} download={{ @name }}>
+       href={{ @url }} download={{ @name }}>
 	{{ @name }}
     </a>
 </li>

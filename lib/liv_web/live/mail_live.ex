@@ -60,6 +60,10 @@ defmodule LivWeb.MailLive do
   data subject, :string, default: ""
   data mail_text, :string, default: ""
   data preview_html, :string, default: ""
+  data write_attachments, :list, default: []
+  data current_attachment, :tuple, default: nil
+  data incoming_attachments, :list, default: []
+  data write_chunk_outstanding, :boolean, default: false
 
   # for config
   data my_addr, :list, default: [nil | "you@example.com"]
@@ -260,9 +264,13 @@ defmodule LivWeb.MailLive do
         recipients: MailClient.default_recipients(mc, to),
         subject: MailClient.reply_subject(mc),
         mail_text: MailClient.quoted_text(mc),
+        write_attachments: [],
+        incoming_attachments: [],
+        current_attachment: nil,
+        write_chunk_outstanding: false,
         buttons: [
           {:button, "\u{1F4EC}", "send", false},
-          {:button, "\u{2716}", "close_dialog", false}
+          {:button, "\u{2716}", "close_write", false}
         ]
       )
     }
@@ -411,6 +419,9 @@ defmodule LivWeb.MailLive do
         _params,
         %Socket{
           assigns: %{
+            write_attachments: atts,
+            current_attachment: nil,
+            incoming_attachments: [],
             subject: subject,
             recipients: recipients,
             mail_text: text,
@@ -421,7 +432,7 @@ defmodule LivWeb.MailLive do
     # last one is always empty
     recipients = Enum.drop(recipients, -1)
 
-    case MailClient.send_mail(mc, subject, recipients, text) do
+    case MailClient.send_mail(mc, subject, recipients, text, Enum.reverse(atts)) do
       {:error, msg} ->
         {:noreply, put_flash(socket, :error, "Mail not sent: #{msg}")}
 
@@ -430,10 +441,43 @@ defmodule LivWeb.MailLive do
           :noreply,
           socket
           |> put_flash(:info, "Mail sent.")
-          |> assign(recipients: [], mail_text: "", subject: "")
+          |> assign(
+            recipients: [],
+            mail_text: "",
+            subject: "",
+            write_attachments: [],
+            incoming_attachments: []
+          )
           |> push_patch(to: close_action(socket))
         }
     end
+  end
+
+  def handle_event("send", _param, socket) do
+    {:noreply, put_flash(socket, :warning, "Attachment upload ongoing")}
+  end
+
+  def handle_event(
+        "close_write",
+        _params,
+        %Socket{assigns: %{incoming_attachments: [], current_attachment: nil}} = socket
+      ) do
+    {
+      :noreply,
+      socket
+      |> assign(
+        recipients: [],
+        mail_text: "",
+        subject: "",
+        write_attachments: [],
+        incoming_attachments: []
+      )
+      |> push_patch(to: close_action(socket))
+    }
+  end
+
+  def handle_event("close_write", _param, socket) do
+    {:noreply, put_flash(socket, :warning, "Attachment upload ongoing")}
   end
 
   def handle_event(
@@ -566,6 +610,32 @@ defmodule LivWeb.MailLive do
       |> assign(mail_chunk_outstanding: false)
       |> stream_attachments()
     }
+  end
+
+  def handle_event(
+        "write_attach",
+        %{"name" => name, "size" => size},
+        %Socket{assigns: %{incoming_attachments: atts}} = socket
+      ) do
+    {
+      :noreply,
+      socket
+      |> assign(incoming_attachments: [{name, size} | atts])
+      |> accept_streaming()
+    }
+  end
+
+  def handle_event("attachment_chunk", %{"chunk" => chunk}, socket) do
+    {
+      :noreply,
+      socket
+      |> accept_chunk(chunk)
+      |> accept_streaming()
+    }
+  end
+
+  def handle_event("drop_attachments", _params, socket) do
+    {:noreply, assign(socket, write_attachments: [])}
   end
 
   def handle_info(:load_attachments, %Socket{assigns: %{mail_client: mc}} = socket) do
@@ -761,5 +831,75 @@ defmodule LivWeb.MailLive do
     {atts, [{name, type, size, _offset, _url}]} = Enum.split(atts, -1)
     atts = atts ++ [{name, type, size, size, url}]
     assign(socket, mail_attachment_metas: atts)
+  end
+
+  defp accept_chunk(
+         %Socket{
+           assigns: %{current_attachment: {name, size, offset, data}, write_attachments: atts}
+         } =
+           socket,
+         chunk
+       ) do
+    chunk = Base.decode64!(chunk)
+    offset = offset + byte_size(chunk)
+
+    data =
+      cond do
+        offset > size ->
+          raise("Excessive data received in streaming")
+
+        offset == size ->
+          Enum.reverse([chunk | data])
+
+        true ->
+          [chunk | data]
+      end
+
+    cond do
+      offset == size ->
+        assign(socket,
+          write_attachments: [{name, size, data} | atts],
+          current_attachment: nil,
+          write_chunk_outstanding: false
+        )
+
+      true ->
+        assign(socket,
+          current_attachment: {name, size, offset, data},
+          write_chunk_outstanding: false
+        )
+    end
+  end
+
+  defp accept_streaming(%Socket{assigns: %{write_chunk_outstanding: true}} = socket) do
+    socket
+  end
+
+  defp accept_streaming(
+         %Socket{assigns: %{current_attachment: nil, incoming_attachments: []}} = socket
+       ) do
+    socket
+  end
+
+  defp accept_streaming(
+         %Socket{assigns: %{current_attachment: nil, incoming_attachments: atts}} = socket
+       ) do
+    {atts, [{name, size}]} = Enum.split(atts, -1)
+
+    socket
+    |> assign(
+      current_attachment: {name, size, 0, []},
+      incoming_attachments: atts,
+      write_chunk_outstanding: true
+    )
+    |> push_event("read_attachment", %{name: name, offset: 0})
+  end
+
+  defp accept_streaming(
+         %Socket{assigns: %{current_attachment: {name, _size, offset, _data}}} = socket
+       ) do
+    socket
+    |> assign(write_chunk_outstanding: true)
+    |> push_event("read_attachment", %{name: name, offset: offset})
   end
 end

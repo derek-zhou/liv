@@ -233,6 +233,18 @@
 		    }
 		}
 	    }
+	    ul.attachments {
+		@apply border rounded mb-0 py-1;
+		li {
+		    @apply text-sm inline;
+		    .progress-box {
+			@apply border h-2 w-16 inline-block;
+			.progress {
+			    @apply bg-indigo-700 h-full;
+			}
+		    }
+		}
+	    }
 	    .node-container {
 		@apply w-full;
 		.message {
@@ -308,17 +320,35 @@
 			@apply border-gray-600;
                     }
 		}
-		ul.attachments {
-		    @apply border rounded mb-0 py-1;
-		    li {
-			@apply text-sm inline;
+	    }
+	    .form-attach {
+		@apply bg-gray-100 p-2 flow-root w-full border-t border-gray-300;
+		.toolbar {
+                    @apply flex flex-wrap justify-between w-full;
+		    input[type="file"] {
+			@apply hidden;
+		    }
+		    .stack {
+			@apply mx-2 leading-none;
 			.progress-box {
-			    @apply border h-2 w-16 inline-block;
+			    @apply border border-gray-300 h-2 w-40 inline-block;
 			    .progress {
 				@apply bg-indigo-700 h-full;
 			    }
 			}
+			.info {
+			    @apply text-sm leading-none;
+			}
 		    }
+                    .button {
+			@apply cursor-pointer text-white bg-purple-600;
+                    }
+                    .button-danger {
+			@apply bg-pink-600;
+                    }
+                    .button:focus, .button:hover {
+			@apply border-gray-600;
+                    }
 		}
 	    }
 	}
@@ -362,6 +392,14 @@
 			}
 		    }
                 }
+		.form-attach {
+		    .toolbar {
+			@apply w-auto justify-start;
+			.button {
+			    @apply mr-1;
+			}
+		    }
+		}
 	    }
 	}
     }

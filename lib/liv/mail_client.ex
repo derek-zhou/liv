@@ -263,22 +263,35 @@ defmodule Liv.MailClient do
   @doc """
   send a mail
   """
-  def send_mail(_, "", _, _), do: {:error, "no subject"}
-  def send_mail(_, _, _, ""), do: {:error, "no text"}
+  def send_mail(_, "", _, _, _), do: {:error, "no subject"}
+  def send_mail(_, _, _, "", _), do: {:error, "no text"}
 
-  def send_mail(mc, subject, [{:to, _} | _] = recipients, text) do
+  def send_mail(mc, subject, [{:to, _} | _] = recipients, text, atts) do
     import Swoosh.Email
 
     try do
-      new()
-      |> from(addr_to_swoosh(Configer.default(:my_address)))
-      |> subject(subject)
-      |> add_recipients(recipients)
-      |> add_references(mc)
-      |> header("X-Mailer", "LivMail 0.1.0")
-      |> text_body(text)
-      |> html_body(Earmark.as_html!(text))
-      |> Mailer.deliver()
+      mail =
+        new()
+        |> from(addr_to_swoosh(Configer.default(:my_address)))
+        |> subject(subject)
+        |> add_recipients(recipients)
+        |> add_references(mc)
+        |> header("X-Mailer", "LivMail 0.1.0")
+        |> text_body(text)
+        |> html_body(Earmark.as_html!(text))
+
+      mail =
+        Enum.reduce(atts, mail, fn {name, _size, data}, mail ->
+          attachment(
+            mail,
+            Swoosh.Attachment.new(
+              {:data, IO.iodata_to_binary(data)},
+              filename: name
+            )
+          )
+        end)
+
+      Mailer.deliver(mail)
     rescue
       RuntimeError -> {:error, "deliver failed"}
     end

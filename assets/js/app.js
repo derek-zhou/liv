@@ -1,13 +1,16 @@
 import "phoenix_html"
 import {Socket} from "phoenix/assets/js/phoenix.js"
 import {LiveSocket} from "phoenix_live_view/assets/js/phoenix_live_view.js"
-import {toByteArray} from "base64-js"
+import {toByteArray, fromByteArray} from "base64-js"
 
 let xDown = null;
 let yDown = null;
 let messageHook = null;
+let writeHook = null;
 let attachments = [];
 let blobURLs = [];
+let uploads = [];
+const chunkSize = 65536;
 
 function browseTouchStart(evt) {
     xDown = evt.touches[0].clientX;
@@ -77,6 +80,29 @@ function last_attachment_url() {
     return URL.createObjectURL(new Blob(attachments[attachments.length - 1]));
 }
 
+function add_attachment(event) {
+    for (let i = 0; i < event.target.files.length; i++) {
+	let file = event.target.files[i];
+	let reader = new FileReader();
+	reader.readAsArrayBuffer(file);
+	reader.addEventListener("load", () => {
+	    uploads.push(reader.result);
+	    writeHook.pushEvent("write_attach", {name: file.name, size: file.size});
+	});
+    }
+}
+
+function upload_attachment(name, offset) {
+    let data = uploads[0];
+    let dlen = data.byteLength;
+    let slen = dlen > offset + chunkSize ? chunkSize : dlen - offset;
+    let slice = new Uint8Array(data, offset, slen);
+    let chunk = fromByteArray(slice);
+    writeHook.pushEvent("attachment_chunk", {chunk: chunk});
+    if (offset + chunkSize >= dlen)
+	uploads.shift();
+}
+    
 let Hooks = new Object();
 
 Hooks.Main = {
@@ -125,6 +151,17 @@ Hooks.View = {
     }
 };
 
+Hooks.Write = {
+    mounted() {
+	writeHook = this;
+	this.el.querySelector("input#write-attach").addEventListener("change",
+								     add_attachment);
+	this.handleEvent("read_attachment", ({name, offset}) => {
+	    upload_attachment(name, offset);
+	});
+    }
+};
+
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 
 let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: Hooks})
@@ -141,4 +178,3 @@ liveSocket.connect()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
-
