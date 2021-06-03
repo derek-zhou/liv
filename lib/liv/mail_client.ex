@@ -297,7 +297,9 @@ defmodule Liv.MailClient do
             mail,
             Swoosh.Attachment.new(
               {:data, IO.iodata_to_binary(data)},
-              filename: name
+              filename: name,
+              content_type: MIME.from_path(name),
+              type: :attachment
             )
           )
         end)

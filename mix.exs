@@ -36,6 +36,7 @@ defmodule Liv.MixProject do
       {:self_configer, "~> 0.1.1"},
       {:maildir_commander, "~> 0.1.2"},
       {:swoosh, "~> 1.3"},
+      {:mime, "~> 1.6"},
       {:hackney, "~> 1.9"},
       {:argon2_elixir, "~> 2.4"},
       {:earmark, "~> 1.4"},
