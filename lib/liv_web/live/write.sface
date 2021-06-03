@@ -2,7 +2,7 @@
     <div class="mail-meta">
 	<Field name="subject" class="line">
     	    <TextInput value={{ @subject }}
-		       opts={{ "phx-debounce": "blur" }} />
+		       opts={{ "phx-debounce": "blur", placeholder: "Mail Subject" }} />
 	</Field>
 	<Recipient :for.with_index={{ {{type, [name | addr]}, i} <- @recipients }}
 		   :props={{ index: i, type: type, options: @addr_options,

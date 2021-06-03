@@ -252,6 +252,33 @@ defmodule LivWeb.MailLive do
   def handle_params(
         %{"to" => to},
         _url,
+        %Socket{assigns: %{live_action: :write, mail_opened: false}} = socket
+      ) do
+    {
+      :noreply,
+      socket
+      |> assign(
+        title: "LivWrite",
+        page_title: "Write",
+        info: "",
+        recipients: MailClient.default_recipients(nil, to),
+        subject: "",
+        mail_text: "",
+        write_attachments: [],
+        incoming_attachments: [],
+        current_attachment: nil,
+        write_chunk_outstanding: false,
+        buttons: [
+          {:button, "\u{1F4EC}", "send", false},
+          {:button, "\u{2716}", "close_write", false}
+        ]
+      )
+    }
+  end
+
+  def handle_params(
+        %{"to" => to},
+        _url,
         %Socket{assigns: %{live_action: :write, mail_client: mc}} = socket
       ) do
     {
@@ -836,8 +863,7 @@ defmodule LivWeb.MailLive do
   defp accept_chunk(
          %Socket{
            assigns: %{current_attachment: {name, size, offset, data}, write_attachments: atts}
-         } =
-           socket,
+         } = socket,
          chunk
        ) do
     chunk = Base.decode64!(chunk)

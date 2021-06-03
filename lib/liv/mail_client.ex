@@ -215,6 +215,17 @@ defmodule Liv.MailClient do
   @doc """
   getter of default to, cc and bcc for this email
   """
+  def default_recipients(nil, to_addr) do
+    List.flatten([
+      {:to, default_to(%{}, to_addr)},
+      Enum.map(
+        default_bcc(%{}, to_addr, Configer.default(:my_address)),
+        &{:bcc, &1}
+      ),
+      {nil, [nil | ""]}
+    ])
+  end
+
   def default_recipients(mc, to_addr) do
     addr_map = addresses_map(mc)
 
