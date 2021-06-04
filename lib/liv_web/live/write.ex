@@ -8,7 +8,7 @@ defmodule LivWeb.Write do
   prop change, :event, required: true
   prop subject, :string, default: ""
   prop recipients, :list, default: []
-  prop mail_text, :string, default: ""
+  prop text, :string, default: ""
   prop addr_options, :list, default: []
 
   defp email_addr(nil, addr), do: addr

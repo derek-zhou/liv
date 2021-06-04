@@ -35,5 +35,7 @@
 	<Attachment :for={{ {name, _type, size, offset, url} <- @attachments }}
 		    :props={{ name: name, size: size, offset: offset, url: url }} />
     </ul>
-    <iframe class="mail-body" srcdoc={{ @content }} sandbox />
+    <iframe :if={{ @html != "" }} class="mail-body" srcdoc={{ @html }} sandbox />
+    <pre :if={{ @html == "" && @text != "" }}>{{ @text }}</pre>
+    <h1 :if={{ @html == "" && @text == "" }}>No text in the mail</h1>
 </div>

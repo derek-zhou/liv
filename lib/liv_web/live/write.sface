@@ -12,10 +12,10 @@
 	<Field name="text">
 	    <TextArea rows="16"
 		      opts={{ "phx-debounce": 1000 }}
-		      value={{ @mail_text }} />
+		      value={{ @text }} />
 	</Field>
 	<div class="preview">
-	    {{ raw(preview(@mail_text)) }}
+	    {{ raw(preview(@text)) }}
 	</div>
     </div>
 </Form>

@@ -5,7 +5,8 @@ defmodule LivWeb.View do
   alias LivWeb.Attachment
 
   prop meta, :map, required: true
-  prop content, :string, required: true
+  prop html, :string, default: ""
+  prop text, :string, default: ""
   prop attachments, :list, default: []
   prop tz_offset, :integer, default: 0
 

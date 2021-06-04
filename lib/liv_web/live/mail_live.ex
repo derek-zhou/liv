@@ -49,6 +49,7 @@ defmodule LivWeb.MailLive do
   data mail_chunk_outstanding, :boolean, default: false
   data mail_meta, :map, default: nil
   data mail_html, :string, default: ""
+  data mail_text, :string, default: ""
 
   # to refer back in later 
   data last_query, :string, default: ""
@@ -58,7 +59,7 @@ defmodule LivWeb.MailLive do
   data recipients, :list, default: []
   data addr_options, :list, default: []
   data subject, :string, default: ""
-  data mail_text, :string, default: ""
+  data write_text, :string, default: ""
   data preview_html, :string, default: ""
   data write_attachments, :list, default: []
   data current_attachment, :tuple, default: nil
@@ -168,7 +169,7 @@ defmodule LivWeb.MailLive do
             {
               :noreply,
               socket
-              |> open_mail(meta, MailClient.html_content(mc))
+              |> open_mail(meta, mc)
               |> assign(
                 info: info_mc(mc),
                 page_title: meta.subject,
@@ -256,7 +257,7 @@ defmodule LivWeb.MailLive do
         info: "",
         recipients: MailClient.default_recipients(nil, to),
         subject: "",
-        mail_text: "",
+        write_text: "",
         write_attachments: [],
         incoming_attachments: [],
         current_attachment: nil,
@@ -284,7 +285,7 @@ defmodule LivWeb.MailLive do
         info: "",
         recipients: MailClient.default_recipients(mc, to),
         subject: MailClient.reply_subject(mc),
-        mail_text: MailClient.quoted_text(mc),
+        write_text: MailClient.quoted_text(mc),
         write_attachments: [],
         incoming_attachments: [],
         current_attachment: nil,
@@ -432,7 +433,7 @@ defmodule LivWeb.MailLive do
         recipients: recipients,
         subject: subject,
         addr_options: completion_list,
-        mail_text: text
+        write_text: text
       )
     }
   end
@@ -447,7 +448,7 @@ defmodule LivWeb.MailLive do
             incoming_attachments: [],
             subject: subject,
             recipients: recipients,
-            mail_text: text,
+            write_text: text,
             mail_client: mc
           }
         } = socket
@@ -466,7 +467,7 @@ defmodule LivWeb.MailLive do
           |> put_flash(:info, "Mail sent.")
           |> assign(
             recipients: [],
-            mail_text: "",
+            write_text: "",
             subject: "",
             write_attachments: [],
             incoming_attachments: []
@@ -490,7 +491,7 @@ defmodule LivWeb.MailLive do
       socket
       |> assign(
         recipients: [],
-        mail_text: "",
+        write_text: "",
         subject: "",
         write_attachments: [],
         incoming_attachments: []
@@ -765,7 +766,7 @@ defmodule LivWeb.MailLive do
     assign(socket, mail_opened: true)
   end
 
-  defp open_mail(%Socket{assigns: %{mail_view_timer: timer}} = socket, meta, html) do
+  defp open_mail(%Socket{assigns: %{mail_view_timer: timer}} = socket, meta, mc) do
     if timer do
       Process.cancel_timer(timer)
     end
@@ -784,7 +785,8 @@ defmodule LivWeb.MailLive do
     |> assign(
       mail_opened: true,
       mail_meta: meta,
-      mail_html: html,
+      mail_html: MailClient.html_content(mc),
+      mail_text: MailClient.text_content(mc),
       mail_view_timer: timer,
       mail_attachments: [],
       mail_attachment_offset: 0,

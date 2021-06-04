@@ -99,8 +99,8 @@ defmodule Liv.MailClient do
   @doc """
   getter of the html content
   """
-  def html_content(%__MODULE__{contents: {text, html}}), do: html_mail(text, html)
-  def html_content(_), do: html_mail("", "")
+  def html_content(%__MODULE__{contents: {_, html}}), do: html
+  def html_content(_), do: ""
 
   @doc """
   getter of the text content
@@ -394,24 +394,6 @@ defmodule Liv.MailClient do
     |> Configer.default()
     |> MapSet.new()
   end
-
-  defp html_mail("", "") do
-    ~s"""
-    <!DOCTYPE html><html>
-    <head><meta charset="utf-8"/></head>
-    <body><h1>No text in the mail</h1></body></html>
-    """
-  end
-
-  defp html_mail(text, "") do
-    ~s"""
-    <!DOCTYPE html><html>
-    <head><meta charset="utf-8"/></head>
-    <body><pre>#{text}</pre></body></html>
-    """
-  end
-
-  defp html_mail(_, html), do: html
 
   defp parse_addr(str) do
     case Regex.run(~r/(.*)\s+<(.*)>$/, str) do
