@@ -10,8 +10,8 @@
     </div>
     <div class="mail-body">
 	<Field name="text">
-	    <TextArea rows="16"
-		      opts={{ "phx-debounce": 1000 }}
+	    <TextArea id="text-box" rows="16"
+		      opts={{ "phx-update": "ignore", "phx-debounce": 1000 }}
 		      value={{ @text }} />
 	</Field>
 	<div class="preview">
