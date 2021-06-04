@@ -291,6 +291,9 @@
 		.mail-body {
 		    @apply w-full h-screen;
 		}
+		pre {
+		    @apply whitespace-pre-line;
+		}
                 .thumbnail {
                     img {
                         @apply w-auto max-w-full h-48;
