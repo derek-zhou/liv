@@ -152,7 +152,7 @@ Hooks.View = {
     }
 };
 
-Hooks.Write = {
+Hooks.Attach = {
     mounted() {
 	writeHook = this;
 	this.el.querySelector("input#write-attach").addEventListener("change",

@@ -30,7 +30,7 @@ defmodule LivWeb.MailLive do
   data password_prompt, :string, default: "Enter your password: "
 
   # for the header
-  data title, :string, default: ""
+  data title, :string, default: "LIV"
   data info, :string, default: "Loading..."
   data buttons, :list, default: []
 
@@ -81,11 +81,10 @@ defmodule LivWeb.MailLive do
       |> push_event("set_value", %{key: "token", value: ""})
       |> assign(
         auth: :logged_out,
-        title: "Login as",
         page_title: "Login as #{user}",
         password_hash: Application.get_env(:liv, :password_hash),
         password_prompt: "Enter your password: ",
-        info: user,
+        info: "Login as #{user}",
         buttons: []
       )
     }
@@ -108,8 +107,7 @@ defmodule LivWeb.MailLive do
       socket
       |> clear_flash()
       |> assign(
-        title: "Set password of",
-        info: user,
+        info: "Set password of #{user}",
         page_title: "Set password of #{user}",
         password_hash: nil,
         saved_password: "",
@@ -136,7 +134,6 @@ defmodule LivWeb.MailLive do
       :noreply,
       socket
       |> assign(
-        title: "LivBox",
         info: info_mc(mc),
         mail_opened: false,
         page_title: query,
@@ -173,7 +170,6 @@ defmodule LivWeb.MailLive do
               socket
               |> open_mail(meta, MailClient.html_content(mc))
               |> assign(
-                title: "LivMail",
                 info: info_mc(mc),
                 page_title: meta.subject,
                 mail_client: mc,
@@ -215,10 +211,9 @@ defmodule LivWeb.MailLive do
       :noreply,
       socket
       |> assign(
-        title: "LivSearch",
         default_query: default_query,
         page_title: "Search",
-        info: "",
+        info: "Search",
         buttons: [
           {:button, "\u{2716}", "close_dialog", false}
         ]
@@ -235,9 +230,8 @@ defmodule LivWeb.MailLive do
       :noreply,
       socket
       |> assign(
-        title: "LivConfig",
         page_title: "Config",
-        info: "",
+        info: "Config",
         my_addr: Configer.default(:my_address),
         my_addrs: Configer.default(:my_addresses),
         my_lists: Configer.default(:my_email_lists),
@@ -258,7 +252,6 @@ defmodule LivWeb.MailLive do
       :noreply,
       socket
       |> assign(
-        title: "LivWrite",
         page_title: "Write",
         info: "",
         recipients: MailClient.default_recipients(nil, to),
@@ -270,6 +263,8 @@ defmodule LivWeb.MailLive do
         write_chunk_outstanding: false,
         buttons: [
           {:button, "\u{1F4EC}", "send", false},
+          {:attach, "\u{1F4CE}", "write_attach", false},
+          {:button, "\u{1F5D1}", "drop_attachments", false},
           {:button, "\u{2716}", "close_write", false}
         ]
       )
@@ -285,7 +280,6 @@ defmodule LivWeb.MailLive do
       :noreply,
       socket
       |> assign(
-        title: "LivWrite",
         page_title: "Write",
         info: "",
         recipients: MailClient.default_recipients(mc, to),
@@ -297,6 +291,8 @@ defmodule LivWeb.MailLive do
         write_chunk_outstanding: false,
         buttons: [
           {:button, "\u{1F4EC}", "send", false},
+          {:attach, "\u{1F4CE}", "write_attach", false},
+          {:button, "\u{1F5D1}", "drop_attachments", false},
           {:button, "\u{2716}", "close_write", false}
         ]
       )
@@ -661,8 +657,23 @@ defmodule LivWeb.MailLive do
     }
   end
 
-  def handle_event("drop_attachments", _params, socket) do
-    {:noreply, assign(socket, write_attachments: [])}
+  def handle_event(
+        "drop_attachments",
+        _params,
+        %Socket{assigns: %{current_attachment: nil}} = socket
+      ) do
+    {:noreply, assign(socket, write_attachments: [], info: "")}
+  end
+
+  def handle_event(
+        "drop_attachments",
+        _params,
+        %Socket{assigns: %{current_attachment: {name, _size, offset, data}}} = socket
+      ) do
+    {
+      :noreply,
+      assign(socket, write_attachments: [], current_attachment: {name, 0, offset, data}, info: "")
+    }
   end
 
   def handle_info(:load_attachments, %Socket{assigns: %{mail_client: mc}} = socket) do
@@ -747,7 +758,7 @@ defmodule LivWeb.MailLive do
   end
 
   defp info_mc(mc) do
-    "#{MailClient.unread_count(mc)}/#{MailClient.mail_count(mc)}"
+    "#{MailClient.unread_count(mc)}/#{MailClient.mail_count(mc)} unread"
   end
 
   defp open_mail(%Socket{assigns: %{mail_meta: meta}} = socket, meta, _) do
@@ -862,6 +873,19 @@ defmodule LivWeb.MailLive do
 
   defp accept_chunk(
          %Socket{
+           assigns: %{current_attachment: {_name, 0, _offset, _data}, write_attachments: atts}
+         } = socket,
+         _chunk
+       ) do
+    assign(socket,
+      current_attachment: nil,
+      write_chunk_outstanding: false,
+      info: attachments_info(atts, 0)
+    )
+  end
+
+  defp accept_chunk(
+         %Socket{
            assigns: %{current_attachment: {name, size, offset, data}, write_attachments: atts}
          } = socket,
          chunk
@@ -883,17 +907,32 @@ defmodule LivWeb.MailLive do
 
     cond do
       offset == size ->
+        atts = [{name, size, data} | atts]
+
         assign(socket,
-          write_attachments: [{name, size, data} | atts],
+          info: attachments_info(atts, 0),
+          write_attachments: atts,
           current_attachment: nil,
           write_chunk_outstanding: false
         )
 
       true ->
         assign(socket,
+          info: attachments_info(atts, offset),
           current_attachment: {name, size, offset, data},
           write_chunk_outstanding: false
         )
+    end
+  end
+
+  defp attachments_info(attachments, offset) do
+    {count, bytes} =
+      Enum.reduce(attachments, {0, 0}, fn {_name, s, _data}, {c, b} -> {c + 1, b + s} end)
+
+    case {count, bytes, offset} do
+      {0, 0, 0} -> ""
+      {_, _, 0} -> "#{count} files/#{div(bytes, 1024)}KB"
+      _ -> "#{count + 1} files/#{div(bytes + offset, 1024)}KB"
     end
   end
 

@@ -19,19 +19,3 @@
 	</div>
     </div>
 </Form>
-<div class="form-attach" id="write-attachment" phx-hook="Write">
-    <div class="toolbar">
-	<label class="button" for="write-attach">&#128206;</label>
-	<FileInput name="attach" id="write-attach" opts={{ multiple: true }}/>
-	<div class="stack">
-	    <div class="progress-box">
-		<div class="progress"
-		     style="width:{{ progress_percent(@current) }}%"/>
-	    </div>
-	    <div class="info">
-		{{ attachments_info(@attachments) }}
-	    </div>
-	</div>
-	<button class="button button-danger" :on-click={{ @drop }}>&#128465;</button>
-    </div>
-</div>
