@@ -96,13 +96,13 @@ LIV has a fairly spartan user interface. You can search your email database, go 
 
 * Sort mails in another way. They are always sorted by date starting from the latest and they are always threaded.
 * Delete mails. I don't delete emails by hand, but instead I archive emails. More on it later
-* View or attach attachments. I probably have to implement it eventually. I don't use attachments for 99.9%+ of the time 
 
 On the other hand, LIV is unique in that:
 
 * Every query, every message etc. are all bookmark-able.
 * All messages are threaded, usable even on a very narrow phone screen.
 * You write your emails in markdown, with instant html preview.
+* Automatically download or upload attachments in the bakground, at the same time when you write or read emails. 
 
 ## Email archiving
 
@@ -116,5 +116,5 @@ This algorithm is implemented in `mc archive`, which I run in my cron job. Archi
 
 ## Disclaimer
 
-LIV is alpha quality software, the implementation is incomplete and may never be. I use it everyday though. If you don't see a point of running your email server you do not need LIV. If you run your own email server and want to add webmail functionality to it, you are welcome to try it and give me feedback.
+LIV is beta quality software, the implementation is incomplete and may never be. I use it everyday though. If you don't see a point of running your email server you do not need LIV. If you run your own email server and want to add webmail functionality to it, you are welcome to try it and give me feedback.
 

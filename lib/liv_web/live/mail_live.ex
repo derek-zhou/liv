@@ -758,7 +758,7 @@ defmodule LivWeb.MailLive do
   end
 
   defp info_mc(mc) do
-    "#{MailClient.unread_count(mc)}/#{MailClient.mail_count(mc)} unread"
+    "#{MailClient.unread_count(mc)} unread/#{MailClient.mail_count(mc)}"
   end
 
   defp open_mail(%Socket{assigns: %{mail_meta: meta}} = socket, meta, _) do
