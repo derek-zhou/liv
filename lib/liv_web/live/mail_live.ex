@@ -176,7 +176,6 @@ defmodule LivWeb.MailLive do
                 mail_client: mc,
                 buttons: [
                   {:patch, "\u{1f50d}", Routes.mail_path(socket, :search), false},
-                  {:patch, "\u{2712}", Routes.mail_path(socket, :write, tl(meta.from)), false},
                   {:button, "\u{1f5c2}", "back_to_list", false},
                   {:button, "\u{25c0}", "backward_message", MailClient.is_first(mc, docid)},
                   {:button, "\u{25b6}", "forward_message", MailClient.is_last(mc, docid)}
