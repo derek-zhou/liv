@@ -72,7 +72,7 @@
                 }
 	    }
             tr.odd {
-                @apply bg-gray-100;
+                @apply bg-gray-50;
             }
         }
         blockquote {
@@ -101,13 +101,13 @@
 	@apply p-2 rounded mb-0;
     }
     .alert-info {
-        @apply bg-yellow-300 text-blue-700;
+        @apply bg-yellow-200 text-blue-700;
     }
     .alert-warning {
-        @apply bg-yellow-300 text-purple-700;
+        @apply bg-yellow-200 text-purple-700;
     }
     .alert-danger {
-        @apply bg-yellow-300 text-red-700;
+        @apply bg-yellow-200 text-red-700;
     }
     .alert-info:empty {
         @apply hidden;
@@ -145,7 +145,7 @@
     .viewport {
 	@apply relative;
 	.header {
-	    @apply sticky top-0 bg-gray-200 p-2 flex;
+	    @apply sticky top-0 bg-gray-100 p-2 flex;
 	    .brand {
 		@apply flex-none;
                 img {
@@ -172,9 +172,9 @@
             }
 	}
 	.content {
-	    @apply border border-gray-200 rounded;
+	    @apply border border-gray-100 rounded;
 	    form {
-		@apply p-2 bg-gray-100 flex flex-col;
+		@apply p-2 bg-gray-50 flex flex-col;
 		.line {
 		    @apply w-full flex flex-row mb-2 space-x-2;
 		    input[type="text"] {
@@ -191,7 +191,7 @@
                     }
 		}
 		.toolbar {
-		    @apply pt-2 flex flex-row flex-wrap justify-center border-t border-gray-200;
+		    @apply pt-2 flex flex-row flex-wrap justify-center border-t border-gray-100;
                     .button[type="reset"] {
 			@apply flex-none cursor-pointer text-white bg-pink-600 mr-1;
                     }
@@ -215,7 +215,7 @@
 		    @apply border rounded border-gray-600;
 		}
 		.preview {
-		    @apply border rounded bg-yellow-100 p-2;
+		    @apply border rounded bg-yellow-50 p-2;
 		}
                 input[type="text"] {
                     @apply w-80 leading-relaxed border rounded border-gray-600;
@@ -225,7 +225,7 @@
                 }
 	    }
 	    .form-help {
-		@apply border-t-2 border-gray-200 bg-gray-100 p-2;
+		@apply border-t-2 border-gray-100 bg-gray-50 p-2;
 		ul {
 		    @apply list-none;
 		    li {
@@ -254,7 +254,7 @@
 	    .node-container {
 		@apply w-full;
 		.message {
-		    @apply flex flex-row flex-wrap border-b border-gray-200 mx-2;
+		    @apply flex flex-row flex-wrap border-b border-gray-100 mx-2;
 		    .subject {
 			@apply w-full whitespace-nowrap overflow-hidden;
 		    }
@@ -385,10 +385,10 @@
 			    @apply flex-grow;
 			}
 			.email-addr {
-			    @apply border-l border-gray-200 w-40 flex-none pl-2;
+			    @apply border-l border-gray-100 w-40 flex-none pl-2;
 			}
 			.date {
-			    @apply border-l border-gray-200;
+			    @apply border-l border-gray-100;
 			}
 		    }
 		}
