@@ -3,6 +3,10 @@ defmodule LivWeb.View do
   alias LivWeb.Router.Helpers, as: Routes
   alias Surface.Components.LivePatch
   alias LivWeb.Attachment
+  alias Liv.Sanitizer
+  alias HtmlSanitizeEx.Scrubber
+
+  @max_inline_html 4096
 
   prop meta, :map, required: true
   prop html, :string, default: ""
@@ -25,4 +29,15 @@ defmodule LivWeb.View do
     |> Enum.map(&to_string/1)
     |> Enum.join(", ")
   end
+
+  defp oversized?(html), do: byte_size(html) >= @max_inline_html
+
+  defp inlined?(html) do
+    case byte_size(html) do
+      c when c > 0 and c < @max_inline_html -> true
+      _ -> false
+    end
+  end
+
+  defp sanitize(html), do: html |> Scrubber.scrub(Sanitizer) |> raw()
 end

@@ -35,6 +35,7 @@
 	<Attachment :for={{ {name, _type, size, offset, url} <- @attachments }}
 		    :props={{ name: name, size: size, offset: offset, url: url }} />
     </ul>
-    <iframe :if={{ @html != "" }} class="mail-body" srcdoc={{ @html }} sandbox />
     <pre :if={{ @html == ""}}>{{ @text }}</pre>
+    <div :if={{ inlined?(@html) }}>{{ sanitize(@html) }}</div>
+    <iframe :if={{ oversized?(@html) }} class="mail-body" srcdoc={{ @html }} sandbox />
 </div>
