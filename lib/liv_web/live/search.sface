@@ -2,18 +2,18 @@
     <Field name="query" class="field">
 	<Label>Enter your query:</Label>
 	<TextInput value={@default_query} />
-	<input class="button" type="submit" value="&#128076;">
     </Field>
-</Form>
-<div class="form-help">
+    <div class="toolbar">
+	<input class="button" type="submit" value="&#128076;">
+    </div>
     <p>
 	Or click one of the following examples:
     </p>
-    <ul class="examples">
+    <ul class="button-examples">
 	<li :for={{text, query} <- @examples}>
-	    <button :on-click={@pick_example} phx-value-query={query}>
+	    <button :on-click={@pick_example} form="" phx-value-query={query}>
 		{text}
 	    </button>
 	</li>
     </ul>
-</div>
+</Form>
