@@ -1,14 +1,14 @@
 <li>
-    <div :if={{ @url == "" }}
-	 id={{ "attachment-#{@name}" }}
+    <div :if={@url == ""}
+	 id={"attachment-#{@name}"}
 	 class="progress-box">
 	<div class="progress"
-	     style="width:{{ floor(@offset/@size*100) }}%"/>
+	     style={"width:#{floor(@offset/@size*100)}%"}/>
     </div>
-    <a :if={{ @url != "" }}
-       id={{ "attachment-#{@name}" }}
+    <a :if={@url != ""}
+       id={"attachment-#{@name}"}
        class="attachment-download"
-       href={{ @url }} download={{ @name }}>
-	{{ @name }}
+       href={@url} download={@name}>
+	{@name}
     </a>
 </li>

@@ -1,21 +1,21 @@
-<Form for={{ :mail }} change={{ @change }}>
+<Form for={:mail} change={@change}>
     <div class="mail-meta">
 	<Field name="subject" class="line">
-    	    <TextInput value={{ @subject }}
-		       opts={{ "phx-debounce": "blur", placeholder: "Mail Subject" }} />
+    	    <TextInput value={@subject}
+		       opts={"phx-debounce": "blur", placeholder: "Mail Subject"} />
 	</Field>
-	<Recipient :for.with_index={{ {{type, [name | addr]}, i} <- @recipients }}
-		   :props={{ index: i, type: type, options: @addr_options,
-				   addr: email_addr(name, addr) }} />
+	<Recipient :for.with_index={{{type, [name | addr]}, i} <- @recipients}
+		   :props={index: i, type: type, options: @addr_options,
+				   addr: email_addr(name, addr)} />
     </div>
     <div class="mail-body">
 	<Field name="text">
 	    <TextArea id="text-box" rows="16"
-		      opts={{ "phx-update": "ignore", "phx-debounce": 1000 }}
-		      value={{ @text }} />
+		      opts={"phx-update": "ignore", "phx-debounce": 1000}
+		      value={@text} />
 	</Field>
 	<div class="preview">
-	    {{ raw(preview(@text)) }}
+	    {raw(preview(@text))}
 	</div>
     </div>
 </Form>

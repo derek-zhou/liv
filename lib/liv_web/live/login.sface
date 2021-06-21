@@ -1,6 +1,6 @@
-<Form for={{ :login }} submit={{ @submit }}>
+<Form for={:login} submit={@submit}>
     <Field name="password" class="field">
-	<Label>{{ @prompt }}</Label>
+	<Label>{@prompt}</Label>
 	<PasswordInput />
 	<input class="button" type="submit" value="&#128076;">
     </Field>

@@ -190,8 +190,11 @@
 			@apply flex-none cursor-pointer text-white bg-purple-600 ml-1;
                     }
 		}
+		hr {
+		    @apply mb-2 border-gray-200;
+		}
 		.toolbar {
-		    @apply pt-2 flex flex-row flex-wrap justify-center border-t border-gray-100;
+		    @apply pt-2 flex flex-row flex-wrap justify-center border-t border-gray-200;
                     .button[type="reset"] {
 			@apply flex-none cursor-pointer text-white bg-pink-600 mr-1;
                     }
@@ -200,7 +203,7 @@
                     }
 		}
                 label {
-                    @apply flex-none mr-2 leading-relaxed;
+                    @apply flex-none mr-2;
 		    .focus {
 			@apply font-bold italic;
 		    }
@@ -316,6 +319,9 @@
 		}
                 .desc {
                     @apply text-sm leading-tight mb-2;
+		    span {
+			@apply whitespace-normal;
+		    }
                 }
 		.toolbar {
                     @apply flex flex-wrap justify-between w-full;

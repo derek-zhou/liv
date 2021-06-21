@@ -1,13 +1,13 @@
-<LivePatch :if={{ @type == :patch }}
-	   to={{ @path_or_msg }}
-	   class={{ "button", disabled: @disabled }}>
-    {{ @text }}</LivePatch>
-<button :if={{ @type == :button }}
-	phx-click={{ @path_or_msg }}
-	class={{ "button", disabled: @disabled }}>
-    {{ @text }}</button>
-<div :if={{ @type == :attach }}
-     class="attach" id={{ @path_or_msg }} phx-hook="Attach">
-    <label class="button" for="write-attach">{{ @text }}</label>
-    <FileInput name="attach" id="write-attach" opts={{ multiple: true }}/>
+<LivePatch :if={@type == :patch}
+	   to={@path_or_msg}
+	   class={"button", disabled: @disabled}>
+    {@text}</LivePatch>
+<button :if={@type == :button}
+	phx-click={@path_or_msg}
+	class={"button", disabled: @disabled}>
+    {@text}</button>
+<div :if={@type == :attach}
+     class="attach" id={@path_or_msg} phx-hook="Attach">
+    <label class="button" for="write-attach">{@text}</label>
+    <FileInput name="attach" id="write-attach" opts={multiple: true}/>
 </div>

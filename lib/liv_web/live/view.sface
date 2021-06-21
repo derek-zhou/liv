@@ -1,41 +1,41 @@
-<div class="box" id="message-view" phx-hook="View" :if={{ @meta != nil }}>
+<div class="box" id="message-view" phx-hook="View" :if={@meta != nil}>
     <div class="line">
 	From:
-	<LivePatch to={{ Routes.mail_path(@socket, :write, tl(@meta.from)) }}
-	      class="email-addr">{{ email_name(@meta.from) }}</LivePatch>
+	<LivePatch to={Routes.mail_path(@socket, :write, tl(@meta.from))}
+	      class="email-addr">{email_name(@meta.from)}</LivePatch>
     </div>
     <div class="line">
 	To:
-	<LivePatch :for={{ addr <- @meta.to }}
-		   to={{ Routes.mail_path(@socket, :write, tl(addr)) }}
-		   class="email-addr">{{ email_name(addr) }}</LivePatch>
+	<LivePatch :for={addr <- @meta.to}
+		   to={Routes.mail_path(@socket, :write, tl(addr))}
+		   class="email-addr">{email_name(addr)}</LivePatch>
     </div>
-    <div class="line" :if={{ length(@meta.cc) > 0 }}>
+    <div class="line" :if={length(@meta.cc) > 0}>
 	Cc:
-	<LivePatch :for={{ addr <- @meta.cc }}
-		   to={{ Routes.mail_path(@socket, :write, tl(addr)) }}
-		   class="email-addr">{{ email_name(addr) }}</LivePatch>
+	<LivePatch :for={addr <- @meta.cc}
+		   to={Routes.mail_path(@socket, :write, tl(addr))}
+		   class="email-addr">{email_name(addr)}</LivePatch>
     </div>
-    <div class="line" :if={{ length(@meta.bcc) > 0 }}>
+    <div class="line" :if={length(@meta.bcc) > 0}>
 	Bcc:
-	<LivePatch :for={{ addr <- @meta.bcc }}
-		   to={{ Routes.mail_path(@socket, :write, tl(addr)) }}
-		   class="email-addr">{{ email_name(addr) }}</LivePatch>
+	<LivePatch :for={addr <- @meta.bcc}
+		   to={Routes.mail_path(@socket, :write, tl(addr))}
+		   class="email-addr">{email_name(addr)}</LivePatch>
     </div>
     <div class="line">
-	Subject: <span class="subject">{{ @meta.subject }}</span>
+	Subject: <span class="subject">{@meta.subject}</span>
     </div>
     <div class="line">
-	Flags: <span class="flags">{{ flags_string(@meta.flags) }}</span>
+	Flags: <span class="flags">{flags_string(@meta.flags)}</span>
     </div>
     <div class="line">
-	Date: <span class="date">{{ date_string(@meta.date, @tz_offset) }}</span>
+	Date: <span class="date">{date_string(@meta.date, @tz_offset)}</span>
     </div>
-    <ul class="attachments" :if={{ !Enum.empty?(@attachments) }}>
-	<Attachment :for={{ {name, _type, size, offset, url} <- @attachments }}
-		    :props={{ name: name, size: size, offset: offset, url: url }} />
+    <ul class="attachments" :if={!Enum.empty?(@attachments)}>
+	<Attachment :for={{name, _type, size, offset, url} <- @attachments}
+		    :props={name: name, size: size, offset: offset, url: url} />
     </ul>
-    <pre :if={{ @html == ""}}>{{ @text }}</pre>
-    <div :if={{ inlined?(@html) }}>{{ sanitize(@html) }}</div>
-    <iframe :if={{ oversized?(@html) }} class="mail-body" srcdoc={{ @html }} sandbox />
+    <pre :if={@html == ""}>{@text}</pre>
+    <div :if={inlined?(@html)}>{sanitize(@html)}</div>
+    <iframe :if={oversized?(@html)} class="mail-body" srcdoc={@html} sandbox />
 </div>

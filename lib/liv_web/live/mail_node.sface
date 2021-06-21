@@ -1,9 +1,9 @@
-<div class={{ "message", "message-unread": unread?(@meta.flags) }}>
-    <LivePatch to={{ Routes.mail_path(@socket, :view, @docid) }}
+<div class={"message", "message-unread": unread?(@meta.flags)}>
+    <LivePatch to={Routes.mail_path(@socket, :view, @docid)}
 	       class="subject">
-	{{ @meta.subject }}
+	{@meta.subject}
     </LivePatch>
-    <LivePatch to={{ Routes.mail_path(@socket, :write, tl(@meta.from)) }}
-	  class="email-addr">{{ email_name(@meta.from) }}</LivePatch>
-    <div class="date">{{ date_string(@meta.date, @tz_offset) }}</div>
+    <LivePatch to={Routes.mail_path(@socket, :write, tl(@meta.from))}
+	  class="email-addr">{email_name(@meta.from)}</LivePatch>
+    <div class="date">{date_string(@meta.date, @tz_offset)}</div>
 </div>

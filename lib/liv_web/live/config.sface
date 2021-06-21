@@ -1,33 +1,33 @@
-<Form for={{ :config }} change={{ @change }}>
+<Form for={:config} change={@change}>
     <div class="mail-meta">
         <Field name="my_name" class="field">
 		<Label>Your name</Label>
-		<TextInput value={{ hd(@my_addr) }}
-			   opts={{ "phx-debounce": 500 }} />
+		<TextInput value={hd(@my_addr)}
+			   opts={"phx-debounce": 500} />
 	</Field>
 	<Field name="my_addr" class="field">
 	    <Label>Primary address</Label>
-	    <TextInput value={{ tl(@my_addr) }}
-		       opts={{ "phx-debounce": 500 }} />
+	    <TextInput value={tl(@my_addr)}
+		       opts={"phx-debounce": 500} />
 	</Field>
     </div>
     <div class="mail-body">
 	<Field name="my_addrs" class="field">
 	    <Label>All your addresses</Label>
-	    <TextArea value={{ Enum.join(@my_addrs, "\n") }}
+	    <TextArea value={Enum.join(@my_addrs, "\n")}
 		      rows="10"
-	              opts={{ "phx-debounce": 500 }}/>
+	              opts={"phx-debounce": 500}/>
 	</Field>
 	<Field name="my_lists" class="field">
 	    <Label>Email lists that contain you</Label>
-	    <TextArea value={{ Enum.join(@my_lists, "\n") }}
+	    <TextArea value={Enum.join(@my_lists, "\n")}
 		      rows="10"
-	              opts={{ "phx-debounce": 500 }}/>
+	              opts={"phx-debounce": 500}/>
 	</Field>
     </div>
     <div class="alert alert-danger">
 	<span>Danger!</span>
-	<LivePatch to={{ Routes.mail_path(@socket, :set_password) }}
+	<LivePatch to={Routes.mail_path(@socket, :set_password)}
 		      class="button">Reset your password</LivePatch>
     </div>
 </Form>

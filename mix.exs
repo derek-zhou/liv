@@ -42,7 +42,7 @@ defmodule Liv.MixProject do
       {:argon2_elixir, "~> 2.4"},
       {:earmark, "~> 1.4"},
       {:guardian, "~> 2.1"},
-      {:surface, "~> 0.4.0"},
+      {:surface, "~> 0.5.0"},
       {:phoenix, "~> 1.5.8"},
       {:phoenix_live_view, "~> 0.15.1"},
       {:floki, ">= 0.27.0", only: :test},

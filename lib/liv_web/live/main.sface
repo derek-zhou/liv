@@ -1,19 +1,19 @@
 <div id="main-content" class="content" phx-hook="Main">
-    <div role="alert" :for={{ type <- Map.keys(@messages) }}
-       class={{ "alert", alert_class(type) }}
-       phx-value-key={{ type }} phx-click="lv:clear-flash">
-	{{ @messages[type] }}
+    <div role="alert" :for={type <- Map.keys(@messages)}
+       class={"alert", alert_class(type)}
+       phx-value-key={type} phx-click="lv:clear-flash">
+	{@messages[type]}
     </div>
     <div class="header">
 	<div class="brand">
-	    <span class="title">{{ @title }}</span>
-	    <span class="info">{{ @info }}</span>
+	    <span class="title">{@title}</span>
+	    <span class="info">{@info}</span>
 	</div>
 	<div class="nav">
-	    <Button :for={{ {type, text, action, disabled} <- @buttons }}
-		    :props={{ type: type, text: text,
-			 path_or_msg: action, disabled: disabled }} />
+	    <Button :for={{type, text, action, disabled} <- @buttons}
+		    :props={type: type, text: text,
+			 path_or_msg: action, disabled: disabled} />
 	</div>
     </div>
-    <slot />
+    <#slot />
 </div>

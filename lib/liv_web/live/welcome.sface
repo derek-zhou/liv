@@ -1,7 +1,7 @@
 <div class="box">
-    <slot/>
+    <#slot/>
     <div class="toolbar">
-	<button class="button button-danger" :on-click={{ @reset_password }}>reset</button>
-	<button class="button" :on-click={{ @logout }}>logout</button>
+	<button class="button button-danger" :on-click={@reset_password}>reset</button>
+	<button class="button" :on-click={@logout}>logout</button>
     </div>
 </div>

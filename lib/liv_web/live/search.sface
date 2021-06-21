@@ -1,7 +1,7 @@
-<Form for={{ :search }} submit={{ @submit }}>
+<Form for={:search} submit={@submit}>
     <Field name="query" class="field">
 	<Label>Enter your query:</Label>
-	<TextInput value={{ @default_query }} />
+	<TextInput value={@default_query} />
 	<input class="button" type="submit" value="&#128076;">
     </Field>
 </Form>
@@ -10,9 +10,9 @@
 	Or click one of the following examples:
     </p>
     <ul class="examples">
-	<li :for={{ {text, query} <- @examples }}>
-	    <button :on-click={{ @pick_example }} phx-value-query={{ query }}>
-		{{ text }}
+	<li :for={{text, query} <- @examples}>
+	    <button :on-click={@pick_example} phx-value-query={query}>
+		{text}
 	    </button>
 	</li>
     </ul>

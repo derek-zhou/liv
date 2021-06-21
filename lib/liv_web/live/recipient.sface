@@ -1,13 +1,13 @@
-<div id={{ "recipient_#{@index}" }} class="line">
-    <Select name={{ "type_#{@index}" }}
-	    options={{ "": "nil", "To:": "to", "Cc:": "cc", "Bcc:": "bcc" }}
-	    selected={{ to_string(@type) }} />
-    <TextInput name={{ "addr_#{@index}" }}
-	       opts={{ "phx-debounce": 500,
+<div id={"recipient_#{@index}"} class="line">
+    <Select name={"type_#{@index}"}
+	    options={"": "nil", "To:": "to", "Cc:": "cc", "Bcc:": "bcc"}
+	    selected={to_string(@type)} />
+    <TextInput name={"addr_#{@index}"}
+	       opts={"phx-debounce": 500,
 		    autocomplete: "off",
-		    list: "list_#{@index}" }}
-	       value={{ @addr }} />
-    <datalist id={{ "list_#{@index}" }}>
-	<option :for={{ value <- @options }} value={{ addr_string(value) }} />
+		    list: "list_#{@index}"}
+	       value={@addr} />
+    <datalist id={"list_#{@index}"}>
+	<option :for={value <- @options} value={addr_string(value)} />
     </datalist>
 </div>
