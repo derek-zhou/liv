@@ -4,9 +4,10 @@
     	    <TextInput value={@subject}
 		       opts={"phx-debounce": "blur", placeholder: "Mail Subject"} />
 	</Field>
-	<Recipient :for.with_index={{{type, [name | addr]}, i} <- @recipients}
-		   :props={index: i, type: type, options: @addr_options,
-				   addr: email_addr(name, addr)} />
+	{#for {{type, [name | addr]}, i} <- Enum.with_index(@recipients)}
+	<Recipient {... index: i, type: type, options: @addr_options,
+		   addr: email_addr(name, addr) } />
+	{/for}
     </div>
     <div class="mail-body">
 	<Field name="text">

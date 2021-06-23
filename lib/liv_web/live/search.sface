@@ -10,10 +10,12 @@
 	Or click one of the following examples:
     </p>
     <ul class="button-examples">
-	<li :for={{text, query} <- @examples}>
-	    <button :on-click={@pick_example} form="" phx-value-query={query}>
+	{#for {text, query} <- @examples}
+	<li>
+	    <button phx-click={@pick_example} form="" phx-value-query={query}>
 		{text}
 	    </button>
 	</li>
+	{/for}
     </ul>
 </Form>

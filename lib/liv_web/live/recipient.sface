@@ -8,6 +8,8 @@
 		    list: "list_#{@index}"}
 	       value={@addr} />
     <datalist id={"list_#{@index}"}>
-	<option :for={value <- @options} value={addr_string(value)} />
+	{#for value <- @options}
+	<option value={addr_string(value)} />
+	{/for}
     </datalist>
 </div>

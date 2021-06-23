@@ -32,12 +32,5 @@ defmodule LivWeb.View do
 
   defp oversized?(html), do: byte_size(html) >= @max_inline_html
 
-  defp inlined?(html) do
-    case byte_size(html) do
-      c when c > 0 and c < @max_inline_html -> true
-      _ -> false
-    end
-  end
-
   defp sanitize(html), do: html |> Scrubber.scrub(Sanitizer) |> raw()
 end
