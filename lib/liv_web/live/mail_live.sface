@@ -1,29 +1,20 @@
 <Main {... messages: @flash, title: @title, info: @info, buttons: @buttons }>
-    {#case {@auth, @live_action}}
-    {#match {:logged_out, _}}
-    <Login {... prompt: @password_prompt, submit: "pw_submit" }/>
-    {#match {:logged_in, :set_password}}
-    <Login {... prompt: @password_prompt, submit: "pw_submit" }/>
-    {#match {:logged_in, :search}}
-    <Search {... default_query: @default_query, submit: "search",
+    <Login :if={@auth == :logged_out || @live_action == :set_password}
+	   {... prompt: @password_prompt, submit: "pw_submit" }/>
+    <Search :if={@auth == :logged_in && @live_action == :search}
+	    {... default_query: @default_query, submit: "search",
 	    pick_example: "pick_search_example" } />
-    {#match {:logged_in, :write}}
-    <Write {... change: "write_change", subject: @subject, recipients: @recipients,
+    <Write :if={@auth == :logged_in && @live_action == :write}
+	   {... change: "write_change", subject: @subject, recipients: @recipients,
 	   addr_options: @addr_options, text: @write_text } />
-    {#match {:logged_in, :config}}
-    <Config {... change: "config_change", my_addr: @my_addr, my_addrs: @my_addrs,
+    <Config :if={@auth == :logged_in && @live_action == :config}
+	    {... change: "config_change", my_addr: @my_addr, my_addrs: @my_addrs,
 	    my_lists: @my_lists } />
-    {#match _}
-    {!-- :find and :view are always included, possibly hidden  to save DOM churn --}
-    {/case}
-
-    {#if @auth == :logged_in}
-    <div hidden={@live_action != :find}>
+    <div :if={@auth == :logged_in} hidden={@live_action != :find}>
 	<Find {... mails: @list_mails, tree: @list_tree, tz_offset: @tz_offset } />
     </div>
-    <div hidden={@live_action != :view}>
+    <div :if={@auth == :logged_in} hidden={@live_action != :view}>
 	<View {... meta: @mail_meta, html: @mail_html, text: @mail_text,
 	      attachments: @mail_attachment_metas, tz_offset: @tz_offset } />
     </div>
-    {/if}
 </Main>

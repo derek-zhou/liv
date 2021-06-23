@@ -1,5 +1,4 @@
-{#if @meta != nil}
-<div class="box" id="message-view" phx-hook="View">
+<div :if={@meta != nil} class="box" id="message-view" phx-hook="View">
     <div class="line">
 	From:
 	<LivePatch to={Routes.mail_path(@socket, :write, tl(@meta.from))}
@@ -12,24 +11,20 @@
 		   class="email-addr">{email_name(addr)}</LivePatch>
 	{/for}
     </div>
-    {#if length(@meta.cc) > 0}
-    <div class="line">
+    <div :if={length(@meta.cc) > 0} class="line">
 	Cc:
 	{#for addr <- @meta.cc}
 	<LivePatch to={Routes.mail_path(@socket, :write, tl(addr))}
 		   class="email-addr">{email_name(addr)}</LivePatch>
 	{/for}
     </div>
-    {/if}
-    {#if length(@meta.bcc) > 0}
-    <div class="line">
+    <div :if={length(@meta.bcc) > 0} class="line">
 	Bcc:
 	{#for addr <- @meta.bcc}
 	<LivePatch to={Routes.mail_path(@socket, :write, tl(addr))}
 		   class="email-addr">{email_name(addr)}</LivePatch>
 	{/for}
     </div>
-    {/if}
     <div class="line">
 	Subject: <span class="subject">{@meta.subject}</span>
     </div>
@@ -39,19 +34,12 @@
     <div class="line">
 	Date: <span class="date">{date_string(@meta.date, @tz_offset)}</span>
     </div>
-    {#if !Enum.empty?(@attachments)}
-    <ul class="attachments">
+    <ul :if={!Enum.empty?(@attachments)} class="attachments">
 	{#for {name, _type, size, offset, url} <- @attachments}
 	<Attachment {... name: name, size: size, offset: offset, url: url } />
 	{/for}
     </ul>
-    {/if}
-    {#if @html == ""}
-    <pre>{@text}</pre>
-    {#elseif oversized?(@html)}
-    <iframe class="mail-body" srcdoc={@html} sandbox />
-    {#else}
-    <div >{sanitize(@html)}</div>
-    {/if}
+    <pre :if={@html == ""}>{@text}</pre>
+    <iframe :if={oversized?(@html)} class="mail-body" srcdoc={@html} sandbox />
+    <div :if={inlined?(@html)}>{sanitize(@html)}</div>
 </div>
-{/if}
