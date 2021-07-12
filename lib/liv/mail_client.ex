@@ -45,7 +45,8 @@ defmodule Liv.MailClient do
   def seen(nil, docid) do
     case MaildirCommander.full_mail(docid) do
       {:error, msg} ->
-        raise(msg)
+        Logger.warn("docid: #{docid} not found: #{msg}")
+        nil
 
       {meta, text, html, parts} ->
         meta =
@@ -94,6 +95,7 @@ defmodule Liv.MailClient do
   @doc """
   getter of a specific mail metadata
   """
+  def mail_meta(nil, _docid), do: nil
   def mail_meta(%__MODULE__{mails: mails}, docid), do: Map.get(mails, docid)
 
   @doc """

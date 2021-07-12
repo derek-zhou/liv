@@ -163,7 +163,21 @@ defmodule LivWeb.MailLive do
 
         case MailClient.mail_meta(mc, docid) do
           nil ->
-            {:noreply, put_flash(socket, :error, "Mail not found")}
+            {
+              :noreply,
+              socket
+              |> put_flash(:error, "Mail not found")
+              |> assign(
+                info: info_mc(mc),
+                page_title: "Mail not found",
+                buttons: [
+                  {:patch, "\u{1f50d}", Routes.mail_path(socket, :search), false},
+                  {:button, "\u{1f5c2}", "back_to_list", false},
+                  {:button, "\u{25c0}", "backward_message", true},
+                  {:button, "\u{25b6}", "forward_message", true}
+                ]
+              )
+            }
 
           meta ->
             {
@@ -185,7 +199,21 @@ defmodule LivWeb.MailLive do
         end
 
       _ ->
-        {:noreply, put_flash(socket, :error, "Illegal docid")}
+        {
+          :noreply,
+          socket
+          |> put_flash(:error, "Illegal docid")
+          |> assign(
+            info: info_mc(mc),
+            page_title: "Mail not found",
+            buttons: [
+              {:patch, "\u{1f50d}", Routes.mail_path(socket, :search), false},
+              {:button, "\u{1f5c2}", "back_to_list", false},
+              {:button, "\u{25c0}", "backward_message", true},
+              {:button, "\u{25b6}", "forward_message", true}
+            ]
+          )
+        }
     end
   end
 
@@ -573,6 +601,17 @@ defmodule LivWeb.MailLive do
   def handle_event(
         "back_to_list",
         _params,
+        %Socket{assigns: %{last_query: "", mail_client: nil}} = socket
+      ) do
+    {:noreply,
+     push_patch(socket,
+       to: Routes.mail_path(socket, :find, URI.encode(@default_query))
+     )}
+  end
+
+  def handle_event(
+        "back_to_list",
+        _params,
         %Socket{assigns: %{last_query: "", mail_client: mc}} = socket
       ) do
     {:noreply,
@@ -756,6 +795,8 @@ defmodule LivWeb.MailLive do
     Gettext.put_locale(LivWeb.Gettext, "en")
     socket
   end
+
+  defp info_mc(nil), do: "0/0"
 
   defp info_mc(mc) do
     "#{MailClient.unread_count(mc)} unread/#{MailClient.mail_count(mc)}"
