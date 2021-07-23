@@ -220,6 +220,9 @@
 		.preview {
 		    @apply border rounded bg-yellow-50 p-2;
 		}
+                input[type="number"] {
+                    @apply w-16 leading-relaxed border rounded border-gray-600;
+                }
                 input[type="text"] {
                     @apply w-80 leading-relaxed border rounded border-gray-600;
                 }

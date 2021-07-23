@@ -11,7 +11,7 @@ defmodule Liv.Application do
       LivWeb.Telemetry,
       # Start the PubSub system
       {Phoenix.PubSub, name: Liv.PubSub},
-      # configer to persis configuration
+      # configer to persist configuration
       {:self_configer, name: Liv.Configer},
       # address vault
       Liv.AddressVault,
@@ -20,6 +20,8 @@ defmodule Liv.Application do
       # Start a worker by calling: Liv.Worker.start_link(arg)
       # {Liv.Worker, arg}
     ]
+
+    Application.put_env(:maildir_commander, :housekeeper, {Liv.MailClient, :archive_job, []})
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options

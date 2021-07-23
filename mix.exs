@@ -34,7 +34,7 @@ defmodule Liv.MixProject do
   defp deps do
     [
       {:self_configer, "~> 0.1.1"},
-#     {:maildir_commander, "~> 0.1.3"},
+      #     {:maildir_commander, "~> 0.1.3"},
       {:maildir_commander, path: "../maildir_commander"},
       {:html_sanitize_ex, "~> 1.4"},
       {:swoosh, "~> 1.3"},

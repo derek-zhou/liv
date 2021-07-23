@@ -351,6 +351,51 @@ defmodule Liv.MailClient do
     end)
   end
 
+  @doc """
+  archiving job. Always return :ok. will log and do side effects
+  """
+  def archive_job() do
+    case MaildirCommander.find("maildir:/", true, :":date", false, false, false) do
+      {:error, reason} ->
+        Logger.warn("query error: #{reason}")
+
+      {:ok, tree, messages} ->
+        horizon = System.system_time(:second) - Configer.default(:archive_days) * 86400
+        archive = String.to_charlist(Configer.default(:archive_maildir))
+        my_addresses = MapSet.new(Configer.default(:my_addresses))
+        is_recent = &is_recent(Map.get(messages, &1), horizon)
+        is_important = &is_important(Map.get(messages, &1), my_addresses)
+
+        {mark_list, unmark_list} =
+          :lists.partition(
+            &MCTree.any(is_important, &1, tree),
+            MCTree.root_list(tree)
+          )
+
+        marked = mark_conversations(mark_list, tree, messages)
+        unmarked = unmark_conversations(unmark_list, tree, messages)
+        Logger.notice("#{marked} mails marked, #{unmarked} mails unmarked")
+        archive_list = Enum.reject(mark_list, &MCTree.any(is_recent, &1, tree))
+        junk_list = Enum.reject(unmark_list, &MCTree.any(is_recent, &1, tree))
+
+        Logger.notice(
+          "#{length(archive_list)} conversations to be archived, #{length(junk_list)} conversation to be deleted"
+        )
+
+        case archive do
+          "" ->
+            Logger.notice("Archiving disabled")
+
+          _ ->
+            deleted = delete_conversations(junk_list, tree, messages)
+            archived = archive_conversations(archive_list, archive, tree, messages)
+            Logger.notice("Done, #{archived} mails archived, #{deleted} mails deleted")
+        end
+    end
+
+    :ok
+  end
+
   defp addresses_map(%__MODULE__{docid: docid, mails: mails}) when docid > 0 do
     %{from: from, to: to, cc: cc} = Map.fetch!(mails, docid)
 
@@ -436,4 +481,66 @@ defmodule Liv.MailClient do
   end
 
   defp add_references(email, _), do: email
+
+  defp is_recent(%{date: date}, horizon) when date > horizon, do: true
+  defp is_recent(%{flags: flags}, _horizon), do: Enum.member?(flags, :unread)
+
+  defp is_important(%{from: [_name | addr]}, my_addresses) do
+    MapSet.member?(my_addresses, addr)
+  end
+
+  defp delete_conversations(list, tree, messages) do
+    MCTree.traverse(
+      fn docid ->
+        %{path: path} = Map.get(messages, docid)
+        Logger.notice("deleting mail (#{docid}) #{path}")
+        MaildirCommander.delete(docid)
+      end,
+      list,
+      tree
+    )
+  end
+
+  defp archive_conversations(list, archive, tree, messages) do
+    MCTree.traverse(
+      fn docid ->
+        %{path: path} = Map.get(messages, docid)
+        Logger.notice("archiving mail (#{docid}) #{path}")
+        MaildirCommander.scrub(path, archive)
+      end,
+      list,
+      tree
+    )
+  end
+
+  # the flag replied is used to mark messages for archiving
+  defp mark_conversations(list, tree, messages) do
+    MCTree.traverse(
+      fn docid ->
+        %{flags: flags} = Map.get(messages, docid)
+
+        unless Enum.member?(flags, :replied) do
+          Logger.notice("marking mail (#{docid})")
+          MaildirCommander.flag(docid, "+R")
+        end
+      end,
+      list,
+      tree
+    )
+  end
+
+  defp unmark_conversations(list, tree, messages) do
+    MCTree.traverse(
+      fn docid ->
+        %{flags: flags} = Map.get(messages, docid)
+
+        if Enum.member?(flags, :replied) do
+          Logger.notice("unmarking mail (#{docid})")
+          MaildirCommander.flag(docid, "-R")
+        end
+      end,
+      list,
+      tree
+    )
+  end
 end

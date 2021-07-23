@@ -10,7 +10,6 @@ defmodule LivWeb.MailLive do
   alias LivWeb.Router.Helpers, as: Routes
   alias Argon2
   alias :self_configer, as: SelfConfiger
-  alias :mc_configer, as: MCConfiger
   alias Liv.Configer
   alias Liv.MailClient
   alias Liv.AddressVault
@@ -70,6 +69,8 @@ defmodule LivWeb.MailLive do
   data my_addr, :list, default: [nil | "you@example.com"]
   data my_addrs, :list, default: []
   data my_lists, :list, default: []
+  data archive_days, :integer, default: 30
+  data archive_maildir, :string, default: ""
 
   # for the initial mount before login
   def handle_params(_params, _url, %Socket{assigns: %{live_action: :login}} = socket) do
@@ -263,6 +264,8 @@ defmodule LivWeb.MailLive do
         my_addr: Configer.default(:my_address),
         my_addrs: Configer.default(:my_addresses),
         my_lists: Configer.default(:my_email_lists),
+        archive_days: Configer.default(:archive_days),
+        archive_maildir: Configer.default(:archive_maildir),
         buttons: [
           {:button, "\u{1F4BE}", "config_save", false},
           {:button, "\u{2716}", "close_dialog", false}
@@ -538,7 +541,9 @@ defmodule LivWeb.MailLive do
             "my_name" => name,
             "my_addr" => addr,
             "my_addrs" => addrs,
-            "my_lists" => lists
+            "my_lists" => lists,
+            "archive_days" => days,
+            "archive_maildir" => maildir
           }
         },
         socket
@@ -551,23 +556,44 @@ defmodule LivWeb.MailLive do
 
     my_addrs = String.split(String.trim(addrs), "\n")
     my_lists = String.split(String.trim(lists), "\n")
+    archive_maildir = String.trim(maildir)
+
+    archive_days =
+      case Integer.parse(days) do
+        {n, ""} when n > 0 -> n
+        _ -> Configer.default(:archive_days)
+      end
 
     socket =
-      case my_addrs do
-        [^addr | _] ->
-          clear_flash(socket)
-
-        _ ->
+      cond do
+        hd(my_addrs) != addr ->
           put_flash(
             socket,
             :error,
             "Your list of address should has your primary address as the first one"
           )
+
+        to_string(archive_days) != days ->
+          put_flash(
+            socket,
+            :error,
+            "Days must be a positive integer"
+          )
+
+        true ->
+          clear_flash(socket)
       end
 
     {
       :noreply,
-      assign(socket, my_addr: my_addr, my_addrs: my_addrs, my_lists: my_lists)
+      assign(
+        socket,
+        my_addr: my_addr,
+        my_addrs: my_addrs,
+        my_lists: my_lists,
+        archive_days: archive_days,
+        archive_maildir: archive_maildir
+      )
     }
   end
 
@@ -575,16 +601,21 @@ defmodule LivWeb.MailLive do
         "config_save",
         _params,
         %Socket{
-          assigns: %{my_addr: my_addr, my_addrs: my_addrs, my_lists: my_lists}
+          assigns: %{
+            my_addr: my_addr,
+            my_addrs: my_addrs,
+            my_lists: my_lists,
+            archive_days: archive_days,
+            archive_maildir: archive_maildir
+          }
         } = socket
       ) do
     Configer
     |> SelfConfiger.set_env(:my_address, my_addr)
     |> SelfConfiger.set_env(:my_addresses, my_addrs)
     |> SelfConfiger.set_env(:my_email_lists, my_lists)
-
-    # MC need the same set of config for archiving
-    SelfConfiger.set_env(MCConfiger, :my_addresses, my_addrs)
+    |> SelfConfiger.set_env(:archive_days, archive_days)
+    |> SelfConfiger.set_env(:archive_maildir, archive_maildir)
 
     {
       :noreply,

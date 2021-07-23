@@ -25,6 +25,19 @@
 	              opts={"phx-debounce": 500}/>
 	</Field>
     </div>
+    <hr/>
+    <div class="mail-meta">
+    	 <Field name="archive_days" class="field">
+	 	<Label>Days to keep in the Inbox</Label>
+		<NumberInput value={@days}
+			     opts={min: 1, "phx-debounce": 500} />
+	 </Field>
+    	 <Field name="archive_maildir" class="field">
+	 	<Label>Archive target</Label>
+		<TextInput value={@maildir}
+			     opts={"phx-debounce": 500} />
+	 </Field>
+    </div>
     <div class="alert alert-danger">
 	<span>Danger!</span>
 	<LivePatch to={Routes.mail_path(@socket, :set_password)}
