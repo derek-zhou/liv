@@ -1,4 +1,5 @@
-<div class={"message", "message-unread": unread?(@meta.flags)}>
+<div class={"message", "message-unread": unread?(@meta.flags),
+	   "message-replied": replied?(@meta.flags)}>
     <LivePatch to={Routes.mail_path(@socket, :view, @docid)}
 	       class="subject">
 	{@meta.subject}

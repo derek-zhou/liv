@@ -279,6 +279,9 @@
 			@apply font-bold;
 		    }
 		}
+		.message.message-replied {
+		    @apply bg-yellow-50;
+		}
 		.children-container {
 		    @apply border-l-4 border-yellow-600 ml-2;
 		}
