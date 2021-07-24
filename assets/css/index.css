@@ -202,6 +202,12 @@
 			@apply flex-none cursor-pointer text-white bg-purple-600 mr-1;
                     }
 		}
+		section {
+		    @apply py-2 border-b;
+		}
+		section:last-child {
+		    @apply border-b-0 pb-0;
+		}
                 label {
                     @apply flex-none mr-2;
 		    .focus {
@@ -415,11 +421,10 @@
 	.viewport {
             @apply max-w-screen-lg;
 	    .content {
-		.mail-meta {
-		    @apply grid grid-cols-2 gap-x-2;
-		}
-		.mail-body {
-		    @apply grid grid-cols-2 gap-x-2;
+		form {
+		    section {
+			@apply grid grid-cols-2 gap-x-2;
+		    }
 		}
 		.box {
                     .thumbnail {

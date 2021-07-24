@@ -1,5 +1,5 @@
 <Form for={:config} change={@change}>
-    <div class="mail-meta">
+    <section>
         <Field name="my_name" class="field">
 		<Label>Your name</Label>
 		<TextInput value={hd(@my_addr)}
@@ -10,8 +10,8 @@
 	    <TextInput value={tl(@my_addr)}
 		       opts={"phx-debounce": 500} />
 	</Field>
-    </div>
-    <div class="mail-body">
+    </section>
+    <section>
 	<Field name="my_addrs" class="field">
 	    <Label>All your addresses</Label>
 	    <TextArea value={Enum.join(@my_addrs, "\n")}
@@ -24,9 +24,8 @@
 		      rows="10"
 	              opts={"phx-debounce": 500}/>
 	</Field>
-    </div>
-    <hr/>
-    <div class="mail-meta">
+    </section>
+    <section>
     	 <Field name="archive_days" class="field">
 	 	<Label>Days to keep in the Inbox</Label>
 		<NumberInput value={@days}
@@ -37,6 +36,8 @@
 		<TextInput value={@maildir}
 			     opts={"phx-debounce": 500} />
 	 </Field>
+    </section>
+    <section>
     	 <Field name="orbit_api_key" class="field">
 	 	<Label>Orbit API key</Label>
 		<TextInput value={@orbit_api_key}
@@ -47,9 +48,14 @@
 		<TextInput value={@orbit_workspace}
 			     opts={"phx-debounce": 500} />
 	 </Field>
-    </div>
+	 <Label :if={@orbit_workspace != ""}>
+	 	Your Orbit is <a href={"https://app.orbit.love/#{@orbit_workspace}"}>
+	 	https://app.orbit.love/{@orbit_workspace}
+		</a>
+	 </Label>
+    </section>
     <div class="alert alert-danger">
-	<span>Danger!</span>
+	<Label>Danger!</Label>
 	<LivePatch to={Routes.mail_path(@socket, :set_password)}
 		      class="button">Reset your password</LivePatch>
     </div>

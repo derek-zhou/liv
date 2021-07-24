@@ -1,5 +1,5 @@
 <Form for={:mail} change={@change}>
-    <div class="mail-meta">
+    <section>
 	<Field name="subject" class="line">
     	    <TextInput value={@subject}
 		       opts={"phx-debounce": "blur", placeholder: "Mail Subject"} />
@@ -8,8 +8,8 @@
 	<Recipient {... index: i, type: type, options: @addr_options,
 		   addr: email_addr(name, addr) } />
 	{/for}
-    </div>
-    <div class="mail-body">
+    </section>
+    <section>
 	<Field name="text">
 	    <TextArea id="text-box" rows="16"
 		      opts={"phx-update": "ignore", "phx-debounce": 1000}
@@ -18,5 +18,5 @@
 	<div class="preview">
 	    {raw(preview(@text))}
 	</div>
-    </div>
+    </section>
 </Form>
