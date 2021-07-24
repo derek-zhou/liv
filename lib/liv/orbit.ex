@@ -39,7 +39,12 @@ defmodule Liv.Orbit do
   defp mark_orbit(docid, mail, api_key, workspace) do
     key = to_string(docid)
     url = Routes.mail_url(Endpoint, :view, key)
-    date = NaiveDateTime.add(~N[1970-01-01 00:00:00], mail.date)
+    [_name | from] = mail.from
+
+    date =
+      ~U[1970-01-01 00:00:00Z]
+      |> DateTime.add(mail.date)
+      |> DateTime.to_iso8601()
 
     json_api_post(
       "https://app.orbit.love/api/v1/#{workspace}/activities",
@@ -53,28 +58,49 @@ defmodule Liv.Orbit do
         "occurred_at" => date,
         "identity" => %{
           "source" => "email",
-          "email" => elem(mail.from, 1)
+          "email" => from
         }
       },
-      api_key
+      api_key,
+      1000
     )
   end
 
-  defp json_api_post(url, data, api_key) do
+  defp json_api_post(url, data, api_key, timeout) do
     case HTTPoison.post(url, Jason.encode!(data), [
            {"Accept", "application/json"},
            {"Authorization", "Bearer #{api_key}"},
            {"Content-Type", "application/json"}
          ]) do
+      {:error, %HTTPoison.Error{reason: :timeout}} ->
+        Logger.notice("api call to #{url} timeout. Will retry")
+        json_api_post(url, data, api_key, next_timeout(timeout))
+
       {:error, %HTTPoison.Error{reason: reason}} ->
         raise("api call to #{url} failed: #{reason}")
+
+      {:ok, %HTTPoison.Response{status_code: 429}} ->
+        Logger.notice("api call to #{url} busy. Will retry")
+        json_api_post(url, data, api_key, next_timeout(timeout))
 
       {:ok, %HTTPoison.Response{status_code: code}} when code < 300 ->
         Logger.debug("api call to #{url} succeeded with response code: #{code}")
         :ok
 
-      {:ok, %HTTPoison.Response{status_code: code}} ->
-        raise("api call to #{url} failed with response code: #{code}")
+      {:ok, %HTTPoison.Response{status_code: code, body: body}} ->
+        Logger.notice("api call #{inspect(data)} failed with response code: #{code}")
+        Logger.notice("response #{inspect(Jason.decode!(body))}")
+        :ok
     end
+  end
+
+  defp next_timeout(timeout) when timeout < 1_000_000 do
+    Process.sleep(timeout)
+    timeout * 2
+  end
+
+  defp next_timeout(_timeout) do
+    Process.sleep(1_000_000)
+    1_000_000
   end
 end
