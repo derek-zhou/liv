@@ -12,4 +12,6 @@ defmodule LivWeb.Config do
   prop my_lists, :list, required: true
   prop days, :integer, required: true
   prop maildir, :string, required: true
+  prop orbit_api_key, :string, required: true
+  prop orbit_workspace, :string, required: true
 end

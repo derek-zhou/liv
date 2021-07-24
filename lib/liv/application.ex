@@ -15,6 +15,8 @@ defmodule Liv.Application do
       {:self_configer, name: Liv.Configer},
       # address vault
       Liv.AddressVault,
+      # the orbit gen server
+      Liv.Orbit,
       # Start the Endpoint (http/https)
       LivWeb.Endpoint
       # Start a worker by calling: Liv.Worker.start_link(arg)

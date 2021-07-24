@@ -37,6 +37,16 @@
 		<TextInput value={@maildir}
 			     opts={"phx-debounce": 500} />
 	 </Field>
+    	 <Field name="orbit_api_key" class="field">
+	 	<Label>Orbit API key</Label>
+		<TextInput value={@orbit_api_key}
+			     opts={"phx-debounce": 500} />
+	 </Field>
+    	 <Field name="orbit_workspace" class="field">
+	 	<Label>Orbit Workspace</Label>
+		<TextInput value={@orbit_workspace}
+			     opts={"phx-debounce": 500} />
+	 </Field>
     </div>
     <div class="alert alert-danger">
 	<span>Danger!</span>

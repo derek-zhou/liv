@@ -71,6 +71,8 @@ defmodule LivWeb.MailLive do
   data my_lists, :list, default: []
   data archive_days, :integer, default: 30
   data archive_maildir, :string, default: ""
+  data orbit_api_key, :string, default: ""
+  data orbit_workspace, :string, default: ""
 
   # for the initial mount before login
   def handle_params(_params, _url, %Socket{assigns: %{live_action: :login}} = socket) do
@@ -266,6 +268,8 @@ defmodule LivWeb.MailLive do
         my_lists: Configer.default(:my_email_lists),
         archive_days: Configer.default(:archive_days),
         archive_maildir: Configer.default(:archive_maildir),
+        orbit_api_key: Configer.default(:orbit_api_key),
+        orbit_workspace: Configer.default(:orbit_workspace),
         buttons: [
           {:button, "\u{1F4BE}", "config_save", false},
           {:button, "\u{2716}", "close_dialog", false}
@@ -543,7 +547,9 @@ defmodule LivWeb.MailLive do
             "my_addrs" => addrs,
             "my_lists" => lists,
             "archive_days" => days,
-            "archive_maildir" => maildir
+            "archive_maildir" => maildir,
+            "orbit_api_key" => api_key,
+            "orbit_workspace" => workspace
           }
         },
         socket
@@ -557,6 +563,8 @@ defmodule LivWeb.MailLive do
     my_addrs = String.split(String.trim(addrs), "\n")
     my_lists = String.split(String.trim(lists), "\n")
     archive_maildir = String.trim(maildir)
+    orbit_api_key = String.trim(api_key)
+    orbit_workspace = String.trim(workspace)
 
     archive_days =
       case Integer.parse(days) do
@@ -592,7 +600,9 @@ defmodule LivWeb.MailLive do
         my_addrs: my_addrs,
         my_lists: my_lists,
         archive_days: archive_days,
-        archive_maildir: archive_maildir
+        archive_maildir: archive_maildir,
+        orbit_api_key: orbit_api_key,
+        orbit_workspace: orbit_workspace
       )
     }
   end
@@ -606,7 +616,9 @@ defmodule LivWeb.MailLive do
             my_addrs: my_addrs,
             my_lists: my_lists,
             archive_days: archive_days,
-            archive_maildir: archive_maildir
+            archive_maildir: archive_maildir,
+            orbit_api_key: orbit_api_key,
+            orbit_workspace: orbit_workspace
           }
         } = socket
       ) do
@@ -616,6 +628,8 @@ defmodule LivWeb.MailLive do
     |> SelfConfiger.set_env(:my_email_lists, my_lists)
     |> SelfConfiger.set_env(:archive_days, archive_days)
     |> SelfConfiger.set_env(:archive_maildir, archive_maildir)
+    |> SelfConfiger.set_env(:orbit_api_key, orbit_api_key)
+    |> SelfConfiger.set_env(:orbit_workspace, orbit_workspace)
 
     {
       :noreply,

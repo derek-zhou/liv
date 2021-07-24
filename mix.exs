@@ -38,6 +38,7 @@ defmodule Liv.MixProject do
       {:maildir_commander, path: "../maildir_commander"},
       {:html_sanitize_ex, "~> 1.4"},
       {:swoosh, "~> 1.3"},
+      {:httpoison, "~> 1.7"},
       {:mime, "~> 1.6"},
       {:hackney, "~> 1.9"},
       {:argon2_elixir, "~> 2.4"},

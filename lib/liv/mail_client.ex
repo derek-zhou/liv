@@ -3,6 +3,7 @@ defmodule Liv.MailClient do
   alias Liv.Configer
   alias Liv.Mailer
   alias Liv.AddressVault
+  alias Phoenix.PubSub
 
   @moduledoc """
   The core MailClient state mamangment abstracted from the UI. 
@@ -517,10 +518,12 @@ defmodule Liv.MailClient do
   defp mark_conversations(list, tree, messages) do
     MCTree.traverse(
       fn docid ->
-        %{flags: flags} = Map.get(messages, docid)
+        mail = %{flags: flags} = Map.get(messages, docid)
 
         unless Enum.member?(flags, :replied) do
           Logger.notice("marking mail (#{docid})")
+          # broadcast the event
+          PubSub.local_broadcast(Liv.PubSub, "mark_message", {:mark_message, docid, mail})
           MaildirCommander.flag(docid, "+R")
         end
       end,
@@ -536,6 +539,8 @@ defmodule Liv.MailClient do
 
         if Enum.member?(flags, :replied) do
           Logger.notice("unmarking mail (#{docid})")
+          # broadcast the event
+          PubSub.local_broadcast(Liv.PubSub, "unmark_message", {:unmark_message, docid})
           MaildirCommander.flag(docid, "-R")
         end
       end,
