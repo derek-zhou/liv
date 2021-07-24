@@ -106,13 +106,17 @@ On the other hand, LIV is unique in that:
 
 ## Email archiving
 
-This is something I come up with over the years dealing with huge amount of emails in a lazy mindset. I only have two email folders, the standard inbox, and `.Archive` (The name is a convention from many IMAP clients including Thunderbird). All mails land in the inbox initially. Every night I go through all emails in the inbox to group them into conversations. For each conversation:
+This is something I come up with over the years dealing with huge amount of emails in a lazy mindset. I only have two email folders, the standard inbox, and `.Archive` (The name is a convention from many IMAP clients including Thunderbird). All mails land in the inbox initially. Every once in a while I go through all emails in the inbox to group them into conversations. For each conversation:
 
-* If the latest email of the conversation is within 30 days, don't do anything with the conversation. Otherwise:
+* If the latest email of the conversation is within 30 days, or any mail is still unread, don't do anything with the conversation. Otherwise:
 * If I (as defined my all my known email addresses) was _not_ involved in the conversation, the whole conversation is deleted.
 * If I was involved in the conversation, the whole conversation is moved to the `.Archive` folder for long term storage, with all attachments removed. 
 
-This algorithm is implemented in `mc archive`, which I run in my cron job. Archived emails are still search-able, just not in the inbox so my inbox stays in constant size. Currently there is no UI to tune this algorithm and you would have to opt-in to use it. 
+Archived emails are still search-able, just not in the inbox so my inbox stays in constant size. This algorithm is automatically implemented in LIV, unless the archive target is left empty from the config page. 
+
+## Orbit integration
+
+The folks at [Orbit](https://orbit.love) are kind enough to provide free services to anyone that has reasonably low volume of traffic. Orbit is a tool to analysis activities, so you can find out who among your corrspondances are actively engaged with you, and who are drifting away. You need to fill out the Orbit API key and the Orbit workspace in the configuration page. Both can be found from your Orbit profile. 
 
 ## Disclaimer
 
