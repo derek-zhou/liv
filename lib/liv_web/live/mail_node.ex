@@ -10,7 +10,7 @@ defmodule LivWeb.MailNode do
 
   defp unread?(flags), do: !Enum.member?(flags, :seen)
 
-  defp replied?(flags), do: !Enum.member?(flags, :replied)
+  defp replied?(flags), do: Enum.member?(flags, :replied)
 
   defp email_name([nil | addr]), do: addr
   defp email_name([name | _addr]), do: name
