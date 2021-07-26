@@ -112,7 +112,7 @@ This is something I come up with over the years dealing with huge amount of emai
 * If I (as defined my all my known email addresses) was _not_ involved in the conversation, the whole conversation is deleted.
 * If I was involved in the conversation, the whole conversation is moved to the `.Archive` folder for long term storage, with all attachments removed. 
 
-Archived emails are still search-able, just not in the inbox so my inbox stays in constant size. This algorithm is automatically implemented in LIV, unless the archive target is left empty from the config page. 
+Archived emails are still searchable, just not in the inbox so my inbox stays in constant size. This algorithm is automatically implemented in LIV, unless the archive target is left empty from the config page. 
 
 ## Orbit integration
 
