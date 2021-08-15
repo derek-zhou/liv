@@ -82,7 +82,7 @@
             }
         }
         pre {
-            @apply mb-4 border-l-4 border-purple-500 p-2;
+            @apply mb-4 p-2;
             > code {
                 @apply whitespace-pre;
             }
