@@ -103,7 +103,13 @@ function upload_attachment(name, offset) {
     if (offset + chunkSize >= dlen)
 	uploads.shift();
 }
-    
+
+// my live socket is not at root
+function getLiveSocketPath(path) {
+    let tokens = path.split('/');
+    return "/" + tokens[1] + "/live";
+}
+
 let Hooks = new Object();
 
 Hooks.Main = {
@@ -163,7 +169,8 @@ Hooks.Attach = {
     }
 };
 
-let liveSocket = new LiveSocket("/live", Socket, {hooks: Hooks})
+let socketPath = getLiveSocketPath(location.pathname);
+let liveSocket = new LiveSocket(socketPath, Socket, {hooks: Hooks})
 
 // Show progress bar on live navigation and form submits
 window.addEventListener("phx:page-loading-start", info => show_progress_bar())

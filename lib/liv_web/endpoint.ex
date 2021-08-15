@@ -1,7 +1,7 @@
 defmodule LivWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :liv
 
-  socket "/live", Phoenix.LiveView.Socket, longpoll: false
+  socket "/" <> System.get_env("USER") <> "/live", Phoenix.LiveView.Socket, longpoll: false
 
   # Serve at "/" the static files from "priv/static" directory.
   #

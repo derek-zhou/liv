@@ -88,7 +88,7 @@ The first time you run LIV it will ask you to setup a password. This password is
 
 The query syntax is from `mu`, so you should familiar yourself with `man mu-query`
 
-If you want to run `mu4e` at the same time with LIV, you must configure `mu4e` to use the alternative `mu` binary. A simple wrapper script is provided [here (mc)](https://github.com/derek-zhou/maildir_commander/blob/main/scripts/mc). Please note `mc` is an incomplete wrapper of `mu`; it only does enough to mimic `mu server`, to satisfy `mu4e`. `mc` is also used for other purposes such as archiving. 
+If you want to run `mu4e` at the same time with LIV, you must configure `mu4e` to use the alternative `mu` binary. A simple wrapper script is provided [here (mc)](https://github.com/derek-zhou/maildir_commander/blob/main/scripts/mc). Please note `mc` is an incomplete wrapper of `mu`; it only does enough to mimic `mu server`, to satisfy `mu4e`.
 
 ## Using LIV
 
@@ -116,7 +116,7 @@ Archived emails are still searchable, just not in the inbox so my inbox stays in
 
 ## Orbit integration
 
-The folks at [Orbit](https://orbit.love) are kind enough to provide free services to anyone that has reasonably low volume of traffic. Orbit is a tool to analysis activities, so you can find out who among your corrspondances are actively engaged with you, and who are drifting away. You need to fill out the Orbit API key and the Orbit workspace in the configuration page. Both can be found from your Orbit profile. 
+The folks at [Orbit](https://orbit.love) are kind enough to provide free services to anyone that has reasonably low volume of traffic. Orbit is a tool to analize activities, so you can find out who among your corespondances are actively engaged with you, and who are drifting away. You need to fill out the Orbit API key and the Orbit workspace in the configuration page. Both can be found from your Orbit profile. 
 
 ## Disclaimer
 
