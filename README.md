@@ -66,19 +66,25 @@ mix phx.server
 And LIV is up (port 4000). To run it in production you will need to do a standard OTP release:
 ```
 export MIX_ENV=prod
-export SECRET_KEY_BASE=YOUR_SECRET_KEY_BASE
-export GUARDIAN_KEY=YOUR_GUARDIAN_KEY
 mix compile
 npm run deploy --prefix ./assets
 mix phx.digest
 mix release 
 ```
 
-The `SECRET_KEY_BASE` and `GUARDIAN_KEY` are two random string you should generate yourself once and keep them secret. The above can be kept in a shell script.
-
 ## Running LIV
 
 It is critically important to run LIV over https. **Do not run LIV over plain http except in debug situation**. I use a nginx reverse proxy but you are free to do anything you want. One thing that is set LIV apart from other Phoenix applications is that it has no route at `/`. The entry point of the application is at: `https://YOUR_MAIL_SERVER/YOUR_USER_NAME`, assume you have https termination and reverse proxy setup correctly. **Each user has to run their own LIV instance**, but all users can share the same OTP release and the same reverse proxy. LIV is smart enough to deduce the username and per-user configuration at the run time. 
+
+Please set a few environment variables before running the release:
+
+```
+export SECRET_KEY_BASE=YOUR_SECRET_KEY_BASE
+export GUARDIAN_KEY=YOUR_GUARDIAN_KEY
+_build/prod/rel/liv/bin/liv start
+```
+
+The `SECRET_KEY_BASE` and `GUARDIAN_KEY` are two random string you should generate yourself once and keep them secret. The above can be kept in a shell script.
 
 The first time you run LIV it will ask you to setup a password. This password is not your system password, which LIV has no access to anyway. Just pick any password you like. LIV will store the hash of this password in `~/.config/self_configer/liv.config` so should you lose the password you can edit it out and restart LIV. There are a few configuration you should enter at the config screen of the application:
 
