@@ -21,7 +21,7 @@ if config_env() == :prod do
       """
 
   config :liv, LivWeb.Endpoint,
-    url: [host: "mail.3qin.us", scheme: "https", port: 443, path: "/#{System.get_env("USER")}/"],
+    url: [host: "mail.3qin.us", scheme: "https", port: 443, path: "/#{System.get_env("USER")}"],
     cache_static_manifest: "priv/static/cache_manifest.json",
     http: [
       ip: {127, 0, 0, 1},

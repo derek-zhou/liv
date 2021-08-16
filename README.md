@@ -72,31 +72,62 @@ mix phx.digest
 mix release 
 ```
 
-## Running LIV
+## Deploying LIV
 
-It is critically important to run LIV over https. **Do not run LIV over plain http except in debug situation**. I use a nginx reverse proxy but you are free to do anything you want. One thing that is set LIV apart from other Phoenix applications is that it has no route at `/`. The entry point of the application is at: `https://YOUR_MAIL_SERVER/YOUR_USER_NAME`, assume you have https termination and reverse proxy setup correctly. **Each user has to run their own LIV instance**, but all users can share the same OTP release and the same reverse proxy. LIV is smart enough to deduce the username and per-user configuration at the run time. 
+It is critically important to run LIV over https. **Do not run LIV over plain http except in debug situation**. Also, **Each user has to run their own LIV instance**, however, all users can share the same OTP release, the same reverse proxy and the SSL cert. LIV is smart enough not to step on each others tow and to deduce the username and per-user configuration at the run time. 
 
 Please set a few environment variables before running the release:
 
 ```
 export SECRET_KEY_BASE=YOUR_SECRET_KEY_BASE
 export GUARDIAN_KEY=YOUR_GUARDIAN_KEY
+export PORT=4001
 _build/prod/rel/liv/bin/liv start
 ```
 
-The `SECRET_KEY_BASE` and `GUARDIAN_KEY` are two random string you should generate yourself once and keep them secret. The above can be kept in a shell script.
+The `SECRET_KEY_BASE` and `GUARDIAN_KEY` are two random string you should generate yourself once, and keep them secret. Each user must pick a different port.
+
+The entry point of is at: `https://YOUR_MAIL_SERVER/YOUR_USER_NAME`. Your reverse proxy needs to provide 2 proxy paths for each instance, one for regular route and one for websocket, as in the following Nginx example:
+
+```
+        location /derek {
+                 proxy_set_header Host $host;
+                 proxy_set_header X-Real-IP $remote_addr;
+                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                 proxy_set_header X-Forwarded-Proto  $scheme;
+                 proxy_set_header X-Forwarded-Host  $host;
+                 proxy_set_header X-Forwarded-Port  $server_port;
+                 proxy_pass http://localhost:4001/;
+                 proxy_redirect off;
+        }
+
+        location /derek/live {
+                 proxy_http_version 1.1;
+                 proxy_set_header Upgrade $http_upgrade;
+                 proxy_set_header Connection "upgrade";
+                 proxy_set_header Host $host;
+                 proxy_set_header X-Real-IP $remote_addr;
+                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                 proxy_set_header X-Forwarded-Proto  $scheme;
+                 proxy_set_header X-Forwarded-Host  $host;
+                 proxy_set_header X-Forwarded-Port  $server_port;
+                 proxy_pass http://localhost:4001/live;
+                 # raise the proxy timeout for the websocket
+                 proxy_read_timeout 6000s;
+        }
+```
+
+## Using LIV
 
 The first time you run LIV it will ask you to setup a password. This password is not your system password, which LIV has no access to anyway. Just pick any password you like. LIV will store the hash of this password in `~/.config/self_configer/liv.config` so should you lose the password you can edit it out and restart LIV. There are a few configuration you should enter at the config screen of the application:
 
 * Your name and preferred email address. This is the default `From:` address and `Bcc:` address
-* Your other email addresses. LIV will remove them from the `Cc:` so you only receive one copy of an email
+* All your email addresses, incliding the preferred one. LIV will remove them from the `Cc:` so you only receive one copy of an email
 * The email lists that you belong to. LIV will remove yourself from the `Bcc:` if you are replying to a mailing list.
 
 The query syntax is from `mu`, so you should familiar yourself with `man mu-query`
 
 If you want to run `mu4e` at the same time with LIV, you must configure `mu4e` to use the alternative `mu` binary. A simple wrapper script is provided [here (mc)](https://github.com/derek-zhou/maildir_commander/blob/main/scripts/mc). Please note `mc` is an incomplete wrapper of `mu`; it only does enough to mimic `mu server`, to satisfy `mu4e`.
-
-## Using LIV
 
 LIV has a fairly spartan user interface. You can search your email database, go though your emails one by one, write or reply email, and that's it. You won't find the following functionalities:
 
