@@ -104,12 +104,6 @@ function upload_attachment(name, offset) {
 	uploads.shift();
 }
 
-// my live socket is not at root
-function getLiveSocketPath(path) {
-    let tokens = path.split('/');
-    return "/" + tokens[1] + "/live";
-}
-
 let Hooks = new Object();
 
 Hooks.Main = {
@@ -169,18 +163,20 @@ Hooks.Attach = {
     }
 };
 
-let socketPath = getLiveSocketPath(location.pathname);
-let liveSocket = new LiveSocket(socketPath, Socket, {hooks: Hooks})
 
 // Show progress bar on live navigation and form submits
 window.addEventListener("phx:page-loading-start", info => show_progress_bar())
 window.addEventListener("phx:page-loading-stop", info => hide_progress_bar())
 
-// connect if there are any LiveViews on the page
-liveSocket.connect()
+document.addEventListener("DOMContentLoaded", () => {
+    let appRoot = document.querySelector("body").getAttribute("data-app-root");
+    let liveSocket = new LiveSocket(appRoot + "live", Socket, {hooks: Hooks});
+    // connect if there are any LiveViews on the page
+    liveSocket.connect();
 
-// expose liveSocket on window for web console debug logs and latency simulation:
-// >> liveSocket.enableDebug()
-// >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
-// >> liveSocket.disableLatencySim()
-window.liveSocket = liveSocket
+    // expose liveSocket on window for web console debug logs and latency simulation:
+    // >> liveSocket.enableDebug()
+    // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
+    // >> liveSocket.disableLatencySim()
+    window.liveSocket = liveSocket
+});

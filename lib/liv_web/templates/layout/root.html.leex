@@ -9,7 +9,7 @@
     <script defer phx-track-static type="module" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
 
   </head>
-  <body>
+  <body data-app-root="<%= Routes.mail_path(@conn, :welcome) %>">
     <div class="progress-bar" id="app-progress-bar"></div>
     <div class="viewport">
       <%= @inner_content %>
