@@ -368,10 +368,9 @@ defmodule Liv.MailClient do
         is_important = &is_important(Map.get(messages, &1), my_addresses)
 
         {mark_list, unmark_list} =
-          :lists.partition(
-            &MCTree.any(is_important, &1, tree),
-            MCTree.root_list(tree)
-          )
+          tree
+          |> MCTree.root_list()
+          |> Enum.split_with(&MCTree.any(is_important, &1, tree))
 
         marked = mark_conversations(mark_list, tree, messages)
         unmarked = unmark_conversations(unmark_list, tree, messages)

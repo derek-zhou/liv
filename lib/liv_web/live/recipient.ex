@@ -1,7 +1,7 @@
 defmodule LivWeb.Recipient do
   use Surface.Component
 
-  alias Surface.Components.Form.{TextInput, Select}
+  alias Surface.Components.Form.{EmailInput, Select}
 
   prop index, :integer, required: true
   prop type, :atom, required: true
