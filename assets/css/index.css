@@ -180,6 +180,9 @@
 		    input[type="text"] {
 			@apply flex-grow;
 		    }
+		    input[type="email"] {
+			@apply flex-grow;
+		    }
 		}
 		.field {
 		    @apply mb-2 flex flex-row flex-wrap justify-center;
@@ -230,6 +233,9 @@
                     @apply w-16 leading-relaxed border rounded border-gray-600;
                 }
                 input[type="text"] {
+                    @apply w-80 leading-relaxed border rounded border-gray-600;
+                }
+                input[type="email"] {
                     @apply w-80 leading-relaxed border rounded border-gray-600;
                 }
                 input[type="password"] {
