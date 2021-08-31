@@ -5,7 +5,7 @@ defmodule Liv.MixProject do
     [
       app: :liv,
       version: "0.2.2",
-      elixir: "~> 1.10",
+      elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
