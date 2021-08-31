@@ -29,7 +29,7 @@ defmodule Liv.MailClient do
            true,
            :":date",
            true,
-           true,
+           false,
            String.match?(query, ~r/^msgid:/)
          ) do
       {:error, msg} ->
