@@ -216,19 +216,51 @@ defmodule Liv.MailClient do
   def mails_of(%__MODULE__{mails: mails}), do: mails
 
   @doc """
-  getter of default to, cc and bcc for this email
+  getter of default to and subject from mailto: link. everything else are ignored for now
   """
-  def default_recipients(nil, to_addr) do
-    List.flatten([
-      {:to, default_to(%{}, to_addr)},
-      Enum.map(
-        default_bcc(%{}, to_addr, Configer.default(:my_address)),
-        &{:bcc, &1}
-      ),
-      {nil, [nil | ""]}
-    ])
+  def parse_mailto(mailto) do
+    [name | addr] = Configer.default(:my_address)
+
+    case URI.parse(mailto) do
+      %URI{scheme: "mailto", path: tos, query: query} ->
+        tos =
+          tos
+          |> String.split(~r/\s*,\s*/)
+          |> Enum.map(fn addr -> {:to, [nil | addr]} end)
+
+        bccs =
+          case List.keymember?(tos, [nil | addr], 1) do
+            true -> []
+            false -> [{:bcc, [name | addr]}]
+          end
+
+        sub =
+          case query do
+            nil ->
+              ""
+
+            _ ->
+              query
+              |> URI.query_decoder()
+              |> Enum.reduce("", fn
+                {"subject", v}, _ -> v
+                {_, _}, sub -> sub
+              end)
+          end
+
+        {tos ++ bccs, sub}
+
+      %URI{path: ^addr} ->
+        {[{:to, [name | addr]}], ""}
+
+      %URI{path: to_addr} ->
+        {[{:to, [nil | to_addr]}, {:bcc, [name | addr]}], ""}
+    end
   end
 
+  @doc """
+  getter of default to, cc and bcc for this email
+  """
   def default_recipients(mc, to_addr) do
     addr_map = addresses_map(mc)
 

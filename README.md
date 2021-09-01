@@ -141,6 +141,18 @@ On the other hand, LIV is unique in that:
 * You write your emails in markdown, with instant html preview.
 * Automatically download or upload attachments in the bakground, at the same time when you write or read emails. 
 
+### Using LIV to handle mailto: links
+
+It is also possible to use LIV to handle mailto: links. All you need to do is to configure your browser to point the mailto: links to the following URL:
+
+```
+https://YOUR_MAIL_HOST/YOUR_USER_NAME/write/THE_ADDR_OR_MAILTO_LINK
+```
+
+for how to do it in Firefox, see the following article:
+
+https://support.mozilla.org/en-US/questions/1281202
+
 ## Email archiving
 
 This is something I come up with over the years dealing with huge amount of emails in a lazy mindset. I only have two email folders, the standard inbox, and `.Archive` (The name is a convention from many IMAP clients including Thunderbird). All mails land in the inbox initially. Every once in a while I go through all emails in the inbox to group them into conversations. For each conversation:

@@ -283,14 +283,16 @@ defmodule LivWeb.MailLive do
         _url,
         %Socket{assigns: %{live_action: :write, mail_opened: false}} = socket
       ) do
+    {recipients, subject} = MailClient.parse_mailto(to)
+
     {
       :noreply,
       socket
       |> assign(
         page_title: "Write",
         info: "",
-        recipients: MailClient.default_recipients(nil, to),
-        subject: "",
+        recipients: recipients,
+        subject: subject,
         write_text: "",
         write_attachments: [],
         incoming_attachments: [],
