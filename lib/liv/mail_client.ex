@@ -538,7 +538,8 @@ defmodule Liv.MailClient do
       fn docid ->
         %{path: path} = Map.get(messages, docid)
         Logger.notice("archiving mail (#{docid}) #{path}")
-        MaildirCommander.scrub(path, archive)
+        MaildirCommander.scrub(path)
+        :ok = MaildirCommander.move(docid, archive)
       end,
       list,
       tree
