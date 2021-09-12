@@ -4,7 +4,7 @@ defmodule Liv.MixProject do
   def project do
     [
       app: :liv,
-      version: "0.2.2",
+      version: "0.3.0",
       elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -37,6 +37,7 @@ defmodule Liv.MixProject do
       {:maildir_commander, path: "../maildir_commander"},
       {:html_sanitize_ex, "~> 1.4"},
       {:swoosh, "~> 1.3"},
+      {:gen_smtp, "~> 1.1"},
       {:httpoison, "~> 1.7"},
       {:mime, "~> 1.6"},
       {:hackney, "~> 1.9"},

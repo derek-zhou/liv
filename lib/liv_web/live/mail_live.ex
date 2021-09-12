@@ -41,7 +41,6 @@ defmodule LivWeb.MailLive do
   data mail_opened, :boolean, default: false
 
   # for the viewer
-  data mail_view_timer, :any, default: nil
   data mail_attachments, :list, default: []
   data mail_attachment_offset, :integer, default: 0
   data mail_attachment_metas, :list, default: []
@@ -186,7 +185,7 @@ defmodule LivWeb.MailLive do
             {
               :noreply,
               socket
-              |> open_mail(meta, mc)
+              |> open_mail(meta)
               |> assign(
                 info: info_mc(mc),
                 page_title: meta.subject,
@@ -311,7 +310,7 @@ defmodule LivWeb.MailLive do
   def handle_params(
         %{"to" => to},
         _url,
-        %Socket{assigns: %{live_action: :write, mail_client: mc}} = socket
+        %Socket{assigns: %{live_action: :write, mail_client: mc, mail_text: text}} = socket
       ) do
     {
       :noreply,
@@ -321,7 +320,7 @@ defmodule LivWeb.MailLive do
         info: "",
         recipients: MailClient.default_recipients(mc, to),
         subject: MailClient.reply_subject(mc),
-        write_text: MailClient.quoted_text(mc),
+        write_text: MailClient.quoted_text(mc, text),
         write_attachments: [],
         incoming_attachments: [],
         current_attachment: nil,
@@ -762,16 +761,41 @@ defmodule LivWeb.MailLive do
     }
   end
 
-  def handle_info(:load_attachments, %Socket{assigns: %{mail_client: mc}} = socket) do
-    {
-      :noreply,
-      socket
-      |> assign(
-        mail_attachments: MailClient.load_attachments(mc),
-        mail_attachment_offset: 0
-      )
-      |> stream_attachments()
-    }
+  def handle_info(
+        {:mail_part, ref, part},
+        %Socket{
+          assigns: %{
+            mail_client: mc,
+            mail_text: text,
+            mail_html: html,
+            mail_attachments: attachments
+          }
+        } = socket
+      ) do
+    case MailClient.receive_part(mc, ref, part) do
+      nil ->
+        {:noreply, socket}
+
+      {:text, body} ->
+        case text do
+          "" -> {:noreply, assign(socket, mail_text: body)}
+          _ -> {:noreply, socket}
+        end
+
+      {:html, body} ->
+        case html do
+          "" -> {:noreply, assign(socket, mail_html: body)}
+          _ -> {:noreply, socket}
+        end
+
+      {:attachment, name, type, body} ->
+        {
+          :noreply,
+          socket
+          |> assign(mail_attachments: attachments ++ [{name, type, body}])
+          |> stream_attachments()
+        }
+    end
   end
 
   # not logged in
@@ -849,32 +873,18 @@ defmodule LivWeb.MailLive do
     "#{MailClient.unread_count(mc)} unread/#{MailClient.mail_count(mc)}"
   end
 
-  defp open_mail(%Socket{assigns: %{mail_meta: meta}} = socket, meta, _) do
+  defp open_mail(%Socket{assigns: %{mail_meta: meta}} = socket, meta) do
     assign(socket, mail_opened: true)
   end
 
-  defp open_mail(%Socket{assigns: %{mail_view_timer: timer}} = socket, meta, mc) do
-    if timer do
-      Process.cancel_timer(timer)
-    end
-
-    timer =
-      cond do
-        Enum.member?(meta.flags, :attach) ->
-          Process.send_after(self(), :load_attachments, 1000)
-
-        true ->
-          nil
-      end
-
+  defp open_mail(socket, meta) do
     socket
     |> push_event("clear_attachment", %{})
     |> assign(
       mail_opened: true,
       mail_meta: meta,
-      mail_html: MailClient.html_content(mc),
-      mail_text: MailClient.text_content(mc),
-      mail_view_timer: timer,
+      mail_text: "",
+      mail_html: "",
       mail_attachments: [],
       mail_attachment_offset: 0,
       mail_attachment_metas: []

@@ -16,8 +16,7 @@ defmodule Liv.MailClient do
     :tree,
     mails: %{},
     docid: 0,
-    parts: [],
-    contents: {}
+    ref: nil
   ]
 
   @doc """
@@ -44,29 +43,38 @@ defmodule Liv.MailClient do
   mark a message seen. if the mc is nil, make a minimum mc first
   """
   def seen(nil, docid) do
-    case MaildirCommander.full_mail(docid) do
+    case MaildirCommander.view(docid) do
       {:error, msg} ->
         Logger.warn("docid: #{docid} not found: #{msg}")
         nil
 
-      {meta, text, html, parts} ->
-        meta =
+      {:ok, meta} ->
+        %{path: path} =
+          meta =
           case Enum.member?(meta.flags, :seen) do
             true ->
               meta
 
             false ->
-              MaildirCommander.flag(docid, "+S")
-              %{meta | flags: [:seen | Enum.reject(meta.flags, &(&1 == :unread))]}
+              {:ok, m} = MaildirCommander.flag(docid, "+S")
+              m
           end
 
-        %__MODULE__{
-          tree: MCTree.single(docid),
-          mails: %{docid => meta},
-          docid: docid,
-          parts: parts,
-          contents: {text, html}
-        }
+        Logger.debug("streaming #{path}")
+
+        case MaildirCommander.stream_mail(path) do
+          {:error, reason} ->
+            Logger.warn("docid: #{docid} path: #{path} not found: #{reason}")
+            nil
+
+          {:ok, ref} ->
+            %__MODULE__{
+              tree: MCTree.single(docid),
+              mails: %{docid => meta},
+              docid: docid,
+              ref: ref
+            }
+        end
     end
   end
 
@@ -77,18 +85,27 @@ defmodule Liv.MailClient do
       nil ->
         mc
 
-      %{flags: flags} = headers ->
-        {_, text, html, parts} = MaildirCommander.full_mail(docid)
-        mc = %{mc | docid: docid, parts: parts, contents: {text, html}}
+      %{flags: flags} ->
+        mc =
+          case Enum.member?(flags, :seen) do
+            true ->
+              %{mc | docid: docid}
 
-        case Enum.member?(flags, :seen) do
-          true ->
-            mc
+            false ->
+              {:ok, m} = MaildirCommander.flag(docid, "+S")
+              %{mc | docid: docid, mails: %{mails | docid => m}}
+          end
 
-          false ->
-            MaildirCommander.flag(docid, "+S")
-            headers = %{headers | flags: [:seen | Enum.reject(flags, &(&1 == :unread))]}
-            %{mc | mails: %{mails | docid => headers}}
+        %{path: path} = mc.mails[docid]
+        Logger.debug("streaming #{path}")
+
+        case MaildirCommander.stream_mail(path) do
+          {:error, reason} ->
+            Logger.warn("docid: #{docid} path: #{path} not found: #{reason}")
+            %{mc | ref: nil}
+
+          {:ok, ref} ->
+            %{mc | ref: ref}
         end
     end
   end
@@ -100,27 +117,17 @@ defmodule Liv.MailClient do
   def mail_meta(%__MODULE__{mails: mails}, docid), do: Map.get(mails, docid)
 
   @doc """
-  getter of the html content
-  """
-  def html_content(%__MODULE__{contents: {_, html}}), do: html
-  def html_content(_), do: ""
-
-  @doc """
-  getter of the text content
-  """
-  def text_content(%__MODULE__{contents: {text, _}}), do: text
-  def text_content(_), do: ""
-
-  @doc """
   getter of the text content in quote
   """
-  def quoted_text(mc) do
-    case text_content(mc) do
-      "" ->
+  def quoted_text(_, ""), do: ""
+  def quoted_text(nil, _), do: ""
+
+  def quoted_text(%__MODULE__{mails: mails, docid: docid}, text) do
+    case Map.get(mails, docid) do
+      nil ->
         ""
 
-      text ->
-        meta = mc.mails[mc.docid]
+      meta ->
         {:ok, date} = DateTime.from_unix(meta.date)
 
         IO.chardata_to_string([
@@ -367,22 +374,25 @@ defmodule Liv.MailClient do
   end
 
   @doc """
-  load attchments into a list of {name, type, content} tupple
+  receive parts into data structure.
   """
-  def load_attachments(%__MODULE__{docid: docid, parts: parts}) do
-    temp = System.tmp_dir!() <> "/liv_temp_mail_" <> System.get_env("USER")
-
-    docid
-    |> MaildirCommander.extract(parts, temp)
-    |> Enum.filter(fn
-      {name, :error, msg} ->
-        Logger.warn("mail docid #{docid}, attachment #{name} fail to load: #{msg}")
-        false
-
-      _ ->
-        true
-    end)
+  def receive_part(%__MODULE__{ref: ref}, ref, %{content_type: "text/plain", body: body}) do
+    {:text, body}
   end
+
+  def receive_part(%__MODULE__{ref: ref}, ref, %{content_type: "text/html", body: body}) do
+    {:html, body}
+  end
+
+  def receive_part(%__MODULE__{ref: ref}, ref, %{
+        content_type: type,
+        disposition_params: %{"filename" => filename},
+        body: body
+      }) do
+    {:attachment, filename, type, body}
+  end
+
+  def receive_part(_, _, _), do: nil
 
   @doc """
   archiving job. Always return :ok. will log and do side effects
@@ -539,7 +549,7 @@ defmodule Liv.MailClient do
         %{path: path} = Map.get(messages, docid)
         Logger.notice("archiving mail (#{docid}) #{path}")
         MaildirCommander.scrub(path)
-        :ok = MaildirCommander.move(docid, archive)
+        {:ok, _} = MaildirCommander.move(docid, archive)
       end,
       list,
       tree
@@ -556,7 +566,7 @@ defmodule Liv.MailClient do
           Logger.notice("marking mail (#{docid})")
           # broadcast the event
           PubSub.local_broadcast(Liv.PubSub, "mark_message", {:mark_message, docid, mail})
-          MaildirCommander.flag(docid, "+R")
+          {:ok, _} = MaildirCommander.flag(docid, "+R")
         end
       end,
       list,
@@ -573,7 +583,7 @@ defmodule Liv.MailClient do
           Logger.notice("unmarking mail (#{docid})")
           # broadcast the event
           PubSub.local_broadcast(Liv.PubSub, "unmark_message", {:unmark_message, docid})
-          MaildirCommander.flag(docid, "-R")
+          {:ok, _} = MaildirCommander.flag(docid, "-R")
         end
       end,
       list,
