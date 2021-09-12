@@ -9,8 +9,7 @@ defmodule LivWeb.View do
   @max_inline_html 4096
 
   prop meta, :map, required: true
-  prop html, :string, default: ""
-  prop text, :string, default: ""
+  prop content, :tuple, default: {:text, ""}
   prop attachments, :list, default: []
   prop tz_offset, :integer, default: 0
 
@@ -30,10 +29,16 @@ defmodule LivWeb.View do
     |> Enum.join(", ")
   end
 
-  defp oversized?(html), do: byte_size(html) >= @max_inline_html
+  defp is_plain_text?({:text, _}), do: true
+  defp is_plain_text?({:html, _}), do: false
 
-  defp inlined?(""), do: false
-  defp inlined?(html), do: byte_size(html) < @max_inline_html
+  defp oversized?({:text, _}), do: false
+  defp oversized?({:html, html}), do: byte_size(html) >= @max_inline_html
 
-  defp sanitize(html), do: html |> Scrubber.scrub(Sanitizer) |> raw()
+  defp inlined?({:text, _}), do: false
+  defp inlined?({:html, html}), do: byte_size(html) < @max_inline_html
+
+  defp text_part({_, text}), do: html_escape(text)
+
+  defp sanitize({_, html}), do: html |> Scrubber.scrub(Sanitizer) |> raw()
 end

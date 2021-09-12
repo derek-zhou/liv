@@ -15,7 +15,7 @@
 	<Find {... mails: @list_mails, tree: @list_tree, tz_offset: @tz_offset } />
     </div>
     <div :if={@auth == :logged_in} hidden={@live_action != :view}>
-	<View {... meta: @mail_meta, html: @mail_html, text: @mail_text,
+	<View {... meta: @mail_meta, content: @mail_content,
 	      attachments: @mail_attachment_metas, tz_offset: @tz_offset } />
     </div>
 </Main>

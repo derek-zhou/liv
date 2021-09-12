@@ -376,6 +376,8 @@ defmodule Liv.MailClient do
   @doc """
   receive parts into data structure.
   """
+  def receive_part(%__MODULE__{ref: ref}, ref, :eof), do: :eof
+
   def receive_part(%__MODULE__{ref: ref}, ref, %{content_type: "text/plain", body: body}) do
     {:text, body}
   end

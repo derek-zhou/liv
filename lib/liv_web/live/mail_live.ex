@@ -46,7 +46,7 @@ defmodule LivWeb.MailLive do
   data mail_attachment_metas, :list, default: []
   data mail_chunk_outstanding, :boolean, default: false
   data mail_meta, :map, default: nil
-  data mail_html, :string, default: ""
+  data mail_content, :tuple, default: {:text, ""}
   data mail_text, :string, default: ""
 
   # to refer back in later 
@@ -767,7 +767,7 @@ defmodule LivWeb.MailLive do
           assigns: %{
             mail_client: mc,
             mail_text: text,
-            mail_html: html,
+            mail_content: {type, html},
             mail_attachments: attachments
           }
         } = socket
@@ -776,6 +776,14 @@ defmodule LivWeb.MailLive do
       nil ->
         {:noreply, socket}
 
+      :eof ->
+        # if we have not seen a html part by now, promote the text
+        case {text, type, html} do
+          {"", _, _} -> {:noreply, socket}
+          {_, :text, ""} -> {:noreply, assign(socket, mail_content: {:text, text})}
+          _ -> {:noreply, socket}
+        end
+
       {:text, body} ->
         case text do
           "" -> {:noreply, assign(socket, mail_text: body)}
@@ -783,12 +791,20 @@ defmodule LivWeb.MailLive do
         end
 
       {:html, body} ->
-        case html do
-          "" -> {:noreply, assign(socket, mail_html: body)}
+        case {type, html} do
+          {:text, ""} -> {:noreply, assign(socket, mail_content: {:html, body})}
           _ -> {:noreply, socket}
         end
 
       {:attachment, name, type, body} ->
+        # if we have not seen a html part by now, promote the text
+        socket =
+          case {text, type, html} do
+            {"", _, _} -> socket
+            {_, :text, ""} -> assign(socket, mail_content: {:text, text})
+            _ -> socket
+          end
+
         {
           :noreply,
           socket
@@ -884,7 +900,7 @@ defmodule LivWeb.MailLive do
       mail_opened: true,
       mail_meta: meta,
       mail_text: "",
-      mail_html: "",
+      mail_content: {:text, ""},
       mail_attachments: [],
       mail_attachment_offset: 0,
       mail_attachment_metas: []
