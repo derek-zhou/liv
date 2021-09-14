@@ -73,6 +73,11 @@ defmodule LivWeb.MailLive do
   data orbit_api_key, :string, default: ""
   data orbit_workspace, :string, default: ""
 
+  def mount(_params, _session, socket) do
+    unless connected?(socket), do: MailClient.snooze()
+    {:ok, socket}
+  end
+
   # for the initial mount before login
   def handle_params(_params, _url, %Socket{assigns: %{live_action: :login}} = socket) do
     user = System.get_env("USER")
@@ -236,6 +241,8 @@ defmodule LivWeb.MailLive do
         true -> "msgid:#{mc.mails[mc.docid].msgid}"
         false -> query
       end
+
+    MailClient.snooze()
 
     {
       :noreply,

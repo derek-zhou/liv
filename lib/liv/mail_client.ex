@@ -20,6 +20,11 @@ defmodule Liv.MailClient do
   ]
 
   @doc """
+  wake up the mc process. It is an optimization
+  """
+  def snooze(), do: MaildirCommander.snooze()
+
+  @doc """
   run a query. query can be a query string or a docid integer
   """
   def new_search(query) do
