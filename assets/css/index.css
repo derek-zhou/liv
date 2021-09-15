@@ -218,7 +218,7 @@
 		    }
                 }
 		.footnote {
-		    @apply text-xs text-gray-700 py-2 flex justify-center;
+		    @apply text-sm text-gray-700 py-2 flex justify-center;
 		}
 		.error {
 		    @apply text-sm text-red-700 py-2;
@@ -324,16 +324,16 @@
                     }
                 }
                 .title {
-                    @apply font-bold my-2 text-base leading-tight w-full;
+                    @apply font-bold my-2 text-lg leading-snug w-full;
                 }
 		.tag-line {
-		    @apply leading-tight;
+		    @apply text-sm leading-snug;
                     .site {
-			@apply text-sm text-gray-400 whitespace-nowrap;
+			@apply text-gray-400 whitespace-nowrap;
                     }
 		}
                 .desc {
-                    @apply text-sm leading-tight mb-2;
+                    @apply text-base leading-snug mb-2;
 		    span {
 			@apply whitespace-normal;
 		    }
@@ -353,7 +353,7 @@
 	    }
 	}
 	.footer {
-	    @apply text-xs text-gray-700 p-2 flex text-center;
+	    @apply text-sm text-gray-700 p-2 flex text-center;
 	    .links {
 		@apply w-1/2 text-left;
 	    }
@@ -376,14 +376,14 @@
                     .title {
                         @apply text-2xl w-auto;
                     }
+		    .tag-line {
+			@apply text-base leading-normal;
+		    }
                     .thumbnail {
 			@apply float-right ml-2;
                     }
-                    .url {
-                        @apply text-base;
-                    }
                     .desc {
-                        @apply text-base leading-snug;
+                        @apply leading-normal;
                     }
 		    .toolbar {
 			@apply w-auto justify-start;
