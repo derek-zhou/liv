@@ -108,6 +108,7 @@ let Hooks = new Object();
 
 Hooks.Main = {
     mounted() {
+	this.el.setAttribute("phx-update", "replace");
 	this.pushEvent("get_value", local_state());
 	this.handleEvent("get_value", ({key}) => {
 	    let value = localStorage.getItem(key) || "";
@@ -124,7 +125,7 @@ Hooks.Main = {
     },
     disconnected() {
 	this.el.setAttribute("phx-update", "ignore");
-    }
+    },
     reconnected() {
 	this.el.setAttribute("phx-update", "replace");
 	this.pushEvent("get_value", local_state());
