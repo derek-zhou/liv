@@ -4,8 +4,9 @@
     <Search :if={@auth == :logged_in && @live_action == :search}
 	    {... default_query: @default_query, submit: "search",
 	    pick_example: "pick_search_example" } />
-    <Write :if={@auth == :logged_in && @live_action == :write}
-	   {... change: "write_change", subject: @subject, recipients: @recipients,
+    <Write :if={@live_action == :write}
+	   {... change: "write_change", auto_recover: "write_recover",
+	   subject: @subject, recipients: @recipients,
 	   addr_options: @addr_options, text: @write_text } />
     <Config :if={@auth == :logged_in && @live_action == :config}
 	    {... change: "config_change", my_addr: @my_addr, my_addrs: @my_addrs,

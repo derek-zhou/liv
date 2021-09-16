@@ -122,6 +122,11 @@ defmodule Liv.MailClient do
   def mail_meta(%__MODULE__{mails: mails}, docid), do: Map.get(mails, docid)
 
   @doc """
+  the query that get one mail
+  """
+  def solo_query(%__MODULE__{mails: mails, docid: docid}), do: "msgid:#{mails[docid].msgid}"
+
+  @doc """
   getter of the text content in quote
   """
   def quoted_text(_, ""), do: ""

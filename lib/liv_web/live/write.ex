@@ -6,6 +6,7 @@ defmodule LivWeb.Write do
   alias Surface.Components.Form.{Field, TextInput, TextArea}
 
   prop change, :event, required: true
+  prop auto_recover, :event, required: true
   prop subject, :string, default: ""
   prop recipients, :list, default: []
   prop text, :string, default: ""
