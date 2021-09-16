@@ -122,7 +122,11 @@ Hooks.Main = {
 		localStorage.removeItem(key);
 	});
     },
+    disconnected() {
+	this.el.setAttribute("phx-update", "ignore");
+    }
     reconnected() {
+	this.el.setAttribute("phx-update", "replace");
 	this.pushEvent("get_value", local_state());
     }
 };
