@@ -85,7 +85,7 @@ defmodule LivWeb.MailLive do
       |> push_event("set_value", %{key: "token", value: ""})
       |> assign(
         auth: :logged_out,
-        saved_path: default_action(socket),
+        saved_path: Routes.mail_path(socket, :find, @default_query),
         page_title: "Login as #{user}",
         password_hash: Application.get_env(:liv, :password_hash),
         password_prompt: "Enter your password: ",
@@ -442,8 +442,30 @@ defmodule LivWeb.MailLive do
     }
   end
 
-  def handle_params(_params, _url, %Socket{assigns: %{live_action: :welcome}} = socket) do
-    {:noreply, push_patch(socket, to: default_action(socket))}
+  def handle_params(
+        _params,
+        _url,
+        %Socket{
+          assigns: %{
+            live_action: :welcome,
+            recover_query: ""
+          }
+        } = socket
+      ) do
+    {:noreply, push_patch(socket, to: Routes.mail_path(socket, :find, @default_query))}
+  end
+
+  def handle_params(
+        _params,
+        _url,
+        %Socket{
+          assigns: %{
+            live_action: :welcome,
+            recover_query: query
+          }
+        } = socket
+      ) do
+    {:noreply, push_patch(socket, to: Routes.mail_path(socket, :find, query))}
   end
 
   def handle_event("get_value", values, socket) do
@@ -943,17 +965,13 @@ defmodule LivWeb.MailLive do
     |> push_patch(to: path)
   end
 
-  defp default_action(socket) do
-    Routes.mail_path(socket, :find, @default_query)
-  end
-
   defp close_action(
          %Socket{assigns: %{mail_client: mc, mail_opened: opened, last_query: query}} = socket
        ) do
     cond do
       opened -> Routes.mail_path(socket, :view, mc.docid)
       query != "" -> Routes.mail_path(socket, :find, query)
-      true -> default_action(socket)
+      true -> Routes.mail_path(socket, :find, @default_query)
     end
   end
 
