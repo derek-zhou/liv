@@ -314,7 +314,7 @@
 		}
                 .thumbnail {
                     img {
-                        @apply w-auto max-w-full h-48;
+                        @apply w-auto max-w-full max-w-xs max-h-48;
                     }
                 }
                 .thumbnail-missing {
@@ -416,7 +416,7 @@
 		.box {
 		    .thumbnail {
                         img {
-			    @apply h-64;
+			    @apply max-w-lg max-h-64;
                         }
 		    }
 		    .url {
@@ -438,7 +438,7 @@
 		.box {
                     .thumbnail {
                         img {
-                            @apply h-96;
+                            @apply max-w-2xl max-h-96;
                         }
                     }
 		}
