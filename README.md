@@ -7,7 +7,7 @@ LIV is a webmail front-end for your personal email server.
 All open source webmail sucks. Most I have seen are layered on top of IMAP, and IMAP sucks. The reason is you have to have search capability to deal with the high volume of emails nowadays, and it is very hard to do that across IMAP. On the other hand, some other email clients don't suck:
 
 * Commercial "free" email providers, such as Gmail or Outlook.com don't suck. However, they are basically ads delivery vehicles targeted to you with all the privacy leaks and annoyances that you want to break out from.
-* Terminal email clients (mutt, mu4e, etc) don't suck. This is what I use before LIV. However, I need to view some HTML mails in a browser window and click some links and it is not convenient for those occasions.
+* Terminal email clients (mutt, mu4e, etc) don't suck. This is what I use before LIV. However, I need to view HTML mails in a browser window and click some links and it is not convenient for those occasions.
 
 LIV is a highly opinionated, minimal implemented webmail front-end that:
 
@@ -15,7 +15,7 @@ LIV is a highly opinionated, minimal implemented webmail front-end that:
 * Use browser native functionalities such as bookmarks. You can bookmark any queries or any emails
 * Let you compose your emails in markdown with instant preview 
 
-LIV is designed to be self hosted; It is not a SaaS. You run LIV on your own email server with or without a  IMAP server. If you don't want to run your own email server please stop right here. If you don't know how to run your email server please do some research first; there are many excellent tutorials out there and this page is not one of them.
+LIV is designed to be self hosted; It is not a SaaS. You run LIV on your own email server with or without an IMAP server. If you don't want to run your own email server please stop right here. If you don't know how to run your email server please do some research first; there are many excellent tutorials out there and this page is not one of them.
 
 ## Your personal email server
 
@@ -82,6 +82,7 @@ Please set a few environment variables before running the release:
 export SECRET_KEY_BASE=YOUR_SECRET_KEY_BASE
 export GUARDIAN_KEY=YOUR_GUARDIAN_KEY
 export PORT=4001
+export MAIL_HOST=YOUR_MAIL_SERVER
 _build/prod/rel/liv/bin/liv start
 ```
 
@@ -117,6 +118,8 @@ The entry point of is at: `https://YOUR_MAIL_SERVER/YOUR_USER_NAME`. Your revers
         }
 ```
 
+You would need to substitude `derek` with your usernames of course. Each user need a pair of stanzas like above.
+
 ## Using LIV
 
 The first time you run LIV it will ask you to setup a password. This password is not your system password, which LIV has no access to anyway. Just pick any password you like. LIV will store the hash of this password in `~/.config/self_configer/liv.config` so should you lose the password you can edit it out and restart LIV. There are a few configuration you should enter at the config screen of the application:
@@ -141,6 +144,8 @@ On the other hand, LIV is unique in that:
 * You write your emails in markdown, with instant html preview.
 * Automatically download or upload attachments in the bakground, at the same time when you write or read emails. 
 
+LIV is not designed to cover 100% of the usercases. Although I use LIV 99% of the time, I still use terminal email clients (mu4e and mutt are both fine) for corners cases such as lloking at the raw message, or handling patches.
+
 ### Using LIV to handle mailto: links
 
 It is also possible to use LIV to handle mailto: links. All you need to do is to configure your browser to point the mailto: links to the following URL:
@@ -153,15 +158,31 @@ for how to do it in Firefox, see the following article:
 
 https://support.mozilla.org/en-US/questions/1281202
 
+### How do I delete a mail?
+
+No, you can't manually delete emails, nor can you edit received emails, move mails around, etc. Emails are immutable and can only expire (default 30 days), unless it qualifies to be archived (See below).
+
+### How do I reply to a mail?
+
+Just click on the sender's address. In fact, any email addresses within the headers of the message, including yourself, are clickable. LIV is smart enough to quote the text and prepare a default set of recipients. The address you clicked will be in the `To:` list, anybody else will be in the `Cc:` list, and yourself will be in the `Bcc:` list. There is no seperate `reply all` functionality. You can change the recipients however you like of course.
+
+### How do I forward a mail?
+
+No, you can't forward a mail like what you normally do in other email clients. Most other email clients munge the message to be forwarded, so it is not a strict forward anyway. You can reply to the message, adding the new recipients as needed. For the rare occation that I really need to forword a mail in verbitim I use mutt's bounce function.
+
 ## Email archiving
 
-This is something I come up with over the years dealing with huge amount of emails in a lazy mindset. I only have two email folders, the standard inbox, and `.Archive` (The name is a convention from many IMAP clients including Thunderbird). All mails land in the inbox initially. Every once in a while I go through all emails in the inbox to group them into conversations. For each conversation:
+This is something I come up with over the years dealing with huge amount of emails in a lazy mindset. I only have two email folders, the standard inbox, and `.Archive` (The name is a convention from many IMAP clients including Thunderbird). All mails land in the inbox initially. Every once in a while LIV go through all emails in the inbox conversation by conversation. For each conversation:
 
 * If the latest email of the conversation is within 30 days, or any mail is still unread, don't do anything with the conversation. Otherwise:
 * If I (as defined my all my known email addresses) was _not_ involved in the conversation, the whole conversation is deleted.
 * If I was involved in the conversation, the whole conversation is moved to the `.Archive` folder for long term storage, with all attachments removed. 
 
-Archived emails are still searchable, just not in the inbox so my inbox stays in constant size. This algorithm is automatically implemented in LIV, unless the archive target is left empty from the config page. 
+The process works best if you actively reply to important emails. It is a good online curtesy anyway. If for some reason you don't want to reply to the sender but still want to archive the conversation, you can reply to yourself and add a note. You only need to reply once for each conversation.
+
+The marking of conversations to be archived is done as soon as possible. The marked conversation will be archived once the latest email of the conversation moves out of the 30 days retention window. Every email in a marked conversation have the `replied` flag set and will be displayed with a highlighted background. You can also search for `flag:replied` messages. 
+
+Archived emails are still searchable, just not in the inbox so my inbox stays in constant size. If the archive target is left empty in the config page, archiving would be disabled, however marking and deleting will still be done. 
 
 ## Orbit integration
 
@@ -170,4 +191,3 @@ The folks at [Orbit](https://orbit.love) are kind enough to provide free service
 ## Disclaimer
 
 LIV is beta quality software, the implementation is incomplete and may never be. I use it everyday though. If you don't see a point of running your email server you do not need LIV. If you run your own email server and want to add webmail functionality to it, you are welcome to try it and give me feedback.
-

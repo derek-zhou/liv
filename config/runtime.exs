@@ -20,8 +20,18 @@ if config_env() == :prod do
       You can generate one by calling: mix guardian.gen.secret
       """
 
+  hostname =
+    case System.get_env("MAIL_HOST") do
+      nil ->
+        {str, _} = System.cmd("hostname -f")
+        String.trim(str)
+
+      str ->
+        str
+    end
+
   config :liv, LivWeb.Endpoint,
-    url: [host: "mail.3qin.us", scheme: "https", port: 443, path: "/#{System.get_env("USER")}"],
+    url: [host: hostname, scheme: "https", port: 443, path: "/#{System.get_env("USER")}"],
     cache_static_manifest: "priv/static/cache_manifest.json",
     http: [
       ip: {127, 0, 0, 1},
