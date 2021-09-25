@@ -23,7 +23,7 @@ if config_env() == :prod do
   hostname =
     case System.get_env("MAIL_HOST") do
       nil ->
-        {str, _} = System.cmd("hostname -f")
+        {str, _} = System.cmd("hostname", ["-f"])
         String.trim(str)
 
       str ->
