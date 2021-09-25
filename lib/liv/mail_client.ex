@@ -62,6 +62,14 @@ defmodule Liv.MailClient do
 
             false ->
               {:ok, m} = MaildirCommander.flag(docid, "+S")
+              # broadcast the event
+              PubSub.local_broadcast_from(
+                Liv.PubSub,
+                self(),
+                "messages",
+                {:seen_message, docid, m}
+              )
+
               m
           end
 
@@ -98,6 +106,14 @@ defmodule Liv.MailClient do
 
             false ->
               {:ok, m} = MaildirCommander.flag(docid, "+S")
+              # broadcast the event
+              PubSub.local_broadcast_from(
+                Liv.PubSub,
+                self(),
+                "messages",
+                {:seen_message, docid, m}
+              )
+
               %{mc | docid: docid, mails: %{mails | docid => m}}
           end
 
@@ -120,6 +136,19 @@ defmodule Liv.MailClient do
   """
   def mail_meta(nil, _docid), do: nil
   def mail_meta(%__MODULE__{mails: mails}, docid), do: Map.get(mails, docid)
+
+  @doc """
+  setter of a specific mail metadata. nil is delete
+  """
+  def set_meta(nil, _docid, _meta), do: nil
+
+  def set_meta(%__MODULE__{mails: mails} = mc, docid, nil) do
+    %{mc | mails: Map.delete(mails, docid)}
+  end
+
+  def set_meta(%__MODULE__{mails: mails} = mc, docid, meta) do
+    %{mc | mails: Map.replace(mails, docid, meta)}
+  end
 
   @doc """
   the query that get one mail
@@ -549,6 +578,8 @@ defmodule Liv.MailClient do
         %{path: path} = Map.get(messages, docid)
         Logger.notice("deleting mail (#{docid}) #{path}")
         MaildirCommander.delete(docid)
+        # broadcast the event
+        PubSub.local_broadcast(Liv.PubSub, "messages", {:delete_message, docid})
       end,
       list,
       tree
@@ -561,7 +592,9 @@ defmodule Liv.MailClient do
         %{path: path} = Map.get(messages, docid)
         Logger.notice("archiving mail (#{docid}) #{path}")
         MaildirCommander.scrub(path)
-        {:ok, _} = MaildirCommander.move(docid, archive)
+        {:ok, mail} = MaildirCommander.move(docid, archive)
+        # broadcast the event
+        PubSub.local_broadcast(Liv.PubSub, "messages", {:archive_message, docid, mail})
       end,
       list,
       tree
@@ -572,13 +605,13 @@ defmodule Liv.MailClient do
   defp mark_conversations(list, tree, messages) do
     MCTree.traverse(
       fn docid ->
-        mail = %{flags: flags} = Map.get(messages, docid)
+        %{flags: flags} = Map.get(messages, docid)
 
         unless Enum.member?(flags, :replied) do
           Logger.notice("marking mail (#{docid})")
+          {:ok, mail} = MaildirCommander.flag(docid, "+R")
           # broadcast the event
-          PubSub.local_broadcast(Liv.PubSub, "mark_message", {:mark_message, docid, mail})
-          {:ok, _} = MaildirCommander.flag(docid, "+R")
+          PubSub.local_broadcast(Liv.PubSub, "messages", {:mark_message, docid, mail})
         end
       end,
       list,
@@ -593,9 +626,9 @@ defmodule Liv.MailClient do
 
         if Enum.member?(flags, :replied) do
           Logger.notice("unmarking mail (#{docid})")
+          {:ok, mail} = MaildirCommander.flag(docid, "-R")
           # broadcast the event
-          PubSub.local_broadcast(Liv.PubSub, "unmark_message", {:unmark_message, docid})
-          {:ok, _} = MaildirCommander.flag(docid, "-R")
+          PubSub.local_broadcast(Liv.PubSub, "messages", {:unmark_message, docid, mail})
         end
       end,
       list,

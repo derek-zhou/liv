@@ -21,7 +21,7 @@ defmodule Liv.Orbit do
   # server
   @impl true
   def init(_) do
-    PubSub.subscribe(Liv.PubSub, "mark_message")
+    PubSub.subscribe(Liv.PubSub, "messages")
     {:ok, []}
   end
 
@@ -35,6 +35,8 @@ defmodule Liv.Orbit do
 
     {:noreply, state}
   end
+
+  def handle_info(_, state), do: {:noreply, state}
 
   defp mark_orbit(docid, mail, api_key, workspace) do
     key = to_string(docid)

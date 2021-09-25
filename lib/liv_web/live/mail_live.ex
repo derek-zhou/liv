@@ -13,6 +13,7 @@ defmodule LivWeb.MailLive do
   alias Liv.Configer
   alias Liv.MailClient
   alias Liv.AddressVault
+  alias Phoenix.PubSub
 
   # client side state
   data auth, :atom, default: nil
@@ -73,6 +74,11 @@ defmodule LivWeb.MailLive do
   data archive_maildir, :string, default: ""
   data orbit_api_key, :string, default: ""
   data orbit_workspace, :string, default: ""
+
+  def mount(_params, _session, socket) do
+    if connected?(socket), do: PubSub.subscribe(Liv.PubSub, "messages")
+    {:ok, socket}
+  end
 
   # for the initial mount before login
   def handle_params(_params, _url, %Socket{assigns: %{live_action: :login}} = socket) do
@@ -938,6 +944,20 @@ defmodule LivWeb.MailLive do
           |> stream_attachments()
         }
     end
+  end
+
+  def handle_info(
+        {:delete_message, docid},
+        %Socket{assigns: %{mail_client: mc}} = socket
+      ) do
+    {:noreply, assign(socket, mail_client: MailClient.set_meta(mc, docid, nil))}
+  end
+
+  def handle_info(
+        {_op, docid, mail},
+        %Socket{assigns: %{mail_client: mc}} = socket
+      ) do
+    {:noreply, assign(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
   end
 
   # not logged in
