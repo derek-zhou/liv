@@ -17,6 +17,16 @@ LIV is a highly opinionated, minimal implemented webmail front-end that:
 
 LIV is designed to be self hosted; It is not a SaaS. You run LIV on your own email server with or without an IMAP server. If you don't want to run your own email server please stop right here. If you don't know how to run your email server please do some research first; there are many excellent tutorials out there and this page is not one of them.
 
+A few screenshots below:
+
+![inbox view](assets/static/inbox.jpg)
+
+![inbox view on a phone](assets/static/phone_screen.jpg)
+
+![sample search query](assets/static/search_dialog.jpg)
+
+![compose in markdown](assets/static/compose.jpg)
+
 ## Your personal email server
 
 LIV is designed for personal usage instead of organisational usage. You run your own email server on your own VPS and your own domain name, serving yourself and maybe a few family members and close friends. To run LIV, you need to have the following setup:
