@@ -48,7 +48,7 @@ LIV also need a couple of commandline tools to function. They are:
 
 They can be installed in most Linux distributions.
 
-LIV uses the [mu email search engine](https://github.com/djcb/mu) so you will also need to install that. Please install the 1.4.x branch. Once installed please verify that mu is indeed working by building the index `mu init && mu index`
+LIV uses the [mu email search engine](https://github.com/djcb/mu) so you will also need to install that. Please install the 1.6.x branch. Once installed please verify that mu is indeed working by building the index `mu init && mu index`
 
 If you use a IMAP server, you need to disable the automatic moving from `new/` to `cur/` directory by the IMAP server. This is because LIV need to be notified by email arrival and update the index. LIV will do the moving itself. If you are using `exim` and `dovecot` like me, you will need to make sure the exim's config has:
 ```
