@@ -270,9 +270,15 @@ defmodule Liv.MailClient do
     case URI.parse(mailto) do
       %URI{scheme: "mailto", path: tos, query: query} ->
         tos =
-          tos
-          |> String.split(~r/\s*,\s*/)
-          |> Enum.map(fn addr -> {:to, [nil | addr]} end)
+          case tos do
+            nil ->
+              []
+
+            _ ->
+              tos
+              |> String.split(~r/\s*,\s*/)
+              |> Enum.map(fn addr -> {:to, [nil | addr]} end)
+          end
 
         bccs =
           case List.keymember?(tos, [nil | addr], 1) do
@@ -295,6 +301,9 @@ defmodule Liv.MailClient do
           end
 
         {tos ++ bccs, sub}
+
+      %URI{path: nil} ->
+        {[{:bcc, [name | addr]}], ""}
 
       %URI{path: ^addr} ->
         {[{:to, [name | addr]}], ""}
