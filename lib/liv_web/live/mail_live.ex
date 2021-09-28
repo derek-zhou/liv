@@ -107,7 +107,7 @@ defmodule LivWeb.MailLive do
         _url,
         %Socket{assigns: %{live_action: :write, mail_opened: false}} = socket
       ) do
-    {recipients, subject} = MailClient.parse_mailto(to)
+    {recipients, subject, text} = MailClient.parse_mailto(to)
 
     {
       :noreply,
@@ -117,7 +117,7 @@ defmodule LivWeb.MailLive do
         info: "",
         recipients: recipients,
         subject: subject,
-        write_text: "",
+        write_text: MailClient.quoted_text(nil, text),
         write_attachments: [],
         incoming_attachments: [],
         current_attachment: nil,

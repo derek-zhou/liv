@@ -159,7 +159,7 @@ defmodule Liv.MailClient do
   getter of the text content in quote
   """
   def quoted_text(_, ""), do: ""
-  def quoted_text(nil, _), do: ""
+  def quoted_text(nil, text), do: "> #{text}\n"
 
   def quoted_text(%__MODULE__{mails: mails, docid: docid}, text) do
     case Map.get(mails, docid) do
@@ -286,30 +286,31 @@ defmodule Liv.MailClient do
             false -> [{:bcc, [name | addr]}]
           end
 
-        sub =
+        {sub, body} =
           case query do
             nil ->
-              ""
+              {"", ""}
 
             _ ->
               query
               |> URI.query_decoder()
-              |> Enum.reduce("", fn
-                {"subject", v}, _ -> v
-                {_, _}, sub -> sub
+              |> Enum.reduce({"", ""}, fn
+                {"subject", v}, {_, b} -> {v, b}
+                {"body", v}, {s, _} -> {s, v}
+                {_, _}, {s, b} -> {s, b}
               end)
           end
 
-        {tos ++ bccs, sub}
+        {tos ++ bccs, sub, body}
 
       %URI{path: nil} ->
-        {[{:bcc, [name | addr]}], ""}
+        {[{:bcc, [name | addr]}], "", ""}
 
       %URI{path: ^addr} ->
-        {[{:to, [name | addr]}], ""}
+        {[{:to, [name | addr]}], "", ""}
 
       %URI{path: to_addr} ->
-        {[{:to, [nil | to_addr]}, {:bcc, [name | addr]}], ""}
+        {[{:to, [nil | to_addr]}, {:bcc, [name | addr]}], "", ""}
     end
   end
 
