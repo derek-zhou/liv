@@ -167,7 +167,7 @@ defmodule LivWeb.MailLive do
       ) do
     mc =
       cond do
-        mc && query == last_query -> mc
+        mc && query == last_query -> MailClient.seen(mc, 0)
         true -> MailClient.new_search(query)
       end
 

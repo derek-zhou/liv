@@ -47,6 +47,8 @@ defmodule Liv.MailClient do
   @doc """
   mark a message seen. if the mc is nil, make a minimum mc first
   """
+  def seen(nil, 0), do: nil
+
   def seen(nil, docid) do
     case MaildirCommander.view(docid) do
       {:error, msg} ->
@@ -92,6 +94,7 @@ defmodule Liv.MailClient do
   end
 
   def seen(%__MODULE__{docid: docid} = mc, docid), do: mc
+  def seen(mc, 0), do: %{mc | docid: 0}
 
   def seen(%__MODULE__{mails: mails} = mc, docid) do
     case Map.get(mails, docid) do
