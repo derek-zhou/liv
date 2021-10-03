@@ -338,10 +338,13 @@
 			@apply whitespace-normal;
 		    }
                 }
+		.button {
+		    @apply border border-blue-600;
+		}
 		.toolbar {
                     @apply flex flex-wrap justify-between w-full;
                     .button {
-			@apply text-white bg-purple-600 mt-2;
+			@apply border-0 text-white bg-purple-600 mt-2;
                     }
                     .button-danger {
 			@apply bg-pink-600;
