@@ -8,7 +8,6 @@ defmodule LivWeb.MailLive do
   alias LivWeb.{Main, Find, Search, View, Login, Guardian, Write, Config}
   alias Phoenix.LiveView.Socket
   alias LivWeb.Router.Helpers, as: Routes
-  alias Argon2
   alias :self_configer, as: SelfConfiger
   alias Liv.Configer
   alias Liv.MailClient
@@ -31,7 +30,6 @@ defmodule LivWeb.MailLive do
   data password_prompt, :string, default: "Enter your password: "
 
   # for the header
-  data title, :string, default: "LIV"
   data info, :string, default: "Loading..."
   data buttons, :list, default: []
 

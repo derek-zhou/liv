@@ -7,7 +7,7 @@
     {/for}
     <div class="header">
 	<div class="brand">
-	    <span class="title">{@title}</span>
+	    <a href={Routes.mail_path(@socket, :welcome)}><img src={Routes.static_path(@socket, "/images/liv_logo.png")}></a>
 	    <span class="info">{@info}</span>
 	</div>
 	<div class="nav">

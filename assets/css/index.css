@@ -149,7 +149,7 @@
 	    .brand {
 		@apply flex-none;
                 img {
-		    @apply inline-block;
+		    @apply inline-block h-8;
                 }
 		.title {
                     @apply text-3xl text-indigo-500 font-bold align-bottom;
