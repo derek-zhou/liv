@@ -307,7 +307,7 @@ defmodule Liv.MailClient do
         {tos ++ bccs, sub, body}
 
       %URI{path: nil} ->
-        {[{:bcc, [name | addr]}], "", ""}
+        {[{:to, [nil | ""]}, {:bcc, [name | addr]}], "", ""}
 
       %URI{path: ^addr} ->
         {[{:to, [name | addr]}], "", ""}
