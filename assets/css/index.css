@@ -227,7 +227,10 @@
 		    @apply border rounded border-gray-600;
 		}
 		.preview {
-		    @apply border rounded bg-yellow-50 p-2;
+		    @apply border rounded bg-yellow-50 p-2 overflow-auto;
+		}
+		.code {
+		    @apply font-mono;
 		}
                 input[type="number"] {
                     @apply w-16 leading-relaxed border rounded border-gray-600;
