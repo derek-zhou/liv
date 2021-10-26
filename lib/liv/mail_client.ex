@@ -268,54 +268,49 @@ defmodule Liv.MailClient do
   getter of default to and subject from mailto: link. everything else are ignored for now
   """
   def parse_mailto(mailto) do
-    [name | addr] = Configer.default(:my_address)
-
     case URI.parse(mailto) do
+      %URI{scheme: "mailto", path: tos, query: nil} ->
+        {get_recipients(tos), nil, nil}
+
       %URI{scheme: "mailto", path: tos, query: query} ->
-        tos =
-          case tos do
-            nil ->
-              []
+        query = URI.query_decoder(query)
 
-            _ ->
-              tos
-              |> String.split(~r/\s*,\s*/)
-              |> Enum.map(fn addr -> {:to, [nil | addr]} end)
-          end
-
-        bccs =
-          case List.keymember?(tos, [nil | addr], 1) do
-            true -> []
-            false -> [{:bcc, [name | addr]}]
-          end
-
-        {sub, body} =
-          case query do
-            nil ->
-              {"", ""}
-
-            _ ->
-              query
-              |> URI.query_decoder()
-              |> Enum.reduce({"", ""}, fn
-                {"subject", v}, {_, b} -> {v, b}
-                {"body", v}, {s, _} -> {s, v}
-                {_, _}, {s, b} -> {s, b}
-              end)
-          end
-
-        {tos ++ bccs, sub, body}
+        {get_recipients(tos), :proplists.get_value("subject", query, nil),
+         :proplists.get_value("body", query, nil)}
 
       %URI{path: nil} ->
-        {[{:to, [nil | ""]}, {:bcc, [name | addr]}], "", ""}
-
-      %URI{path: ^addr} ->
-        {[{:to, [name | addr]}], "", ""}
+        {nil, nil, nil}
 
       %URI{path: to_addr} ->
-        {[{:to, [nil | to_addr]}, {:bcc, [name | addr]}], "", ""}
+        {get_recipients([to_addr]), nil, nil}
     end
   end
+
+  defp get_recipients(nil), do: nil
+  defp get_recipients([]), do: nil
+
+  defp get_recipients(str) when is_binary(str) do
+    str |> String.split(~r/\s*,\s*/) |> get_recipients()
+  end
+
+  defp get_recipients(tos) do
+    [name | addr] = Configer.default(:my_address)
+
+    bccs =
+      case Enum.member?(tos, addr) do
+        true -> []
+        false -> [{:bcc, [name | addr]}]
+      end
+
+    tos = Enum.map(tos, fn addr -> {:to, [nil | addr]} end)
+
+    tos ++ bccs
+  end
+
+  @doc """
+  default recipients
+  """
+  def default_recipients(), do: [{:to, [nil | ""]}, {:bcc, Configer.default(:my_address)}]
 
   @doc """
   getter of default to, cc and bcc for this email

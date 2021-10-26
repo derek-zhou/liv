@@ -106,6 +106,11 @@ defmodule LivWeb.MailLive do
         %Socket{assigns: %{live_action: :write, mail_opened: false}} = socket
       ) do
     {recipients, subject, text} = MailClient.parse_mailto(to)
+    {draft_recipients, draft_subject, draft_text} = AddressVault.get_draft()
+
+    subject = subject || draft_subject || ""
+    text = text || draft_text || ""
+    recipients = recipients || draft_recipients || MailClient.default_recipients()
 
     {
       :noreply,
@@ -596,6 +601,8 @@ defmodule LivWeb.MailLive do
       end)
       |> MailClient.normalize_recipients()
 
+    AddressVault.put_draft(subject, recipients, text)
+
     {
       :noreply,
       assign(socket,
@@ -623,6 +630,8 @@ defmodule LivWeb.MailLive do
         MailClient.parse_recipient(mail["type_#{i}"], mail["addr_#{i}"])
       end)
       |> MailClient.normalize_recipients()
+
+    AddressVault.put_draft(subject, recipients, text)
 
     {
       :noreply,
@@ -658,6 +667,8 @@ defmodule LivWeb.MailLive do
         {:noreply, put_flash(socket, :error, "Mail not sent: #{msg}")}
 
       {:ok, _} ->
+        AddressVault.clear_draft()
+
         {
           :noreply,
           socket
@@ -952,10 +963,35 @@ defmodule LivWeb.MailLive do
   end
 
   def handle_info(
-        {_op, docid, mail},
+        {:mark_message, docid, mail},
         %Socket{assigns: %{mail_client: mc}} = socket
       ) do
     {:noreply, assign(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
+  end
+
+  def handle_info(
+        {:unmark_message, docid, mail},
+        %Socket{assigns: %{mail_client: mc}} = socket
+      ) do
+    {:noreply, assign(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
+  end
+
+  def handle_info(
+        {:archive_message, docid, mail},
+        %Socket{assigns: %{mail_client: mc}} = socket
+      ) do
+    {:noreply, assign(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
+  end
+
+  def handle_info({:draft_update, subject, recipients, body}, socket) do
+    {
+      :noreply,
+      assign(socket,
+        recipients: recipients || MailClient.default_recipients(),
+        subject: subject || "",
+        write_text: body || ""
+      )
+    }
   end
 
   # not logged in

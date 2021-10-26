@@ -25,6 +25,18 @@ defmodule Liv.Application do
 
     Application.put_env(:maildir_commander, :housekeeper, {Liv.MailClient, :archive_job, []})
 
+    Application.put_env(
+      :maildir_commander,
+      :put_pasteboard,
+      {Liv.AddressVault, :put_pasteboard, []}
+    )
+
+    Application.put_env(
+      :maildir_commander,
+      :get_pasteboard,
+      {Liv.AddressVault, :get_pasteboard, []}
+    )
+
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Liv.Supervisor]
