@@ -36,7 +36,7 @@ defmodule Liv.MixProject do
       {:self_configer, "~> 0.1.1"},
       {:maildir_commander, path: "../maildir_commander"},
       {:html_sanitize_ex, "~> 1.4"},
-      {:swoosh, "~> 1.3"},
+      {:swoosh, "~> 1.5"},
       {:gen_smtp, "~> 1.1"},
       {:httpoison, "~> 1.7"},
       {:mime, "~> 1.6"},
