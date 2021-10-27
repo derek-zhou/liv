@@ -428,7 +428,7 @@ defmodule LivWeb.MailLive do
       |> assign(
         page_title: "Draft",
         info: "",
-        write_text: text,
+        write_text: text || "",
         buttons: [
           {:button, "\u{2716}", "close_write", false}
         ]
