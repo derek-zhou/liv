@@ -8,6 +8,7 @@
 	   {... change: "write_change", auto_recover: "write_recover",
 	   subject: @subject, recipients: @recipients,
 	   addr_options: @addr_options, text: @write_text } />
+    <Draft :if={@live_action == :draft} text={@write_text} />
     <Config :if={@auth == :logged_in && @live_action == :config}
 	    {... change: "config_change", my_addr: @my_addr, my_addrs: @my_addrs,
 	    my_lists: @my_lists, days: @archive_days, maildir: @archive_maildir,

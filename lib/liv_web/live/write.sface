@@ -15,8 +15,6 @@
 		      opts={"phx-update": "ignore", "phx-debounce": 1000}
 		      value={@text} />
 	</Field>
-	<div class="preview">
-	    {raw(preview(@text))}
-	</div>
+	<Draft text={@text} />
     </section>
 </Form>

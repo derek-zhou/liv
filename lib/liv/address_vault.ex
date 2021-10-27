@@ -37,7 +37,7 @@ defmodule Liv.AddressVault do
   """
   def get_pasteboard() do
     {_, _, body} = GenServer.call(__MODULE__, :get_draft)
-    body
+    body || ""
   end
 
   @doc """

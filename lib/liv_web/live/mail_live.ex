@@ -5,7 +5,7 @@ defmodule LivWeb.MailLive do
   @default_query "maildir:/"
   @chunk_size 65536
 
-  alias LivWeb.{Main, Find, Search, View, Login, Guardian, Write, Config}
+  alias LivWeb.{Main, Find, Search, View, Login, Guardian, Write, Config, Draft}
   alias Phoenix.LiveView.Socket
   alias LivWeb.Router.Helpers, as: Routes
   alias :self_configer, as: SelfConfiger
@@ -108,19 +108,15 @@ defmodule LivWeb.MailLive do
     {recipients, subject, text} = MailClient.parse_mailto(to)
     {draft_recipients, draft_subject, draft_text} = AddressVault.get_draft()
 
-    subject = subject || draft_subject || ""
-    text = text || draft_text || ""
-    recipients = recipients || draft_recipients || MailClient.default_recipients()
-
     {
       :noreply,
       socket
       |> assign(
         page_title: "Write",
         info: "",
-        recipients: recipients,
-        subject: subject,
-        write_text: MailClient.quoted_text(nil, text),
+        recipients: recipients || draft_recipients || MailClient.default_recipients(),
+        subject: subject || draft_subject || "",
+        write_text: MailClient.quoted_text(nil, text) || draft_text || "",
         write_attachments: [],
         incoming_attachments: [],
         current_attachment: nil,
@@ -418,6 +414,23 @@ defmodule LivWeb.MailLive do
         buttons: [
           {:button, "\u{1F4BE}", "config_save", false},
           {:button, "\u{2716}", "close_dialog", false}
+        ]
+      )
+    }
+  end
+
+  def handle_params(_params, _url, %Socket{assigns: %{live_action: :draft}} = socket) do
+    {_recipients, _subject, text} = AddressVault.get_draft()
+
+    {
+      :noreply,
+      socket
+      |> assign(
+        page_title: "Draft",
+        info: "",
+        write_text: text,
+        buttons: [
+          {:button, "\u{2716}", "close_write", false}
         ]
       )
     }

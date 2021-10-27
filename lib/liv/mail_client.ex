@@ -161,6 +161,7 @@ defmodule Liv.MailClient do
   @doc """
   getter of the text content in quote
   """
+  def quoted_text(_, nil), do: nil
   def quoted_text(_, ""), do: ""
   def quoted_text(nil, text), do: "> #{text}\n"
 

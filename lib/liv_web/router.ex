@@ -21,6 +21,7 @@ defmodule LivWeb.Router do
     live "/view/:docid", MailLive, :view
     live "/search", MailLive, :search
     live "/config", MailLive, :config
+    live "/draft", MailLive, :draft
     live "/write/:to", MailLive, :write
   end
 
