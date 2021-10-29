@@ -106,7 +106,7 @@ defmodule LivWeb.MailLive do
         %Socket{assigns: %{live_action: :write, mail_opened: false}} = socket
       ) do
     {recipients, subject, text} = MailClient.parse_mailto(to)
-    {draft_recipients, draft_subject, draft_text} = AddressVault.get_draft()
+    {draft_subject, draft_recipients, draft_text} = AddressVault.get_draft()
 
     {
       :noreply,
@@ -420,14 +420,14 @@ defmodule LivWeb.MailLive do
   end
 
   def handle_params(_params, _url, %Socket{assigns: %{live_action: :draft}} = socket) do
-    {_recipients, _subject, text} = AddressVault.get_draft()
+    {subject, _recipients, text} = AddressVault.get_draft()
 
     {
       :noreply,
       socket
       |> assign(
         page_title: "Draft",
-        info: "",
+        info: subject,
         write_text: text || "",
         buttons: [
           {:button, "\u{2716}", "close_write", false}
