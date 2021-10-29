@@ -147,7 +147,6 @@
 	.header {
 	    @apply sticky top-0 bg-gray-100 p-2 flex;
 	    .brand {
-		@apply flex-none;
                 img {
 		    @apply inline-block h-8;
                 }
