@@ -125,6 +125,7 @@ defmodule LivWeb.MailLive do
           {:button, "\u{1F4EC}", "send", false},
           {:attach, "\u{1F4CE}", "write_attach", false},
           {:button, "\u{1F5D1}", "drop_attachments", false},
+          {:patch, "\u{1F4C3}", Routes.mail_path(socket, :draft), false},
           {:button, "\u{2716}", "close_write", false}
         ]
       )
@@ -183,10 +184,10 @@ defmodule LivWeb.MailLive do
         mail_client: mc,
         last_query: query,
         buttons: [
-          {:patch, "\u{1f527}", Routes.mail_path(socket, :config), false},
-          {:patch, "\u{1f50d}", Routes.mail_path(socket, :search), false},
-          {:patch, "\u{2712}", Routes.mail_path(socket, :write, "#"), false},
-          {:patch, "\u{1f4a4}", Routes.mail_path(socket, :login), false}
+          {:patch, "\u{1F527}", Routes.mail_path(socket, :config), false},
+          {:patch, "\u{1F50D}", Routes.mail_path(socket, :search), false},
+          {:patch, "\u{1F4DD}", Routes.mail_path(socket, :write, "#"), false},
+          {:patch, "\u{1F4A4}", Routes.mail_path(socket, :login), false}
         ]
       )
     }
@@ -238,10 +239,10 @@ defmodule LivWeb.MailLive do
                 info: "Mail not found",
                 page_title: "Mail not found",
                 buttons: [
-                  {:patch, "\u{1f50d}", Routes.mail_path(socket, :search), false},
-                  {:patch, "\u{1f5c2}", Routes.mail_path(socket, :find, @default_query), false},
-                  {:button, "\u{25c0}", "backward_message", true},
-                  {:button, "\u{25b6}", "forward_message", true}
+                  {:patch, "\u{1F50D}", Routes.mail_path(socket, :search), false},
+                  {:patch, "\u{1f5C2}", Routes.mail_path(socket, :find, @default_query), false},
+                  {:button, "\u{25C0}", "backward_message", true},
+                  {:button, "\u{25B6}", "forward_message", true}
                 ]
               )
             }
@@ -260,10 +261,10 @@ defmodule LivWeb.MailLive do
                 mail_client: mc,
                 last_query: query,
                 buttons: [
-                  {:patch, "\u{1f50d}", Routes.mail_path(socket, :search), false},
-                  {:patch, "\u{1f5c2}", Routes.mail_path(socket, :find, query), false},
-                  {:button, "\u{25c0}", "backward_message", MailClient.is_first(mc, docid)},
-                  {:button, "\u{25b6}", "forward_message", MailClient.is_last(mc, docid)}
+                  {:patch, "\u{1F50D}", Routes.mail_path(socket, :search), false},
+                  {:patch, "\u{1F5C2}", Routes.mail_path(socket, :find, query), false},
+                  {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, docid)},
+                  {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, docid)}
                 ]
               )
             }
@@ -278,10 +279,10 @@ defmodule LivWeb.MailLive do
             info: "Mail not found",
             page_title: "Mail not found",
             buttons: [
-              {:patch, "\u{1f50d}", Routes.mail_path(socket, :search), false},
-              {:patch, "\u{1f5c2}", Routes.mail_path(socket, :find, @default_query), false},
-              {:button, "\u{25c0}", "backward_message", true},
-              {:button, "\u{25b6}", "forward_message", true}
+              {:patch, "\u{1F50D}", Routes.mail_path(socket, :search), false},
+              {:patch, "\u{1F5C2}", Routes.mail_path(socket, :find, @default_query), false},
+              {:button, "\u{25C0}", "backward_message", true},
+              {:button, "\u{25B6}", "forward_message", true}
             ]
           )
         }
@@ -313,10 +314,10 @@ defmodule LivWeb.MailLive do
                 info: info_mc(mc),
                 page_title: "Mail not found",
                 buttons: [
-                  {:patch, "\u{1f50d}", Routes.mail_path(socket, :search), false},
-                  {:patch, "\u{1f5c2}", Routes.mail_path(socket, :find, query), false},
-                  {:button, "\u{25c0}", "backward_message", true},
-                  {:button, "\u{25b6}", "forward_message", true}
+                  {:patch, "\u{1F50D}", Routes.mail_path(socket, :search), false},
+                  {:patch, "\u{1F5C2}", Routes.mail_path(socket, :find, query), false},
+                  {:button, "\u{25C0}", "backward_message", true},
+                  {:button, "\u{25B6}", "forward_message", true}
                 ]
               )
             }
@@ -331,10 +332,10 @@ defmodule LivWeb.MailLive do
                 page_title: meta.subject,
                 mail_client: mc,
                 buttons: [
-                  {:patch, "\u{1f50d}", Routes.mail_path(socket, :search), false},
-                  {:patch, "\u{1f5c2}", Routes.mail_path(socket, :find, query), false},
-                  {:button, "\u{25c0}", "backward_message", MailClient.is_first(mc, docid)},
-                  {:button, "\u{25b6}", "forward_message", MailClient.is_last(mc, docid)}
+                  {:patch, "\u{1F50D}", Routes.mail_path(socket, :search), false},
+                  {:patch, "\u{1F5C2}", Routes.mail_path(socket, :find, query), false},
+                  {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, docid)},
+                  {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, docid)}
                 ]
               )
             }
@@ -349,10 +350,10 @@ defmodule LivWeb.MailLive do
             info: info_mc(mc),
             page_title: "Mail not found",
             buttons: [
-              {:patch, "\u{1f50d}", Routes.mail_path(socket, :search), false},
-              {:patch, "\u{1f5c2}", Routes.mail_path(socket, :find, query), false},
-              {:button, "\u{25c0}", "backward_message", true},
-              {:button, "\u{25b6}", "forward_message", true}
+              {:patch, "\u{1F50D}", Routes.mail_path(socket, :search), false},
+              {:patch, "\u{1F5C2}", Routes.mail_path(socket, :find, query), false},
+              {:button, "\u{25C0}", "backward_message", true},
+              {:button, "\u{25B6}", "forward_message", true}
             ]
           )
         }
@@ -430,6 +431,7 @@ defmodule LivWeb.MailLive do
         info: subject,
         write_text: text || "",
         buttons: [
+          {:patch, "\u{1F4DD}", Routes.mail_path(socket, :write, "#"), false},
           {:button, "\u{2716}", "close_write", false}
         ]
       )
@@ -458,6 +460,7 @@ defmodule LivWeb.MailLive do
           {:button, "\u{1F4EC}", "send", false},
           {:attach, "\u{1F4CE}", "write_attach", false},
           {:button, "\u{1F5D1}", "drop_attachments", false},
+          {:patch, "\u{1F4C3}", Routes.mail_path(socket, :draft), false},
           {:button, "\u{2716}", "close_write", false}
         ]
       )
