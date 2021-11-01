@@ -407,8 +407,15 @@ defmodule Liv.MailClient do
   """
   def reply_subject(%__MODULE__{docid: docid, mails: mails}) when docid > 0 do
     case mails[docid].subject do
-      sub = <<"Re: ", _rest::binary>> -> sub
-      sub -> "Re: " <> sub
+      "" ->
+        ""
+
+      sub ->
+        case Regex.run(~r/^re:\s*(.*)/i, sub) do
+          nil -> "Re: " <> sub
+          [_, ""] -> ""
+          [_, str] -> "Re: " <> str
+        end
     end
   end
 
