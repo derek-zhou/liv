@@ -2,6 +2,7 @@ defmodule LivWeb.MailNode do
   use Surface.Component
 
   alias LivWeb.Router.Helpers, as: Routes
+  alias LivWeb.Endpoint
   alias Surface.Components.LivePatch
 
   prop meta, :map, required: true

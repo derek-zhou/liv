@@ -1,27 +1,27 @@
 <div :if={@meta != nil} class="box" id="message-view" phx-hook="View">
     <div class="line">
 	From:
-	<LivePatch to={Routes.mail_path(@socket, :write, tl(@meta.from))}
+	<LivePatch to={Routes.mail_path(Endpoint, :write, tl(@meta.from))}
 	      class="email-addr">{email_name(@meta.from)}</LivePatch>
     </div>
     <div class="line">
 	To:
 	{#for addr <- @meta.to}
-	<LivePatch to={Routes.mail_path(@socket, :write, tl(addr))}
+	<LivePatch to={Routes.mail_path(Endpoint, :write, tl(addr))}
 		   class="email-addr">{email_name(addr)}</LivePatch>
 	{/for}
     </div>
     <div :if={length(@meta.cc) > 0} class="line">
 	Cc:
 	{#for addr <- @meta.cc}
-	<LivePatch to={Routes.mail_path(@socket, :write, tl(addr))}
+	<LivePatch to={Routes.mail_path(Endpoint, :write, tl(addr))}
 		   class="email-addr">{email_name(addr)}</LivePatch>
 	{/for}
     </div>
     <div :if={length(@meta.bcc) > 0} class="line">
 	Bcc:
 	{#for addr <- @meta.bcc}
-	<LivePatch to={Routes.mail_path(@socket, :write, tl(addr))}
+	<LivePatch to={Routes.mail_path(Endpoint, :write, tl(addr))}
 		   class="email-addr">{email_name(addr)}</LivePatch>
 	{/for}
     </div>

@@ -56,7 +56,7 @@
     </section>
     <div class="alert alert-danger">
 	<Label>Danger!</Label>
-	<LivePatch to={Routes.mail_path(@socket, :set_password)}
+	<LivePatch to={Routes.mail_path(Endpoint, :set_password)}
 		      class="button">Reset your password</LivePatch>
     </div>
 </Form>

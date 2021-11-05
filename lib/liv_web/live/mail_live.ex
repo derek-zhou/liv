@@ -8,6 +8,7 @@ defmodule LivWeb.MailLive do
   alias LivWeb.{Main, Find, Search, View, Login, Guardian, Write, Config, Draft}
   alias Phoenix.LiveView.Socket
   alias LivWeb.Router.Helpers, as: Routes
+  alias LivWeb.Endpoint
   alias :self_configer, as: SelfConfiger
   alias Liv.Configer
   alias Liv.MailClient
@@ -89,7 +90,7 @@ defmodule LivWeb.MailLive do
       |> push_event("set_value", %{key: "token", value: ""})
       |> assign(
         auth: :logged_out,
-        saved_path: Routes.mail_path(socket, :find, @default_query),
+        saved_path: Routes.mail_path(Endpoint, :find, @default_query),
         page_title: "Login as #{user}",
         password_hash: Application.get_env(:liv, :password_hash),
         password_prompt: "Enter your password: ",
@@ -125,7 +126,7 @@ defmodule LivWeb.MailLive do
           {:button, "\u{1F4EC}", "send", false},
           {:attach, "\u{1F4CE}", "write_attach", false},
           {:button, "\u{1F5D1}", "drop_attachments", false},
-          {:patch, "\u{1F4C3}", Routes.mail_path(socket, :draft), false},
+          {:patch, "\u{1F4C3}", Routes.mail_path(Endpoint, :draft), false},
           {:button, "\u{2716}", "close_write", false}
         ]
       )
@@ -184,10 +185,10 @@ defmodule LivWeb.MailLive do
         mail_client: mc,
         last_query: query,
         buttons: [
-          {:patch, "\u{1F527}", Routes.mail_path(socket, :config), false},
-          {:patch, "\u{1F50D}", Routes.mail_path(socket, :search), false},
-          {:patch, "\u{1F4DD}", Routes.mail_path(socket, :write, "#"), false},
-          {:patch, "\u{1F4A4}", Routes.mail_path(socket, :login), false}
+          {:patch, "\u{1F527}", Routes.mail_path(Endpoint, :config), false},
+          {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
+          {:patch, "\u{1F4DD}", Routes.mail_path(Endpoint, :write, "#"), false},
+          {:patch, "\u{1F4A4}", Routes.mail_path(Endpoint, :login), false}
         ]
       )
     }
@@ -239,8 +240,8 @@ defmodule LivWeb.MailLive do
                 info: "Mail not found",
                 page_title: "Mail not found",
                 buttons: [
-                  {:patch, "\u{1F50D}", Routes.mail_path(socket, :search), false},
-                  {:patch, "\u{1f5C2}", Routes.mail_path(socket, :find, @default_query), false},
+                  {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
+                  {:patch, "\u{1f5C2}", Routes.mail_path(Endpoint, :find, @default_query), false},
                   {:button, "\u{25C0}", "backward_message", true},
                   {:button, "\u{25B6}", "forward_message", true}
                 ]
@@ -261,8 +262,8 @@ defmodule LivWeb.MailLive do
                 mail_client: mc,
                 last_query: query,
                 buttons: [
-                  {:patch, "\u{1F50D}", Routes.mail_path(socket, :search), false},
-                  {:patch, "\u{1F5C2}", Routes.mail_path(socket, :find, query), false},
+                  {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
+                  {:patch, "\u{1F5C2}", Routes.mail_path(Endpoint, :find, query), false},
                   {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, docid)},
                   {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, docid)}
                 ]
@@ -279,8 +280,8 @@ defmodule LivWeb.MailLive do
             info: "Mail not found",
             page_title: "Mail not found",
             buttons: [
-              {:patch, "\u{1F50D}", Routes.mail_path(socket, :search), false},
-              {:patch, "\u{1F5C2}", Routes.mail_path(socket, :find, @default_query), false},
+              {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
+              {:patch, "\u{1F5C2}", Routes.mail_path(Endpoint, :find, @default_query), false},
               {:button, "\u{25C0}", "backward_message", true},
               {:button, "\u{25B6}", "forward_message", true}
             ]
@@ -314,8 +315,8 @@ defmodule LivWeb.MailLive do
                 info: info_mc(mc),
                 page_title: "Mail not found",
                 buttons: [
-                  {:patch, "\u{1F50D}", Routes.mail_path(socket, :search), false},
-                  {:patch, "\u{1F5C2}", Routes.mail_path(socket, :find, query), false},
+                  {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
+                  {:patch, "\u{1F5C2}", Routes.mail_path(Endpoint, :find, query), false},
                   {:button, "\u{25C0}", "backward_message", true},
                   {:button, "\u{25B6}", "forward_message", true}
                 ]
@@ -332,8 +333,8 @@ defmodule LivWeb.MailLive do
                 page_title: meta.subject,
                 mail_client: mc,
                 buttons: [
-                  {:patch, "\u{1F50D}", Routes.mail_path(socket, :search), false},
-                  {:patch, "\u{1F5C2}", Routes.mail_path(socket, :find, query), false},
+                  {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
+                  {:patch, "\u{1F5C2}", Routes.mail_path(Endpoint, :find, query), false},
                   {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, docid)},
                   {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, docid)}
                 ]
@@ -350,8 +351,8 @@ defmodule LivWeb.MailLive do
             info: info_mc(mc),
             page_title: "Mail not found",
             buttons: [
-              {:patch, "\u{1F50D}", Routes.mail_path(socket, :search), false},
-              {:patch, "\u{1F5C2}", Routes.mail_path(socket, :find, query), false},
+              {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
+              {:patch, "\u{1F5C2}", Routes.mail_path(Endpoint, :find, query), false},
               {:button, "\u{25C0}", "backward_message", true},
               {:button, "\u{25B6}", "forward_message", true}
             ]
@@ -431,7 +432,7 @@ defmodule LivWeb.MailLive do
         info: subject,
         write_text: text || "",
         buttons: [
-          {:patch, "\u{1F4DD}", Routes.mail_path(socket, :write, "#"), false},
+          {:patch, "\u{1F4DD}", Routes.mail_path(Endpoint, :write, "#"), false},
           {:button, "\u{2716}", "close_write", false}
         ]
       )
@@ -460,7 +461,7 @@ defmodule LivWeb.MailLive do
           {:button, "\u{1F4EC}", "send", false},
           {:attach, "\u{1F4CE}", "write_attach", false},
           {:button, "\u{1F5D1}", "drop_attachments", false},
-          {:patch, "\u{1F4C3}", Routes.mail_path(socket, :draft), false},
+          {:patch, "\u{1F4C3}", Routes.mail_path(Endpoint, :draft), false},
           {:button, "\u{2716}", "close_write", false}
         ]
       )
@@ -477,7 +478,7 @@ defmodule LivWeb.MailLive do
           }
         } = socket
       ) do
-    {:noreply, push_patch(socket, to: Routes.mail_path(socket, :find, @default_query))}
+    {:noreply, push_patch(socket, to: Routes.mail_path(Endpoint, :find, @default_query))}
   end
 
   def handle_params(
@@ -490,7 +491,7 @@ defmodule LivWeb.MailLive do
           }
         } = socket
       ) do
-    {:noreply, push_patch(socket, to: Routes.mail_path(socket, :find, query))}
+    {:noreply, push_patch(socket, to: Routes.mail_path(Endpoint, :find, query))}
   end
 
   def handle_event("get_value", values, socket) do
@@ -590,7 +591,7 @@ defmodule LivWeb.MailLive do
       :noreply,
       socket
       |> assign(mail_client: nil)
-      |> push_patch(to: Routes.mail_path(socket, :find, query))
+      |> push_patch(to: Routes.mail_path(Endpoint, :find, query))
     }
   end
 
@@ -844,7 +845,7 @@ defmodule LivWeb.MailLive do
         {:noreply, put_flash(socket, :warning, "Already at the beginning")}
 
       prev ->
-        {:noreply, push_patch(socket, to: Routes.mail_path(socket, :view, prev))}
+        {:noreply, push_patch(socket, to: Routes.mail_path(Endpoint, :view, prev))}
     end
   end
 
@@ -858,7 +859,7 @@ defmodule LivWeb.MailLive do
         {:noreply, put_flash(socket, :warning, "Already at the end")}
 
       next ->
-        {:noreply, push_patch(socket, to: Routes.mail_path(socket, :view, next))}
+        {:noreply, push_patch(socket, to: Routes.mail_path(Endpoint, :view, next))}
     end
   end
 
@@ -1017,12 +1018,12 @@ defmodule LivWeb.MailLive do
         # temporarily log user in to set the password
         socket
         |> assign(auth: :logged_in)
-        |> push_patch(to: Routes.mail_path(socket, :set_password))
+        |> push_patch(to: Routes.mail_path(Endpoint, :set_password))
 
       hash ->
         socket
         |> assign(password_hash: hash)
-        |> push_patch(to: Routes.mail_path(socket, :login))
+        |> push_patch(to: Routes.mail_path(Endpoint, :login))
     end
   end
 
@@ -1035,14 +1036,16 @@ defmodule LivWeb.MailLive do
     |> push_patch(to: path)
   end
 
-  defp close_action(
-         %Socket{assigns: %{mail_client: mc, mail_opened: opened, last_query: query}} = socket
-       ) do
-    cond do
-      opened -> Routes.mail_path(socket, :view, mc.docid)
-      query != "" -> Routes.mail_path(socket, :find, query)
-      true -> Routes.mail_path(socket, :find, @default_query)
-    end
+  defp close_action(%Socket{assigns: %{mail_client: mc, mail_opened: true}}) do
+    Routes.mail_path(Endpoint, :view, mc.docid)
+  end
+
+  defp close_action(%Socket{assigns: %{last_query: ""}}) do
+    Routes.mail_path(Endpoint, :find, @default_query)
+  end
+
+  defp close_action(%Socket{assigns: %{last_query: query}}) do
+    Routes.mail_path(Endpoint, :find, query)
   end
 
   defp fetch_token(socket, %{"token" => token}) do

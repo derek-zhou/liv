@@ -2,6 +2,7 @@ defmodule LivWeb.Config do
   use Surface.Component
 
   alias LivWeb.Router.Helpers, as: Routes
+  alias LivWeb.Endpoint
   alias Surface.Components.Form
   alias Surface.Components.Form.{Field, TextInput, NumberInput, Label, TextArea}
   alias Surface.Components.LivePatch

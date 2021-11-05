@@ -4,8 +4,8 @@
 	      meta: Map.get(@mails, docid),
 	      tz_offset: @tz_offset } />
     <div class="children-container">
-	{render(%{root: docid, tz_offset: @tz_offset, socket: @socket,
-	mails: @mails, tree: @tree})}
+	{render(%{root: docid, tz_offset: @tz_offset, mails: @mails, tree: @tree,
+	__context__: @__context__, __surface__: @__surface__})}
     </div>
 </div>
 {/for}

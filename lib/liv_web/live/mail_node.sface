@@ -1,10 +1,10 @@
 <div class={"message", "message-unread": unread?(@meta.flags),
 	   "message-replied": replied?(@meta.flags)}>
-    <LivePatch to={Routes.mail_path(@socket, :view, @docid)}
+    <LivePatch to={Routes.mail_path(Endpoint, :view, @docid)}
 	       class="subject">
 	{@meta.subject}
     </LivePatch>
-    <LivePatch to={Routes.mail_path(@socket, :write, tl(@meta.from))}
+    <LivePatch to={Routes.mail_path(Endpoint, :write, tl(@meta.from))}
 	  class="email-addr">{email_name(@meta.from)}</LivePatch>
     <div class="date">{date_string(@meta.date, @tz_offset)}</div>
 </div>

@@ -1,6 +1,7 @@
 defmodule LivWeb.View do
   use Surface.Component
   alias LivWeb.Router.Helpers, as: Routes
+  alias LivWeb.Endpoint
   alias Surface.Components.LivePatch
   alias LivWeb.Attachment
   alias Liv.Sanitizer
