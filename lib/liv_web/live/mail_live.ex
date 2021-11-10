@@ -1067,7 +1067,7 @@ defmodule LivWeb.MailLive do
     assign(socket, recover_query: query)
   end
 
-  defp fetch_recover_query(socket, _), do: assign(socket, recover_query: "")
+  defp fetch_recover_query(socket, _), do: assign(socket, recover_query: @default_query)
 
   defp info_mc(nil), do: "0/0"
 
