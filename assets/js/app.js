@@ -61,7 +61,9 @@ function local_state() {
     for (let i = 0; i < localStorage.length; i++) {
 	let key = localStorage.key(i);
 	let value = localStorage.getItem(key);
-	ret[key] = value;
+	let found = key.match(/^liv_(.*)/);
+	if (found)
+	    ret[found[1]] = value;
     }
     return ret;
 }
@@ -115,14 +117,12 @@ Hooks.Main = {
 	    this.pushEvent("get_value", ret);
 	});
 	this.handleEvent("set_value", ({key, value}) => {
+	    let local_key = "liv_" + key;
 	    if (value)
-		localStorage.setItem(key, value);
+		localStorage.setItem(local_key, value);
 	    else
-		localStorage.removeItem(key);
+		localStorage.removeItem(local_key);
 	});
-    },
-    reconnected() {
-	this.pushEvent("get_value", local_state());
     }
 };
 

@@ -16,16 +16,15 @@ defmodule LivWeb.MailLive do
   alias Phoenix.PubSub
 
   # client side state
+  # nil, logged_in, logged_out
   data auth, :atom, default: nil
   data tz_offset, :integer, default: 0
-  data recover_query, :string, default: ""
+  data recover_query, :string, default: @default_query
 
   # the mail client app state
   data mail_client, :map, default: nil
 
   # for login
-  # nil, logged_in, logged_out
-  data saved_path, :string, default: ""
   data password_hash, :string, default: ""
   data saved_password, :string, default: ""
   data password_prompt, :string, default: "Enter your password: "
@@ -77,6 +76,7 @@ defmodule LivWeb.MailLive do
   def mount(_params, _session, socket) do
     cond do
       connected?(socket) ->
+        MailClient.snooze()
         PubSub.subscribe(Liv.PubSub, "messages")
         values = get_connect_params(socket)
 
@@ -105,7 +105,6 @@ defmodule LivWeb.MailLive do
       |> push_event("set_value", %{key: "token", value: ""})
       |> assign(
         auth: :logged_out,
-        saved_path: Routes.mail_path(Endpoint, :find, @default_query),
         page_title: "Login as #{user}",
         password_hash: Application.get_env(:liv, :password_hash),
         password_prompt: "Enter your password: ",
@@ -115,47 +114,25 @@ defmodule LivWeb.MailLive do
     }
   end
 
-  # write must be outside auth protection for form recovery
-  def handle_params(
-        %{"to" => to},
-        _url,
-        %Socket{assigns: %{live_action: :write, mail_opened: false}} = socket
-      ) do
-    {recipients, subject, text} = MailClient.parse_mailto(to)
-    {draft_subject, draft_recipients, draft_text} = AddressVault.get_draft()
+  def handle_params(_params, _url, %Socket{assigns: %{auth: :logged_out}} = socket) do
+    case Application.get_env(:liv, :password_hash) do
+      nil ->
+        # temporarily log user in to set the password
+        {
+          :noreply,
+          socket
+          |> assign(auth: :logged_in)
+          |> push_patch(to: Routes.mail_path(Endpoint, :set_password))
+        }
 
-    {
-      :noreply,
-      socket
-      |> assign(
-        page_title: "Write",
-        info: "",
-        recipients: recipients || draft_recipients || MailClient.default_recipients(),
-        subject: subject || draft_subject || "",
-        write_text: MailClient.quoted_text(nil, text) || draft_text || "",
-        write_attachments: [],
-        incoming_attachments: [],
-        current_attachment: nil,
-        write_chunk_outstanding: false,
-        buttons: [
-          {:button, "\u{1F4EC}", "send", false},
-          {:attach, "\u{1F4CE}", "write_attach", false},
-          {:button, "\u{1F5D1}", "drop_attachments", false},
-          {:patch, "\u{1F4C3}", Routes.mail_path(Endpoint, :draft), false},
-          {:button, "\u{2716}", "close_write", false}
-        ]
-      )
-    }
-  end
-
-  def handle_params(_params, url, %Socket{assigns: %{auth: nil}} = socket) do
-    %URI{path: path} = URI.parse(url)
-    MailClient.snooze()
-    {:noreply, assign(socket, saved_path: path, page_title: "")}
-  end
-
-  def handle_params(_params, _url, %Socket{assigns: %{auth: :logged_out}}) do
-    exit("Unauthorized")
+      hash ->
+        {
+          :noreply,
+          socket
+          |> assign(password_hash: hash)
+          |> push_patch(to: Routes.mail_path(Endpoint, :login))
+        }
+    end
   end
 
   def handle_params(_params, _url, %Socket{assigns: %{live_action: :set_password}} = socket) do
@@ -454,6 +431,39 @@ defmodule LivWeb.MailLive do
     }
   end
 
+  # write must be outside auth protection for form recovery
+  def handle_params(
+        %{"to" => to},
+        _url,
+        %Socket{assigns: %{live_action: :write, mail_opened: false}} = socket
+      ) do
+    {recipients, subject, text} = MailClient.parse_mailto(to)
+    {draft_subject, draft_recipients, draft_text} = AddressVault.get_draft()
+
+    {
+      :noreply,
+      socket
+      |> assign(
+        page_title: "Write",
+        info: "",
+        recipients: recipients || draft_recipients || MailClient.default_recipients(),
+        subject: subject || draft_subject || "",
+        write_text: MailClient.quoted_text(nil, text) || draft_text || "",
+        write_attachments: [],
+        incoming_attachments: [],
+        current_attachment: nil,
+        write_chunk_outstanding: false,
+        buttons: [
+          {:button, "\u{1F4EC}", "send", false},
+          {:attach, "\u{1F4CE}", "write_attach", false},
+          {:button, "\u{1F5D1}", "drop_attachments", false},
+          {:patch, "\u{1F4C3}", Routes.mail_path(Endpoint, :draft), false},
+          {:button, "\u{2716}", "close_write", false}
+        ]
+      )
+    }
+  end
+
   def handle_params(
         %{"to" => to},
         _url,
@@ -489,19 +499,6 @@ defmodule LivWeb.MailLive do
         %Socket{
           assigns: %{
             live_action: :welcome,
-            recover_query: ""
-          }
-        } = socket
-      ) do
-    {:noreply, push_patch(socket, to: Routes.mail_path(Endpoint, :find, @default_query))}
-  end
-
-  def handle_params(
-        _params,
-        _url,
-        %Socket{
-          assigns: %{
-            live_action: :welcome,
             recover_query: query
           }
         } = socket
@@ -517,7 +514,6 @@ defmodule LivWeb.MailLive do
       |> fetch_tz_offset(values)
       |> fetch_locale(values)
       |> fetch_recover_query(values)
-      |> patch_action()
     }
   end
 
@@ -548,7 +544,8 @@ defmodule LivWeb.MailLive do
   def handle_event(
         "pw_submit",
         %{"login" => %{"password" => password}},
-        %Socket{assigns: %{password_hash: nil, saved_password: password}} = socket
+        %Socket{assigns: %{recover_query: query, password_hash: nil, saved_password: password}} =
+          socket
       ) do
     hash = Argon2.hash_pwd_salt(password)
     SelfConfiger.set_env(Configer, :password_hash, hash)
@@ -558,7 +555,7 @@ defmodule LivWeb.MailLive do
       socket
       |> clear_flash()
       |> assign(password_hash: hash)
-      |> patch_action()
+      |> push_patch(to: Routes.mail_path(Endpoint, :find, query))
     }
   end
 
@@ -577,7 +574,7 @@ defmodule LivWeb.MailLive do
   def handle_event(
         "pw_submit",
         %{"login" => %{"password" => password}},
-        %Socket{assigns: %{password_hash: hash}} = socket
+        %Socket{assigns: %{recover_query: query, password_hash: hash}} = socket
       ) do
     case Argon2.verify_pass(password, hash) do
       true ->
@@ -589,7 +586,7 @@ defmodule LivWeb.MailLive do
           |> clear_flash()
           |> push_event("set_value", %{key: "token", value: token})
           |> assign(auth: :logged_in)
-          |> patch_action()
+          |> push_patch(to: Routes.mail_path(Endpoint, :find, query))
         }
 
       false ->
@@ -1024,31 +1021,6 @@ defmodule LivWeb.MailLive do
         write_text: body || ""
       )
     }
-  end
-
-  # not logged in
-  defp patch_action(%Socket{assigns: %{auth: :logged_out}} = socket) do
-    case Application.get_env(:liv, :password_hash) do
-      nil ->
-        # temporarily log user in to set the password
-        socket
-        |> assign(auth: :logged_in)
-        |> push_patch(to: Routes.mail_path(Endpoint, :set_password))
-
-      hash ->
-        socket
-        |> assign(password_hash: hash)
-        |> push_patch(to: Routes.mail_path(Endpoint, :login))
-    end
-  end
-
-  # no saved path = no patch
-  defp patch_action(%Socket{assigns: %{saved_path: ""}} = socket), do: socket
-
-  defp patch_action(%Socket{assigns: %{saved_path: path}} = socket) do
-    socket
-    |> assign(saved_path: "")
-    |> push_patch(to: path)
   end
 
   defp close_action(%Socket{assigns: %{mail_client: mc, mail_opened: true}}) do
