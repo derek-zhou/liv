@@ -94,7 +94,11 @@ defmodule LivWeb.MailLive do
     end
   end
 
-  # for the initial mount before login
+  # this is during the static render. Just do nothing
+  def handle_params(_params, _url, %Socket{assigns: %{auth: nil}} = socket) do
+    {:noreply, socket}
+  end
+
   def handle_params(_params, _url, %Socket{assigns: %{live_action: :login}} = socket) do
     user = System.get_env("USER")
 
@@ -431,7 +435,6 @@ defmodule LivWeb.MailLive do
     }
   end
 
-  # write must be outside auth protection for form recovery
   def handle_params(
         %{"to" => to},
         _url,
