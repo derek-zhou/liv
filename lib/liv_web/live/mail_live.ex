@@ -75,8 +75,23 @@ defmodule LivWeb.MailLive do
   data orbit_workspace, :string, default: ""
 
   def mount(_params, _session, socket) do
-    if connected?(socket), do: PubSub.subscribe(Liv.PubSub, "messages")
-    {:ok, socket}
+    cond do
+      connected?(socket) ->
+        PubSub.subscribe(Liv.PubSub, "messages")
+        values = get_connect_params(socket)
+
+        {
+          :ok,
+          socket
+          |> fetch_token(values)
+          |> fetch_tz_offset(values)
+          |> fetch_locale(values)
+          |> fetch_recover_query(values)
+        }
+
+      true ->
+        {:ok, socket}
+    end
   end
 
   # for the initial mount before login

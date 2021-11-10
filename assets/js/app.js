@@ -108,7 +108,6 @@ let Hooks = new Object();
 
 Hooks.Main = {
     mounted() {
-	this.pushEvent("get_value", local_state());
 	this.handleEvent("get_value", ({key}) => {
 	    let value = localStorage.getItem(key) || "";
 	    let ret = new Object();
@@ -170,7 +169,8 @@ window.addEventListener("phx:page-loading-stop", info => hide_progress_bar())
 
 document.addEventListener("DOMContentLoaded", () => {
     let appRoot = document.querySelector("body").getAttribute("data-app-root");
-    let liveSocket = new LiveSocket(appRoot + "live", Socket, {hooks: Hooks});
+    let liveSocket = new LiveSocket(appRoot + "live", Socket,
+				    {hooks: Hooks, params: local_state()});
     // connect if there are any LiveViews on the page
     liveSocket.connect();
 
