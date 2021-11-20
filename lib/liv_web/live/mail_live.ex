@@ -5,14 +5,12 @@ defmodule LivWeb.MailLive do
   @default_query "maildir:/"
   @chunk_size 65536
 
+  alias Liv.{Configer, MailClient, AddressVault}
   alias LivWeb.{Main, Find, Search, View, Login, Guardian, Write, Config, Draft}
-  alias Phoenix.LiveView.Socket
   alias LivWeb.Router.Helpers, as: Routes
   alias LivWeb.Endpoint
   alias :self_configer, as: SelfConfiger
-  alias Liv.Configer
-  alias Liv.MailClient
-  alias Liv.AddressVault
+  alias Phoenix.LiveView.Socket
   alias Phoenix.PubSub
 
   # client side state
@@ -1056,14 +1054,42 @@ defmodule LivWeb.MailLive do
 
   defp fetch_tz_offset(socket, _), do: socket
 
-  defp fetch_locale(socket, %{"language" => locale}) do
-    Gettext.put_locale(LivWeb.Gettext, locale)
+  defp fetch_locale(socket, %{"language" => language}) do
+    case language |> language_to_locale() |> validate_locale() do
+      nil -> :ok
+      locale -> Gettext.put_locale(LivWeb.Gettext, locale)
+    end
+
     socket
   end
 
   defp fetch_locale(socket, _) do
     Gettext.put_locale(LivWeb.Gettext, "en")
     socket
+  end
+
+  defp language_to_locale(language) do
+    String.replace(language, "-", "_", global: false)
+  end
+
+  defp validate_locale(nil), do: nil
+
+  defp validate_locale(locale) do
+    supported_locales = Gettext.known_locales(LivWeb.Gettext)
+
+    case String.split(locale, "_") do
+      [language, _] ->
+        Enum.find([locale, language], fn locale ->
+          locale in supported_locales
+        end)
+
+      [^locale] ->
+        if locale in supported_locales do
+          locale
+        else
+          nil
+        end
+    end
   end
 
   defp fetch_recover_query(socket, %{"recoverQuery" => query}) do
