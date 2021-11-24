@@ -170,7 +170,7 @@ window.addEventListener("phx:page-loading-stop", info => hide_progress_bar())
 document.addEventListener("DOMContentLoaded", () => {
     let appRoot = document.querySelector("body").getAttribute("data-app-root");
     let liveSocket = new LiveSocket(appRoot + "live", Socket,
-				    {hooks: Hooks, params: local_state()});
+				    {hooks: Hooks, params: local_state});
     // connect if there are any LiveViews on the page
     liveSocket.connect();
 
