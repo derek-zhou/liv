@@ -1,8 +1,6 @@
 defmodule Liv.MailClient do
   require Logger
-  alias Liv.Configer
-  alias Liv.Mailer
-  alias Liv.AddressVault
+  alias Liv.{Configer, Mailer, AddressVault, Message}
   alias Phoenix.PubSub
 
   @moduledoc """
@@ -379,7 +377,7 @@ defmodule Liv.MailClient do
         |> add_references(mc)
         |> header("X-Mailer", "LivMail 0.1.0")
         |> text_body(text)
-        |> html_body(Earmark.as_html!(text))
+        |> html_body(Message.parse(text))
 
       mail =
         Enum.reduce(atts, mail, fn {name, _size, data}, mail ->
