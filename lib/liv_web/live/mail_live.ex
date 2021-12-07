@@ -1013,6 +1013,13 @@ defmodule LivWeb.MailLive do
     {:noreply, assign(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
   end
 
+  def handle_info(
+        {:seen_message, docid, mail},
+        %Socket{assigns: %{mail_client: mc}} = socket
+      ) do
+    {:noreply, assign(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
+  end
+
   def handle_info({:draft_update, subject, recipients, body}, socket) do
     {
       :noreply,
