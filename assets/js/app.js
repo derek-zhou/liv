@@ -131,7 +131,7 @@ Hooks.View = {
 	messageHook = this;
 	this.el.addEventListener("touchstart", browseTouchStart);
 	this.el.addEventListener("touchmove", browseTouchMove);
-	this.handleEvent("chear_attachments", () => {
+	this.handleEvent("clear_attachments", () => {
 	    for (let url of blobURLs.values()) {
 		URL.revokeObjectURL(url);
 	    }
