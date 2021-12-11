@@ -3,44 +3,6 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import {toByteArray, fromByteArray} from "base64-js"
 
-let xDown = null;
-let yDown = null;
-let messageHook = null;
-let writeHook = null;
-let attachments = [];
-let blobURLs = [];
-let uploads = [];
-const chunkSize = 65536;
-
-function browseTouchStart(evt) {
-    xDown = evt.touches[0].clientX;
-    yDown = evt.touches[0].clientY;
-}
-
-function browseTouchMove(evt) {
-    if ( ! xDown || ! yDown ) {
-        return;
-    }
-    var xUp = evt.touches[0].clientX;
-    var yUp = evt.touches[0].clientY;
-    var xDiff = xDown - xUp;
-    var yDiff = yDown - yUp;
-
-    /*most significant*/
-    if ( Math.abs( xDiff ) > Math.abs( yDiff ) ) {
-	if ( xDiff > 0 ) {
-	    /* left swipe */
-	    messageHook.pushEvent("forward_message", null);
-	} else {
-	    /* right swipe */
-	    messageHook.pushEvent("backward_message", null);
-	}
-    }
-    /* reset values */
-    xDown = null;
-    yDown = null;
-}
-
 function show_progress_bar() {
     var bar = document.querySelector("div#app-progress-bar");
     bar.style.width = "100%";
@@ -68,44 +30,6 @@ function local_state() {
     return ret;
 }
 
-function push_attachment_chunk(first, chunk) {
-    let binary = toByteArray(chunk);
-    if (first) {
-	attachments.push([binary]);
-    } else {
-	let last = attachments.pop();
-	last.push(binary);
-	attachments.push(last);
-    }
-}
-
-function last_attachment_url() {
-    return URL.createObjectURL(new Blob(attachments[attachments.length - 1]));
-}
-
-function add_attachment(event) {
-    for (let i = 0; i < event.target.files.length; i++) {
-	let file = event.target.files[i];
-	let reader = new FileReader();
-	reader.readAsArrayBuffer(file);
-	reader.addEventListener("load", () => {
-	    uploads.push(reader.result);
-	    writeHook.pushEvent("write_attach", {name: file.name, size: file.size});
-	});
-    }
-}
-
-function upload_attachment(name, offset) {
-    let data = uploads[0];
-    let dlen = data.byteLength;
-    let slen = dlen > offset + chunkSize ? chunkSize : dlen - offset;
-    let slice = new Uint8Array(data, offset, slen);
-    let chunk = fromByteArray(slice);
-    writeHook.pushEvent("attachment_chunk", {chunk: chunk});
-    if (offset + chunkSize >= dlen)
-	uploads.shift();
-}
-
 let Hooks = new Object();
 
 Hooks.Main = {
@@ -127,38 +51,111 @@ Hooks.Main = {
 };
 
 Hooks.View = {
+    xDown: null,
+    yDown: null,
+    attachments: [],
+    blobURLs: [],
+    
     mounted() {
-	messageHook = this;
-	this.el.addEventListener("touchstart", browseTouchStart);
-	this.el.addEventListener("touchmove", browseTouchMove);
+	this.el.addEventListener("touchstart", this.browseTouchStart);
+	this.el.addEventListener("touchmove", this.browseTouchMove);
 	this.handleEvent("clear_attachments", () => {
-	    for (let url of blobURLs.values()) {
+	    for (let url of this.blobURLs.values()) {
 		URL.revokeObjectURL(url);
 	    }
-	    blobURLs = [];
-	    attachments = [];
+	    this.blobURLs = [];
+	    this.attachments = [];
 	});
 	this.handleEvent("attachment_chunk", ({first, last, chunk}) => {
-	    push_attachment_chunk(first, chunk);
+	    this.push_attachment_chunk(first, chunk);
 	    if (last) {
-		let url = last_attachment_url();
-		blobURLs.push(url);
+		let url = this.last_attachment_url();
+		this.blobURLs.push(url);
 		this.pushEvent("ack_attachment_chunk", {url: url});
 	    } else {
 		this.pushEvent("ack_attachment_chunk", {});
 	    }
 	});
+    },
+    
+    browseTouchStart(evt) {
+	this.xDown = evt.touches[0].clientX;
+	this.yDown = evt.touches[0].clientY;
+    },
+
+    browseTouchMove(evt) {
+	if ( ! this.xDown || ! this.yDown ) {
+            return;
+	}
+	var xUp = evt.touches[0].clientX;
+	var yUp = evt.touches[0].clientY;
+	var xDiff = this.xDown - xUp;
+	var yDiff = this.yDown - yUp;
+	
+	/*most significant*/
+	if ( Math.abs( xDiff ) > Math.abs( yDiff ) ) {
+	    if ( xDiff > 0 ) {
+		/* left swipe */
+		this.pushEvent("forward_message", null);
+	    } else {
+		/* right swipe */
+		this.pushEvent("backward_message", null);
+	    }
+	}
+	/* reset values */
+	this.xDown = null;
+	this.yDown = null;
+    },
+
+    push_attachment_chunk(first, chunk) {
+	let binary = toByteArray(chunk);
+	if (first) {
+	    this.attachments.push([binary]);
+	} else {
+	    let last = this.attachments.pop();
+	    last.push(binary);
+	    this.attachments.push(last);
+	}
+    },
+    
+    last_attachment_url() {
+	return URL.createObjectURL(new Blob(this.attachments[this.attachments.length - 1]));
     }
 };
 
 Hooks.Attach = {
+    chunkSize: 65536,
+    uploads: [],
+    
     mounted() {
-	writeHook = this;
 	this.el.querySelector("input#write-attach").addEventListener("change",
-								     add_attachment);
+								     this.add_attachment);
 	this.handleEvent("read_attachment", ({name, offset}) => {
-	    upload_attachment(name, offset);
+	    this.upload_attachment(name, offset);
 	});
+    },
+
+    add_attachment(event) {
+	for (let i = 0; i < event.target.files.length; i++) {
+	    let file = event.target.files[i];
+	    let reader = new FileReader();
+	    reader.readAsArrayBuffer(file);
+	    reader.addEventListener("load", () => {
+		this.uploads.push(reader.result);
+		this.pushEvent("write_attach", {name: file.name, size: file.size});
+	    });
+	}
+    },
+    
+    upload_attachment(name, offset) {
+	let data = this.uploads[0];
+	let dlen = data.byteLength;
+	let slen = dlen > offset + this.chunkSize ? this.chunkSize : dlen - offset;
+	let slice = new Uint8Array(data, offset, slen);
+	let chunk = fromByteArray(slice);
+	this.pushEvent("attachment_chunk", {chunk: chunk});
+	if (offset + chunkSize >= dlen)
+	    this.uploads.shift();
     }
 };
 
