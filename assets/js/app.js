@@ -57,8 +57,8 @@ Hooks.View = {
     blobURLs: [],
     
     mounted() {
-	this.el.addEventListener("touchstart", this.browseTouchStart);
-	this.el.addEventListener("touchmove", this.browseTouchMove);
+	this.el.addEventListener("touchstart", (e) => this.browseTouchStart(e.touches[0]));
+	this.el.addEventListener("touchmove", (e) => this.browseTouchMove(e.touches[0]));
 	this.handleEvent("clear_attachments", () => {
 	    for (let url of this.blobURLs.values()) {
 		URL.revokeObjectURL(url);
@@ -78,17 +78,17 @@ Hooks.View = {
 	});
     },
     
-    browseTouchStart(evt) {
-	this.xDown = evt.touches[0].clientX;
-	this.yDown = evt.touches[0].clientY;
+    browseTouchStart(dev) {
+	this.xDown = dev.clientX;
+	this.yDown = dev.clientY;
     },
 
-    browseTouchMove(evt) {
+    browseTouchMove(dev) {
 	if ( ! this.xDown || ! this.yDown ) {
             return;
 	}
-	var xUp = evt.touches[0].clientX;
-	var yUp = evt.touches[0].clientY;
+	var xUp = dev.clientX;
+	var yUp = dev.clientY;
 	var xDiff = this.xDown - xUp;
 	var yDiff = this.yDown - yUp;
 	
@@ -124,26 +124,28 @@ Hooks.View = {
 };
 
 Hooks.Attach = {
-    chunkSize: 65536,
+    chunkSize: 16384,
     uploads: [],
     
     mounted() {
-	this.el.querySelector("input#write-attach").addEventListener("change",
-								     this.add_attachment);
+	this.el
+	    .querySelector("input#write-attach")
+	    .addEventListener("change", (e) => this.add_attachment(e.target.files));
 	this.handleEvent("read_attachment", ({name, offset}) => {
 	    this.upload_attachment(name, offset);
 	});
     },
 
-    add_attachment(event) {
-	for (let i = 0; i < event.target.files.length; i++) {
-	    let file = event.target.files[i];
-	    let reader = new FileReader();
-	    reader.readAsArrayBuffer(file);
-	    reader.addEventListener("load", () => {
-		this.uploads.push(reader.result);
-		this.pushEvent("write_attach", {name: file.name, size: file.size});
+    async add_attachment(files) {
+	for (let i = 0; i < files.length; i++) {
+	    let file = files[i];
+	    let buffer = await new Promise((resolve) => {
+		const reader = new FileReader();
+		reader.onload = (e) => resolve(e.target.result);
+		reader.readAsArrayBuffer(file);
 	    });
+	    this.uploads.push(buffer);
+	    this.pushEvent("write_attach", {name: file.name, size: file.size});
 	}
     },
     
@@ -154,7 +156,7 @@ Hooks.Attach = {
 	let slice = new Uint8Array(data, offset, slen);
 	let chunk = fromByteArray(slice);
 	this.pushEvent("attachment_chunk", {chunk: chunk});
-	if (offset + chunkSize >= dlen)
+	if (offset + this.chunkSize >= dlen)
 	    this.uploads.shift();
     }
 };
