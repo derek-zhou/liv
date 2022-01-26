@@ -10,5 +10,6 @@ defmodule Mix.Tasks.Liv.Init do
     Memento.start()
     Memento.Table.create!(Liv.Correspondent, disc_copies: nodes)
     Liv.AddressVault.migrate()
+    Memento.stop()
   end
 end

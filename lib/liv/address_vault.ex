@@ -88,7 +88,7 @@ defmodule Liv.AddressVault do
   def migrate() do
     table = Configer.default(:saved_addresses)
 
-    Memento.transaction!(fn ->
+    Memento.Transaction.execute_sync!(fn ->
       Enum.each(table, fn [name | addr] ->
         Logger.info("Saving \"#{name}\" <#{addr}>")
         Memento.Query.write(%Correspondent{name: name, addr: addr, mails: []})
