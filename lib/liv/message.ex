@@ -3,8 +3,6 @@ defmodule Liv.Message do
   parse composed message
   """
 
-  require Logger
-
   @doc """
   parse user input into a message
   """
@@ -41,6 +39,8 @@ defmodule Liv.Message do
     "h2",
     "h3",
     "h4",
+    "h5",
+    "h6",
     "hr",
     "i",
     "img",
