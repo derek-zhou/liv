@@ -35,6 +35,7 @@ defmodule Liv.MixProject do
     [
       {:self_configer, "~> 0.1.1"},
       {:maildir_commander, "~> 0.4.1"},
+      {:memento, "~> 0.3.2"},
       {:html_sanitize_ex, "~> 1.4"},
       {:swoosh, "~> 1.5"},
       {:gen_smtp, "~> 1.1"},

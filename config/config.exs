@@ -27,6 +27,9 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# put the database at the user's home
+config :mnesia, dir: '#{System.get_env("HOME")}/.mnesia'
+
 # for guardian
 config :liv, LivWeb.Guardian,
   issuer: "liv",

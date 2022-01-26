@@ -1,156 +1,98 @@
+defmodule Liv.Correspondent do
+  use Memento.Table, attributes: [:addr, :name, :mails]
+end
+
 defmodule Liv.AddressVault do
   @moduledoc """
   I keep track of addresses used in the system
   """
 
-  use GenServer
   require Logger
-  alias Liv.Configer
-  alias Phoenix.PubSub
-  alias :self_configer, as: SelfConfiger
-
-  defstruct [:subject, :recipients, :body, dirty: false, addr_to_name: %{}]
+  alias Liv.{Configer, Correspondent}
 
   @doc """
   add an email address to the database
   """
   def add(name, addr) do
-    GenServer.cast(__MODULE__, {:add, name, addr})
+    Memento.transaction!(fn ->
+      Memento.Query.write(%Correspondent{name: name, addr: addr, mails: []})
+    end)
+
+    :ok
   end
 
   @doc """
   return a list of email addresses that contains the string
   """
   def start_with(str) do
-    GenServer.call(__MODULE__, {:start_with, str})
+    list =
+      Memento.transaction!(fn ->
+        Memento.Query.all(Correspondent)
+      end)
+
+    list
+    |> Enum.map(fn %Correspondent{addr: addr, name: name} -> [name | addr] end)
+    |> Enum.filter(fn [name | addr] ->
+      cond do
+        String.starts_with?(addr, str) -> true
+        name == nil -> false
+        String.starts_with?(name, str) -> true
+        true -> false
+      end
+    end)
   end
 
   @doc """
-  get draft
+  mark a docid as from one address
   """
-  def get_draft() do
-    GenServer.call(__MODULE__, :get_draft)
-  end
+  def mark([_ | nil], _), do: :ok
+  def mark([_ | ""], _), do: :ok
 
-  @doc """
-  get the body text as a pasteboard
-  """
-  def get_pasteboard() do
-    {_, _, body} = GenServer.call(__MODULE__, :get_draft)
-    body || ""
-  end
+  def mark([name | addr], docid) do
+    Memento.transaction!(fn ->
+      case Memento.Query.read(Correspondent, addr) do
+        nil ->
+          Memento.Query.write(%Correspondent{name: name, addr: addr, mails: []})
 
-  @doc """
-  put the draft
-  """
-  def put_draft(subject, recipients, body) do
-    # broadcast the event
-    PubSub.local_broadcast_from(
-      Liv.PubSub,
-      self(),
-      "messages",
-      {:draft_update, subject, recipients, body}
-    )
-
-    GenServer.cast(__MODULE__, {:put_draft, subject, recipients, body})
-  end
-
-  @doc """
-  clear the draft
-  """
-  def clear_draft(), do: put_draft(nil, nil, nil)
-
-  @doc """
-  put the text into the body of draft
-  """
-  def put_pasteboard(text), do: put_draft(nil, nil, text)
-
-  @doc false
-  def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: __MODULE__)
-  end
-
-  @impl true
-  def init(_) do
-    Process.flag(:trap_exit, true)
-
-    addr_to_name =
-      :saved_addresses
-      |> Configer.default()
-      |> Enum.map(fn [name | addr] -> {addr, name} end)
-      |> Enum.into(%{})
-
-    {:ok, %__MODULE__{addr_to_name: addr_to_name}}
-  end
-
-  @impl true
-  def terminate(_, %__MODULE__{dirty: false}), do: :ok
-
-  def terminate(_, %__MODULE__{addr_to_name: addr_to_name}) do
-    SelfConfiger.set_env(
-      Configer,
-      :saved_addresses,
-      Enum.map(addr_to_name, fn {addr, name} -> [name | addr] end)
-    )
+        %Correspondent{mails: mails} = c ->
+          Memento.Query.write(%{c | mails: [docid | mails]})
+      end
+    end)
 
     :ok
   end
 
-  @impl true
-  def handle_cast(
-        {:add, name, addr},
-        %__MODULE__{addr_to_name: addr_to_name} = state
-      ) do
-    {
-      :noreply,
-      %{state | dirty: true, addr_to_name: Map.put(addr_to_name, addr, name)},
-      5000
-    }
+  @doc """
+  undo the mark of a docid as from one address
+  """
+  def unmark([_ | nil], _), do: :ok
+  def unmark([_ | ""], _), do: :ok
+
+  def unmark([_ | addr], docid) do
+    Memento.transaction!(fn ->
+      case Memento.Query.read(Correspondent, addr) do
+        nil ->
+          :ok
+
+        %Correspondent{mails: mails} = c ->
+          Memento.Query.write(%{c | mails: Enum.reject(mails, &(&1 == docid))})
+      end
+    end)
+
+    :ok
   end
 
-  @impl true
-  def handle_cast({:put_draft, subject, recipients, body}, state) do
-    {:noreply, %{state | subject: subject, recipients: recipients, body: body}}
-  end
+  @doc """
+  migrate the saved address to mnesia
+  """
+  def migrate() do
+    table = Configer.default(:saved_addresses)
 
-  @impl true
-  def handle_info(:timeout, %__MODULE__{dirty: false} = state) do
-    {:noreply, state}
-  end
-
-  def handle_info(:timeout, %__MODULE__{addr_to_name: addr_to_name} = state) do
-    SelfConfiger.set_env(
-      Configer,
-      :saved_addresses,
-      Enum.map(addr_to_name, fn {addr, name} -> [name | addr] end)
-    )
-
-    {:noreply, %{state | dirty: false}}
-  end
-
-  @impl true
-  def handle_call({:start_with, str}, _from, %__MODULE__{addr_to_name: addr_to_name} = state) do
-    list =
-      addr_to_name
-      |> Enum.map(fn {addr, name} -> [name | addr] end)
-      |> Enum.filter(fn [name | addr] ->
-        cond do
-          String.starts_with?(addr, str) -> true
-          name == nil -> false
-          String.starts_with?(name, str) -> true
-          true -> false
-        end
+    Memento.transaction!(fn ->
+      Enum.each(table, fn [name | addr] ->
+        Logger.info("Saving \"#{name}\" <#{addr}>")
+        Memento.Query.write(%Correspondent{name: name, addr: addr, mails: []})
       end)
-
-    {:reply, list, state}
-  end
-
-  @impl true
-  def handle_call(
-        :get_draft,
-        _from,
-        %__MODULE__{subject: subject, recipients: recipients, body: body} = state
-      ) do
-    {:reply, {subject, recipients, body}, state}
+    end)
   end
 end

@@ -624,6 +624,7 @@ defmodule Liv.MailClient do
         unless Enum.member?(flags, :replied) do
           Logger.notice("marking mail (#{docid})")
           {:ok, mail} = MaildirCommander.flag(docid, "+R")
+          AddressVault.mark(mail.from, docid)
           # broadcast the event
           PubSub.local_broadcast(Liv.PubSub, "messages", {:mark_message, docid, mail})
         end
@@ -641,6 +642,7 @@ defmodule Liv.MailClient do
         if Enum.member?(flags, :replied) do
           Logger.notice("unmarking mail (#{docid})")
           {:ok, mail} = MaildirCommander.flag(docid, "-R")
+          AddressVault.unmark(mail.from, docid)
           # broadcast the event
           PubSub.local_broadcast(Liv.PubSub, "messages", {:unmark_message, docid, mail})
         end

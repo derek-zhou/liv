@@ -5,7 +5,7 @@ defmodule LivWeb.MailLive do
   @default_query "maildir:/"
   @chunk_size 65536
 
-  alias Liv.{Configer, MailClient, AddressVault}
+  alias Liv.{Configer, MailClient, AddressVault, DraftServer}
   alias LivWeb.{Main, Find, Search, View, Login, Guardian, Write, Config, Draft}
   alias LivWeb.Router.Helpers, as: Routes
   alias LivWeb.Endpoint
@@ -416,7 +416,7 @@ defmodule LivWeb.MailLive do
   end
 
   def handle_params(_params, _url, %Socket{assigns: %{live_action: :draft}} = socket) do
-    {subject, _recipients, text} = AddressVault.get_draft()
+    {subject, _recipients, text} = DraftServer.get_draft()
 
     {
       :noreply,
@@ -439,7 +439,7 @@ defmodule LivWeb.MailLive do
         %Socket{assigns: %{live_action: :write, mail_opened: false}} = socket
       ) do
     {recipients, subject, text} = MailClient.parse_mailto(to)
-    {draft_subject, draft_recipients, draft_text} = AddressVault.get_draft()
+    {draft_subject, draft_recipients, draft_text} = DraftServer.get_draft()
 
     {
       :noreply,
@@ -631,7 +631,7 @@ defmodule LivWeb.MailLive do
       end)
       |> MailClient.normalize_recipients()
 
-    AddressVault.put_draft(subject, recipients, text)
+    DraftServer.put_draft(subject, recipients, text)
 
     {
       :noreply,
@@ -661,7 +661,7 @@ defmodule LivWeb.MailLive do
       end)
       |> MailClient.normalize_recipients()
 
-    AddressVault.put_draft(subject, recipients, text)
+    DraftServer.put_draft(subject, recipients, text)
 
     {
       :noreply,
@@ -697,7 +697,7 @@ defmodule LivWeb.MailLive do
         {:noreply, put_flash(socket, :error, "Mail not sent: #{msg}")}
 
       {:ok, _} ->
-        AddressVault.clear_draft()
+        DraftServer.clear_draft()
 
         {
           :noreply,

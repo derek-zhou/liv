@@ -13,8 +13,8 @@ defmodule Liv.Application do
       {Phoenix.PubSub, name: Liv.PubSub},
       # configer to persist configuration
       {:self_configer, name: Liv.Configer},
-      # address vault
-      Liv.AddressVault,
+      # draft server
+      Liv.DraftServer,
       # the orbit gen server
       Liv.Orbit,
       # Start the Endpoint (http/https)
