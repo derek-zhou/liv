@@ -28,13 +28,13 @@ defmodule Liv.Application do
     Application.put_env(
       :maildir_commander,
       :put_pasteboard,
-      {Liv.AddressVault, :put_pasteboard, []}
+      {Liv.DraftServer, :put_pasteboard, []}
     )
 
     Application.put_env(
       :maildir_commander,
       :get_pasteboard,
-      {Liv.AddressVault, :get_pasteboard, []}
+      {Liv.DraftServer, :get_pasteboard, []}
     )
 
     # See https://hexdocs.pm/elixir/Supervisor.html

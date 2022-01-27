@@ -416,7 +416,7 @@ defmodule LivWeb.MailLive do
   end
 
   def handle_params(_params, _url, %Socket{assigns: %{live_action: :draft}} = socket) do
-    {subject, _recipients, text} = DraftServer.get_draft()
+    {subject, recipients, text} = DraftServer.get_draft()
 
     {
       :noreply,
@@ -424,9 +424,48 @@ defmodule LivWeb.MailLive do
       |> assign(
         page_title: "Draft",
         info: subject,
+        recipients: recipients,
+        subject: subject,
         write_text: text || "",
         buttons: [
-          {:patch, "\u{1F4DD}", Routes.mail_path(Endpoint, :write, "#"), false},
+          {:patch, "\u{1F4DD}", Routes.mail_path(Endpoint, :write, "#draft"), false},
+          {:button, "\u{2716}", "close_write", false}
+        ]
+      )
+    }
+  end
+
+  def handle_params(
+        %{"to" => "#draft"},
+        _url,
+        %Socket{
+          assigns: %{
+            live_action: :write,
+            mail_opened: false,
+            recipients: recipients,
+            subject: subject,
+            write_text: text
+          }
+        } = socket
+      ) do
+    {
+      :noreply,
+      socket
+      |> assign(
+        page_title: "Write",
+        info: "",
+        recipients: recipients || MailClient.default_recipients(),
+        subject: subject || "",
+        write_text: text || "",
+        write_attachments: [],
+        incoming_attachments: [],
+        current_attachment: nil,
+        write_chunk_outstanding: false,
+        buttons: [
+          {:button, "\u{1F4EC}", "send", false},
+          {:attach, "\u{1F4CE}", "write_attach", false},
+          {:button, "\u{1F5D1}", "drop_attachments", false},
+          {:patch, "\u{1F4C3}", Routes.mail_path(Endpoint, :draft), false},
           {:button, "\u{2716}", "close_write", false}
         ]
       )
@@ -439,7 +478,6 @@ defmodule LivWeb.MailLive do
         %Socket{assigns: %{live_action: :write, mail_opened: false}} = socket
       ) do
     {recipients, subject, text} = MailClient.parse_mailto(to)
-    {draft_subject, draft_recipients, draft_text} = DraftServer.get_draft()
 
     {
       :noreply,
@@ -447,9 +485,9 @@ defmodule LivWeb.MailLive do
       |> assign(
         page_title: "Write",
         info: "",
-        recipients: recipients || draft_recipients || MailClient.default_recipients(),
-        subject: subject || draft_subject || "",
-        write_text: MailClient.quoted_text(nil, text) || draft_text || "",
+        recipients: recipients || MailClient.default_recipients(),
+        subject: subject || "",
+        write_text: MailClient.quoted_text(nil, text) || "",
         write_attachments: [],
         incoming_attachments: [],
         current_attachment: nil,
@@ -697,8 +735,6 @@ defmodule LivWeb.MailLive do
         {:noreply, put_flash(socket, :error, "Mail not sent: #{msg}")}
 
       {:ok, _} ->
-        DraftServer.clear_draft()
-
         {
           :noreply,
           socket
