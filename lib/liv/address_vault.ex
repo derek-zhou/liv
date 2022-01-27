@@ -87,6 +87,12 @@ defmodule Liv.AddressVault do
   """
   def migrate() do
     table = Configer.default(:saved_addresses)
+    nodes = [node()]
+
+    Memento.stop()
+    Memento.Schema.create(nodes)
+    Memento.start()
+    Memento.Table.create!(Liv.Correspondent, disc_copies: nodes)
 
     Memento.Transaction.execute_sync!(fn ->
       Enum.each(table, fn [name | addr] ->
