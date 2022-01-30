@@ -1,12 +1,13 @@
 defmodule Liv.MailClient do
   require Logger
-  alias Liv.{Configer, Mailer, AddressVault, Message}
+  alias Liv.{Configer, Mailer, AddressVault, DraftServer, Message}
   alias Phoenix.PubSub
 
   @moduledoc """
   The core MailClient state mamangment abstracted from the UI. 
   """
 
+  alias :bbmustache, as: BBMustache
   alias :maildir_commander, as: MaildirCommander
   alias :mc_tree, as: MCTree
 
@@ -399,6 +400,36 @@ defmodule Liv.MailClient do
   end
 
   def send_mail(_, _, _, _), do: {:error, "no To: recipient"}
+
+  @doc """
+  Send the html draft from draft server
+  """
+  def send_draft(name, addr) do
+    import Swoosh.Email
+
+    case DraftServer.get_draft() do
+      {nil, _, _} ->
+        {:error, "no subject"}
+
+      {_, _, nil} ->
+        {:error, "no draft"}
+
+      {subject, _recipients, draft} ->
+        try do
+          new()
+          |> from(addr_to_swoosh(Configer.default(:my_address)))
+          |> subject(subject)
+          |> to({name, addr})
+          |> header("X-Mailer", "LivMail 0.1.0")
+          |> html_body(BBMustache.render(draft, %{name: name, addr: addr}, key_type: :atom))
+          |> Mailer.deliver()
+
+	  :ok
+        rescue
+          RuntimeError -> {:error, "deliver failed"}
+        end
+    end
+  end
 
   @doc """
   getter of the default reply subject

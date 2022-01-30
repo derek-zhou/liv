@@ -37,6 +37,12 @@ defmodule Liv.Application do
       {Liv.DraftServer, :get_pasteboard, []}
     )
 
+    Application.put_env(
+      :maildir_commander,
+      :send_draft,
+      {Liv.MailClient, :send_draft, []}
+    )
+
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Liv.Supervisor]

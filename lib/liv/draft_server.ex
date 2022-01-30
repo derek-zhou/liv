@@ -42,7 +42,7 @@ defmodule Liv.DraftServer do
   @doc """
   put the text into the body of draft
   """
-  def put_pasteboard(text), do: put_draft(nil, nil, text)
+  def put_pasteboard(subject, text), do: put_draft(subject, nil, text)
 
   @doc false
   def start_link(args) do
