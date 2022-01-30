@@ -1,13 +1,12 @@
 defmodule Liv.MailClient do
   require Logger
-  alias Liv.{Configer, Mailer, AddressVault, DraftServer, Message}
+  alias Liv.{Configer, Mailer, AddressVault, DraftServer}
   alias Phoenix.PubSub
 
   @moduledoc """
   The core MailClient state mamangment abstracted from the UI. 
   """
 
-  alias :bbmustache, as: BBMustache
   alias :maildir_commander, as: MaildirCommander
   alias :mc_tree, as: MCTree
 
@@ -377,8 +376,8 @@ defmodule Liv.MailClient do
         |> add_recipients(recipients)
         |> add_references(mc)
         |> header("X-Mailer", "LivMail 0.1.0")
-        |> text_body(text)
-        |> html_body(Message.parse(text))
+        |> text_body(DraftServer.text(text))
+        |> html_body(DraftServer.html(text))
 
       mail =
         Enum.reduce(atts, mail, fn {name, _size, data}, mail ->
@@ -421,10 +420,11 @@ defmodule Liv.MailClient do
           |> subject(subject)
           |> to({name, addr})
           |> header("X-Mailer", "LivMail 0.1.0")
-          |> html_body(BBMustache.render(draft, %{name: name, addr: addr}, key_type: :atom))
+          |> text_body(DraftServer.text(draft))
+          |> html_body(DraftServer.html(draft, %{name: name, addr: addr}))
           |> Mailer.deliver()
 
-	  :ok
+          :ok
         rescue
           RuntimeError -> {:error, "deliver failed"}
         end
