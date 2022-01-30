@@ -999,8 +999,11 @@ defmodule LivWeb.MailLive do
 
       {:html, body} ->
         case {type, html} do
-          {:text, ""} -> {:noreply, assign(socket, mail_content: {:html, body})}
-          _ -> {:noreply, socket}
+          {:text, ""} ->
+            {:noreply, assign(socket, mail_content: {:html, String.trim_leading(body)})}
+
+          _ ->
+            {:noreply, socket}
         end
 
       {:attachment, name, type, body} ->

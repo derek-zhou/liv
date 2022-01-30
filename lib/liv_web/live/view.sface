@@ -40,6 +40,6 @@
 	{/for}
     </ul>
     <pre :if={is_plain_text?(@content)}>{text_part(@content)}</pre>
-    <iframe :if={oversized?(@content)} class="mail-body" srcdoc={elem(@content, 1)} sandbox />
+    <iframe :if={oversized?(@content)} class="mail-body" srcdoc={html_part(@content)} sandbox />
     <div :if={inlined?(@content)} class="desc">{sanitize(@content)}</div>
 </div>

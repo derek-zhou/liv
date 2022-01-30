@@ -2,6 +2,8 @@ defmodule Liv.DraftServer do
   use GenServer
   alias Phoenix.PubSub
   alias :bbmustache, as: BBMustache
+  alias Liv.{Sanitizer, Message}
+  alias HtmlSanitizeEx.Scrubber
 
   defstruct [:subject, :recipients, :body]
 
@@ -61,6 +63,12 @@ defmodule Liv.DraftServer do
   def html(draft, map \\ %{})
   def html(<<"<", _::binary>> = draft, map), do: BBMustache.render(draft, map, key_type: :atom)
   def html(draft, _map), do: Earmark.as_html!(draft)
+
+  @doc """
+  return a version html that is safe to be embedded in our page.
+  """
+  def safe_html(<<"<", _::binary>> = draft), do: Scrubber.scrub(draft, Sanitizer)
+  def safe_html(draft), do: Message.parse(draft)
 
   @doc false
   def start_link(args) do

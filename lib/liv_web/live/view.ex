@@ -1,11 +1,9 @@
 defmodule LivWeb.View do
   use Surface.Component
   alias LivWeb.Router.Helpers, as: Routes
-  alias LivWeb.Endpoint
+  alias LivWeb.{Endpoint, Attachment}
   alias Surface.Components.LivePatch
-  alias LivWeb.Attachment
-  alias Liv.Sanitizer
-  alias HtmlSanitizeEx.Scrubber
+  alias Liv.DraftServer
 
   @max_inline_html 4096
 
@@ -40,6 +38,7 @@ defmodule LivWeb.View do
   defp inlined?({:html, html}), do: byte_size(html) < @max_inline_html
 
   defp text_part({_, text}), do: html_escape(text)
+  defp html_part({_, html}), do: html
 
-  defp sanitize({_, html}), do: html |> Scrubber.scrub(Sanitizer) |> raw()
+  defp sanitize({_, html}), do: html |> DraftServer.safe_html() |> raw()
 end
