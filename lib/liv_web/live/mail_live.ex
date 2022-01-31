@@ -423,9 +423,9 @@ defmodule LivWeb.MailLive do
       socket
       |> assign(
         page_title: "Draft",
-        info: subject,
+        info: subject || "",
         recipients: recipients,
-        subject: subject,
+        subject: subject || "",
         write_text: text || "",
         buttons: [
           {:patch, "\u{1F4DD}", Routes.mail_path(Endpoint, :write, "#draft"), false},
@@ -1057,6 +1057,21 @@ defmodule LivWeb.MailLive do
         %Socket{assigns: %{mail_client: mc}} = socket
       ) do
     {:noreply, assign(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
+  end
+
+  def handle_info(
+        {:draft_update, subject, recipients, body},
+        %Socket{assigns: %{live_action: :draft}} = socket
+      ) do
+    {
+      :noreply,
+      assign(socket,
+        recipients: recipients || MailClient.default_recipients(),
+        info: subject || "",
+        subject: subject || "",
+        write_text: body || ""
+      )
+    }
   end
 
   def handle_info({:draft_update, subject, recipients, body}, socket) do
