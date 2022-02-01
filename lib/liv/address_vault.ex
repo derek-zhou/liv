@@ -83,16 +83,22 @@ defmodule Liv.AddressVault do
   end
 
   @doc """
-  migrate the saved address to mnesia
+  install mnesia in the node
   """
-  def migrate() do
-    table = Configer.default(:saved_addresses)
+  def install!() do
     nodes = [node()]
 
     Memento.stop()
     Memento.Schema.create(nodes)
     Memento.start()
     Memento.Table.create!(Liv.Correspondent, disc_copies: nodes)
+  end
+
+  @doc """
+  migrate old data from the configer
+  """
+  def migrate!() do
+    table = Configer.default(:saved_addresses)
 
     Memento.Transaction.execute_sync!(fn ->
       Enum.each(table, fn [name | addr] ->

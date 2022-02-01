@@ -4,6 +4,7 @@ defmodule Liv.Application do
   @moduledoc false
 
   use Application
+  require Logger
 
   def start(_type, _args) do
     children = [
@@ -42,6 +43,13 @@ defmodule Liv.Application do
       :send_draft,
       {Liv.MailClient, :send_draft, []}
     )
+
+    try do
+      Liv.AddressVault.install!()
+    rescue
+      _e in Memento.AlreadyExistsError ->
+        Logger.info("Tables in Mnesia already created")
+    end
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
