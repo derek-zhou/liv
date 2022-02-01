@@ -11,12 +11,12 @@
 	"phoenix_live_view": "^0.16.4"
     },
     "devDependencies": {
-	"@snowpack/plugin-postcss": "^1.1.0",
-	"autoprefixer": "^10.2.4",
-	"postcss": "^8.2.6",
+	"@snowpack/plugin-postcss": "^1.4.3",
+	"autoprefixer": "^10.4.2",
+	"postcss": "^8.4.5",
 	"postcss-cli": "^8.3.1",
 	"postcss-nested": "^5.0.3",
-	"snowpack": "^3.0.1",
-	"tailwindcss": "^2.0.3"
+	"snowpack": "^3.8.8",
+	"tailwindcss": "^3.0.15"
     }
 }
