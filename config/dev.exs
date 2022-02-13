@@ -31,6 +31,9 @@ config :liv, LivWeb.Endpoint,
     ]
   ]
 
+# mailer
+config :liv, Liv.Mailer, adapter: Swoosh.Adapters.Local
+
 # Do not include metadata nor timestamps in development logs
 config :logger,
        :console,

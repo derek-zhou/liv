@@ -30,6 +30,11 @@ if config_env() == :prod do
         str
     end
 
+  # the local SMTP is the way that make the most sense
+  config :liv, Liv.Mailer,
+    adapter: Swoosh.Adapters.SMTP,
+    relay: "localhost"
+
   config :liv, LivWeb.Endpoint,
     url: [host: hostname, scheme: "https", port: 443, path: "/#{System.get_env("USER")}"],
     cache_static_manifest: "priv/static/cache_manifest.json",
