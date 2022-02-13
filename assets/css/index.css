@@ -188,11 +188,14 @@ span {
 		    @apply flex-none cursor-pointer text-white bg-purple-600 ml-1;
                 }
 	    }
+	    .long {
+		@apply w-full;
+	    }
 	    hr {
 		@apply mb-2 border-gray-200;
 	    }
 	    .toolbar {
-		@apply pt-2 flex flex-row flex-wrap justify-center border-t border-gray-200;
+		@apply pt-2 flex flex-row flex-wrap justify-center;
                 .button[type="reset"] {
 		    @apply flex-none cursor-pointer text-white bg-pink-600 mr-1;
                 }
@@ -201,19 +204,19 @@ span {
                 }
 	    }
 	    section {
-		@apply py-2 border-b;
+		@apply pt-2 border-b;
 	    }
 	    section:last-child {
 		@apply border-b-0 pb-0;
 	    }
             label {
-                @apply flex-none mr-2;
+                @apply flex-initial mr-2;
 		.focus {
 		    @apply font-bold italic;
 		}
             }
 	    .footnote {
-		@apply text-sm text-gray-700 py-2 flex justify-center;
+		@apply text-sm text-gray-700 flex justify-center;
 	    }
 	    .error {
 		@apply text-sm text-red-700 py-2;
@@ -228,7 +231,10 @@ span {
                 @apply w-16 leading-relaxed border rounded border-gray-600;
             }
             input[type="text"] {
-                @apply w-80 leading-relaxed border rounded border-gray-600;
+                @apply w-48 leading-relaxed border rounded border-gray-600;
+            }
+            input[type="text"].long {
+                @apply w-80;
             }
             input[type="email"] {
                 @apply w-80 leading-relaxed border rounded border-gray-600;
@@ -433,7 +439,7 @@ span {
 	.content {
 	    form {
 		section {
-		    @apply grid grid-cols-2 gap-x-2;
+		    @apply flex flex-row flex-wrap gap-x-4 justify-center;
 		}
 	    }
 	    .box {
