@@ -22,6 +22,9 @@ defmodule LivWeb.MailLive do
   # the mail client app state
   data mail_client, :map, default: nil
 
+  # new mail count since last checking
+  data new_mail_count, :integer, default: 0
+
   # for login
   data password_hash, :string, default: ""
   data saved_password, :string, default: ""
@@ -76,6 +79,7 @@ defmodule LivWeb.MailLive do
       connected?(socket) ->
         MailClient.snooze()
         PubSub.subscribe(Liv.PubSub, "messages")
+        PubSub.subscribe(Liv.PubSub, "world")
         values = get_connect_params(socket)
 
         {
@@ -158,10 +162,18 @@ defmodule LivWeb.MailLive do
   def handle_params(
         %{"query" => query},
         _url,
-        %Socket{assigns: %{live_action: :find, mail_client: mc, last_query: last_query}} = socket
+        %Socket{
+          assigns: %{
+            live_action: :find,
+            mail_client: mc,
+            last_query: last_query,
+            new_mail_count: count
+          }
+        } = socket
       ) do
     mc =
       cond do
+        count > 0 -> MailClient.new_search(query)
         mc && query == last_query -> MailClient.seen(mc, 0)
         true -> MailClient.new_search(query)
       end
@@ -178,6 +190,7 @@ defmodule LivWeb.MailLive do
         list_tree: MailClient.tree_of(mc),
         mail_client: mc,
         last_query: query,
+        new_mail_count: 0,
         buttons: [
           {:patch, "\u{1F527}", Routes.mail_path(Endpoint, :config), false},
           {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
@@ -968,6 +981,31 @@ defmodule LivWeb.MailLive do
     }
   end
 
+  def handle_event(
+        "clear_flash",
+        %{"key" => key},
+        %Socket{assigns: %{new_mail_count: 0}} = socket
+      ) do
+    {:noreply, clear_flash(socket, key)}
+  end
+
+  def handle_event(
+        "clear_flash",
+        %{"key" => "info"},
+        %Socket{assigns: %{live_action: :find, last_query: query}} = socket
+      ) do
+    {
+      :noreply,
+      socket
+      |> clear_flash(:info)
+      |> push_patch(to: Routes.mail_path(Endpoint, :find, query))
+    }
+  end
+
+  def handle_event("clear_flash", %{"key" => key}, socket) do
+    {:noreply, clear_flash(socket, key)}
+  end
+
   def handle_info(
         {:mail_part, ref, part},
         %Socket{
@@ -1057,6 +1095,15 @@ defmodule LivWeb.MailLive do
         %Socket{assigns: %{mail_client: mc}} = socket
       ) do
     {:noreply, assign(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
+  end
+
+  def handle_info(:new_mail, %Socket{assigns: %{new_mail_count: c}} = socket) do
+    {
+      :noreply,
+      socket
+      |> put_flash(:info, "You've got mail")
+      |> assign(new_mail_count: c + 1)
+    }
   end
 
   def handle_info(

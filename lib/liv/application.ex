@@ -44,6 +44,12 @@ defmodule Liv.Application do
       {Liv.MailClient, :send_draft, []}
     )
 
+    Application.put_env(
+      :maildir_commander,
+      :notify_new_mail,
+      {Liv.MailClient, :notify_new_mail, []}
+    )
+
     try do
       Liv.AddressVault.install!()
     rescue

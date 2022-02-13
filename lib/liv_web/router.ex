@@ -25,6 +25,11 @@ defmodule LivWeb.Router do
     live "/write/:to", MailLive, :write
   end
 
+  if Mix.env() == :dev do
+    # If using Phoenix
+    forward "/sent_emails", Plug.Swoosh.MailboxPreview
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", LivWeb do
   #   pipe_through :api

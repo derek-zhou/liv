@@ -524,6 +524,11 @@ defmodule Liv.MailClient do
     :ok
   end
 
+  @doc """
+  broadcast new mail arrival
+  """
+  def notify_new_mail(), do: PubSub.local_broadcast(Liv.PubSub, "world", :new_mail)
+
   defp addresses_map(%__MODULE__{docid: docid, mails: mails}) when docid > 0 do
     %{from: from, to: to, cc: cc} = Map.fetch!(mails, docid)
 
