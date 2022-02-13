@@ -38,6 +38,16 @@
 	 </Field>
     </section>
     <section>
+	<Field name="sending_method" class="field">
+	       <Label>Sending_method</Label>
+	       <Select options={"Local SMTP": "local",
+			        "Remote SMTP": "remote",
+			        "Sendgrid API": "sendgrid"} />
+	</Field>
+    </section>
+    <section>
+    </section>
+    <section>
     	 <Field name="orbit_api_key" class="field">
 	 	<Label>Orbit API key</Label>
 		<TextInput value={@orbit_api_key}
