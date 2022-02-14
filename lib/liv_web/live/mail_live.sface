@@ -12,7 +12,8 @@
     <Config :if={@auth == :logged_in && @live_action == :config}
 	    {... change: "config_change", my_addr: @my_addr, my_addrs: @my_addrs,
 	    my_lists: @my_lists, days: @archive_days, maildir: @archive_maildir,
-	    orbit_api_key: @orbit_api_key, orbit_workspace: @orbit_workspace} />
+	    orbit_api_key: @orbit_api_key, orbit_workspace: @orbit_workspace,
+	    sending_method: @sending_method, sending_data: @sending_data} />
     <div :if={@auth == :logged_in} hidden={@live_action != :find}>
 	<Find {... mails: @list_mails, tree: @list_tree, tz_offset: @tz_offset } />
     </div>

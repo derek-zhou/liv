@@ -188,6 +188,9 @@ span {
 		    @apply flex-none cursor-pointer text-white bg-purple-600 ml-1;
                 }
 	    }
+	    .hide {
+		@apply hidden;
+	    }
 	    .long {
 		@apply w-full;
 	    }

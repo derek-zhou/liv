@@ -73,6 +73,9 @@ defmodule LivWeb.MailLive do
   data archive_maildir, :string, default: ""
   data orbit_api_key, :string, default: ""
   data orbit_workspace, :string, default: ""
+  # :local, :remote or :sendgrid
+  data sending_method, :atom, default: :local
+  data sending_data, :map, default: %{username: "", password: "", hostname: "", api_key: ""}
 
   def mount(_params, _session, socket) do
     cond do
@@ -407,6 +410,8 @@ defmodule LivWeb.MailLive do
         _url,
         %Socket{assigns: %{live_action: :config}} = socket
       ) do
+    {sending_method, sending_data} = Configer.default(:sending_method)
+
     {
       :noreply,
       socket
@@ -420,6 +425,8 @@ defmodule LivWeb.MailLive do
         archive_maildir: Configer.default(:archive_maildir),
         orbit_api_key: Configer.default(:orbit_api_key),
         orbit_workspace: Configer.default(:orbit_workspace),
+        sending_method: sending_method,
+        sending_data: sending_data,
         buttons: [
           {:button, "\u{1F4BE}", "config_save", false},
           {:button, "\u{2716}", "close_dialog", false}
@@ -802,11 +809,18 @@ defmodule LivWeb.MailLive do
             "my_lists" => lists,
             "archive_days" => days,
             "archive_maildir" => maildir,
-            "orbit_api_key" => api_key,
-            "orbit_workspace" => workspace
+            "orbit_api_key" => orbit_api_key,
+            "orbit_workspace" => workspace,
+            "sending_method" => sending_method,
+            "username" => username,
+            "password" => password,
+            "hostname" => hostname,
+            "api_key" => api_key
           }
         },
-        socket
+        %Socket{
+          assigns: %{sending_data: sending_data}
+        } = socket
       ) do
     my_addr =
       case name do
@@ -817,7 +831,7 @@ defmodule LivWeb.MailLive do
     my_addrs = String.split(String.trim(addrs), "\n")
     my_lists = String.split(String.trim(lists), "\n")
     archive_maildir = String.trim(maildir)
-    orbit_api_key = String.trim(api_key)
+    orbit_api_key = String.trim(orbit_api_key)
     orbit_workspace = String.trim(workspace)
 
     archive_days =
@@ -825,6 +839,21 @@ defmodule LivWeb.MailLive do
         {n, ""} when n > 0 -> n
         _ -> Configer.default(:archive_days)
       end
+
+    sending_method =
+      case sending_method do
+        "local" -> :local
+        "remote" -> :remote
+        "sendgrid" -> :sendgrid
+      end
+
+    sending_data = %{
+      sending_data
+      | username: String.trim(username),
+        password: String.trim(password),
+        hostname: String.trim(hostname),
+        api_key: String.trim(api_key)
+    }
 
     socket =
       cond do
@@ -842,6 +871,22 @@ defmodule LivWeb.MailLive do
             "Days must be a positive integer"
           )
 
+        sending_method == :remote &&
+            (sending_data.username == "" || sending_data.password == "" ||
+               sending_data.hostname == "") ->
+          put_flash(
+            socket,
+            :error,
+            "SMTP username, password and hostname must not be empty"
+          )
+
+        sending_method == :sendgrid && sending_data.api_key == "" ->
+          put_flash(
+            socket,
+            :error,
+            "Sendgrid API key must not be empty"
+          )
+
         true ->
           clear_flash(socket)
       end
@@ -856,7 +901,9 @@ defmodule LivWeb.MailLive do
         archive_days: archive_days,
         archive_maildir: archive_maildir,
         orbit_api_key: orbit_api_key,
-        orbit_workspace: orbit_workspace
+        orbit_workspace: orbit_workspace,
+        sending_method: sending_method,
+        sending_data: sending_data
       )
     }
   end
@@ -872,7 +919,9 @@ defmodule LivWeb.MailLive do
             archive_days: archive_days,
             archive_maildir: archive_maildir,
             orbit_api_key: orbit_api_key,
-            orbit_workspace: orbit_workspace
+            orbit_workspace: orbit_workspace,
+            sending_method: sending_method,
+            sending_data: sending_data
           }
         } = socket
       ) do
@@ -884,6 +933,7 @@ defmodule LivWeb.MailLive do
     |> SelfConfiger.set_env(:archive_maildir, archive_maildir)
     |> SelfConfiger.set_env(:orbit_api_key, orbit_api_key)
     |> SelfConfiger.set_env(:orbit_workspace, orbit_workspace)
+    |> Configer.update_sending_method(sending_method, sending_data)
 
     {
       :noreply,

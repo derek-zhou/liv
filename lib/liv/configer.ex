@@ -1,6 +1,8 @@
 defmodule Liv.Configer do
   @app :liv
 
+  alias :self_configer, as: SelfConfiger
+
   def default(:my_address), do: default_value(:my_address, [nil | "you@example.com"])
   def default(:my_addresses), do: default_value(:my_addresses, ["you@example.com"])
   def default(:my_email_lists), do: default_value(:my_email_lists, [])
@@ -9,6 +11,68 @@ defmodule Liv.Configer do
   def default(:archive_maildir), do: default_value(:archive_maildir, "/.Archive")
   def default(:orbit_api_key), do: default_value(:orbit_api_key, "")
   def default(:orbit_workspace), do: default_value(:orbit_workspace, "")
+
+  @doc """
+  load configuration into user data format
+  """
+  def default(:sending_method) do
+    config = Application.get_env(@app, Liv.Mailer)
+    data = %{username: "", password: "", hostname: "", api_key: ""}
+
+    case config[:adapter] do
+      Swoosh.Adapters.Sendgrid ->
+        {:sendgrid, %{data | api_key: config[:api_key]}}
+
+      Swoosh.Adapters.SMTP ->
+        case config[:relay] do
+          "localhost" ->
+            {:local, data}
+
+          hostname ->
+            {:remote,
+             %{
+               data
+               | hostname: hostname,
+                 username: config[:username],
+                 password: config[:password]
+             }}
+        end
+
+      _ ->
+        {:local, data}
+    end
+  end
+
+  @doc """
+  serialize user configration format into application format
+  """
+  def update_sending_method(mod, :local, _data) do
+    SelfConfiger.set_env(mod, Liv.Mailer, adapter: Swoosh.Adapters.SMTP, relay: "localhost")
+  end
+
+  def update_sending_method(mod, :remote, %{
+        username: username,
+        password: password,
+        hostname: hostname
+      }) do
+    SelfConfiger.set_env(mod, Liv.Mailer,
+      adapter: Swoosh.Adapters.SMTP,
+      relay: hostname,
+      username: username,
+      password: password,
+      ssl: true,
+      tls: :always,
+      auth: :always,
+      port: 587
+    )
+  end
+
+  def update_sending_method(mod, :sendgrid, %{api_key: api_key}) do
+    SelfConfiger.set_env(mod, Liv.Mailer,
+      adapter: Swoosh.Adapters.Sendgrid,
+      api_key: api_key
+    )
+  end
 
   defp default_value(key, default), do: Application.get_env(@app, key, default)
 end
