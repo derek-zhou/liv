@@ -3,6 +3,9 @@ defmodule Liv.Configer do
 
   alias :self_configer, as: SelfConfiger
 
+  @doc """
+  load configuration into user data format
+  """
   def default(:my_address), do: default_value(:my_address, [nil | "you@example.com"])
   def default(:my_addresses), do: default_value(:my_addresses, ["you@example.com"])
   def default(:my_email_lists), do: default_value(:my_email_lists, [])
@@ -12,9 +15,12 @@ defmodule Liv.Configer do
   def default(:orbit_api_key), do: default_value(:orbit_api_key, "")
   def default(:orbit_workspace), do: default_value(:orbit_workspace, "")
 
-  @doc """
-  load configuration into user data format
-  """
+  def default(:remote_mail_boxes) do
+    :remote_mail_boxes
+    |> default_value([])
+    |> Enum.map(&Map.new(&1))
+  end
+
   def default(:sending_method) do
     config = Application.get_env(@app, Liv.Mailer)
     data = %{username: "", password: "", hostname: "", api_key: ""}
@@ -72,6 +78,13 @@ defmodule Liv.Configer do
       adapter: Swoosh.Adapters.Sendgrid,
       api_key: api_key
     )
+  end
+
+  @doc """
+  update the remote mail boxes
+  """
+  def update_remote_mail_boxes(mod, boxes) do
+    SelfConfiger.set_env(mod, :remote_mail_boxes, Enum.map(boxes, &Keyword.new(&1)))
   end
 
   defp default_value(key, default), do: Application.get_env(@app, key, default)

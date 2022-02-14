@@ -14,4 +14,6 @@ defmodule LivWeb.Write do
 
   defp email_addr(nil, addr), do: addr
   defp email_addr(name, addr), do: "#{name} <#{addr}>"
+
+  defp ui_recs(recs), do: recs ++ [{nil, [nil | ""]}]
 end

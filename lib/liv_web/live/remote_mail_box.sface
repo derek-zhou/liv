@@ -1,0 +1,23 @@
+<section id={"remote_mail_box_#{@index}"}>
+    <Field name={"method_#{@index}"} class="field">
+	<Label>Receiving method</Label>
+	<Select options={"": "",
+			"POP3": "pop3"}
+		selected={to_string(@box.method)}/>
+    </Field>
+    <Field name={"username_#{@index}"} class="field">
+	<Label>Username</Label>
+	<TextInput value={@box.username}
+                   opts={"phx-debounce": 500} />
+    </Field>
+    <Field name={"password_#{@index}"} class="field">
+	<Label>Password</Label>
+	<PasswordInput value={@box.password}
+		       opts={"phx-debounce": 500} />
+    </Field>
+    <Field name={"hostname_#{@index}"} class="field">
+	<Label>Hostname</Label>
+	<TextInput value={@box.hostname}
+		   opts={"phx-debounce": 500} />
+    </Field>
+</section>

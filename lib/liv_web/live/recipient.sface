@@ -1,6 +1,6 @@
 <div id={"recipient_#{@index}"} class="line">
     <Select id={"recipient_type_#{@index}"} name={"type_#{@index}"}
-	    options={"": "nil", "To:": "to", "Cc:": "cc", "Bcc:": "bcc"}
+	    options={"": "", "To:": "to", "Cc:": "cc", "Bcc:": "bcc"}
 	    selected={to_string(@type)} />
     <EmailInput id={"recipient_addr_#{@index}"} name={"addr_#{@index}"}
 	       opts={"phx-debounce": 500,

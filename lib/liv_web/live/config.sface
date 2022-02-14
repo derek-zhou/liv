@@ -66,6 +66,9 @@
 		       opts={"phx-debounce": 500} />
 	</Field>
     </section>
+    {#for {box, i} <- Enum.with_index(ui_boxes(@remote_mail_boxes))}
+    <RemoteMailBox {... index: i, box: box} />
+    {/for}
     <section>
     	 <Field name="orbit_api_key" class="field">
 	 	<Label>Orbit API key</Label>

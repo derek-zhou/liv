@@ -26,6 +26,9 @@ defmodule Liv.MailClient do
   run a query. query can be a query string or a docid integer
   """
   def new_search(query) do
+    # we piggy back pop to new mail query
+    if String.match?(query, ~r/flag:unread/), do: pop_all()
+
     case MaildirCommander.find(
            query,
            true,
@@ -323,8 +326,7 @@ defmodule Liv.MailClient do
       Enum.map(
         default_bcc(addr_map, to_addr, Configer.default(:my_address)),
         &{:bcc, &1}
-      ),
-      {nil, [nil | ""]}
+      )
     ])
   end
 
@@ -335,8 +337,7 @@ defmodule Liv.MailClient do
     List.flatten([
       Enum.filter(recipients, fn {type, _} -> type == :to end),
       Enum.filter(recipients, fn {type, _} -> type == :cc end),
-      Enum.filter(recipients, fn {type, _} -> type == :bcc end),
-      {nil, [nil | ""]}
+      Enum.filter(recipients, fn {type, _} -> type == :bcc end)
     ])
   end
 
@@ -528,6 +529,14 @@ defmodule Liv.MailClient do
   broadcast new mail arrival
   """
   def notify_new_mail(), do: PubSub.local_broadcast(Liv.PubSub, "world", :new_mail)
+
+  defp pop_all() do
+    :remote_mail_boxes
+    |> Configer.default()
+    |> Enum.each(fn %{method: "pop3", username: user, password: pass, hostname: host} ->
+      MaildirCommander.pop_all(user, pass, host)
+    end)
+  end
 
   defp addresses_map(%__MODULE__{docid: docid, mails: mails}) when docid > 0 do
     %{from: from, to: to, cc: cc} = Map.fetch!(mails, docid)

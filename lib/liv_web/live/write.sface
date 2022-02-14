@@ -4,7 +4,7 @@
     	    <TextInput value={@subject}
 		       opts={"phx-debounce": "blur", placeholder: "Mail Subject"} />
 	</Field>
-	{#for {{type, [name | addr]}, i} <- Enum.with_index(@recipients)}
+	{#for {{type, [name | addr]}, i} <- Enum.with_index(ui_recs(@recipients))}
 	<Recipient {... index: i, type: type, options: @addr_options,
 		   addr: email_addr(name, addr) } />
 	{/for}

@@ -1,6 +1,7 @@
 defmodule LivWeb.Config do
   use Surface.Component
 
+  alias LivWeb.RemoteMailBox
   alias Surface.Components.Form
 
   alias Surface.Components.Form.{
@@ -24,6 +25,11 @@ defmodule LivWeb.Config do
   prop sending_method, :atom, required: true
   prop sending_data, :map, required: true
   prop reset_password, :string, default: ""
+  prop remote_mail_boxes, :list, default: []
+
+  defp ui_boxes(boxes) do
+    boxes ++ [%{method: "", username: "", password: "", hostname: ""}]
+  end
 
   defp field_class(true), do: "field"
   defp field_class(false), do: "hide"

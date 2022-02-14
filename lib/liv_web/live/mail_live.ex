@@ -77,6 +77,7 @@ defmodule LivWeb.MailLive do
   data sending_method, :atom, default: :local
   data sending_data, :map, default: %{username: "", password: "", hostname: "", api_key: ""}
   data reset_password, :string, default: ""
+  data remote_mail_boxes, :list, default: []
 
   def mount(_params, _session, socket) do
     cond do
@@ -426,6 +427,7 @@ defmodule LivWeb.MailLive do
         archive_maildir: Configer.default(:archive_maildir),
         orbit_api_key: Configer.default(:orbit_api_key),
         orbit_workspace: Configer.default(:orbit_workspace),
+        remote_mail_boxes: Configer.default(:remote_mail_boxes),
         sending_method: sending_method,
         sending_data: sending_data,
         reset_password: "",
@@ -719,7 +721,10 @@ defmodule LivWeb.MailLive do
       |> Enum.map(fn i ->
         MailClient.parse_recipient(mail["type_#{i}"], mail["addr_#{i}"])
       end)
-      |> MailClient.normalize_recipients()
+      |> Enum.flat_map(fn
+        %{method: ""} -> []
+        box -> box
+      end)
 
     DraftServer.put_draft(subject, recipients, text)
 
@@ -804,25 +809,26 @@ defmodule LivWeb.MailLive do
   def handle_event(
         "config_change",
         %{
-          "config" => %{
-            "my_name" => name,
-            "my_addr" => addr,
-            "my_addrs" => addrs,
-            "my_lists" => lists,
-            "archive_days" => days,
-            "archive_maildir" => maildir,
-            "orbit_api_key" => orbit_api_key,
-            "orbit_workspace" => workspace,
-            "sending_method" => sending_method,
-            "username" => username,
-            "password" => password,
-            "hostname" => hostname,
-            "api_key" => api_key,
-            "reset_password" => reset_password
-          }
+          "config" =>
+            %{
+              "my_name" => name,
+              "my_addr" => addr,
+              "my_addrs" => addrs,
+              "my_lists" => lists,
+              "archive_days" => days,
+              "archive_maildir" => maildir,
+              "orbit_api_key" => orbit_api_key,
+              "orbit_workspace" => workspace,
+              "sending_method" => sending_method,
+              "username" => username,
+              "password" => password,
+              "hostname" => hostname,
+              "api_key" => api_key,
+              "reset_password" => reset_password
+            } = config
         },
         %Socket{
-          assigns: %{sending_data: sending_data}
+          assigns: %{sending_data: sending_data, remote_mail_boxes: boxes}
         } = socket
       ) do
     my_addr =
@@ -857,6 +863,22 @@ defmodule LivWeb.MailLive do
         hostname: String.trim(hostname),
         api_key: String.trim(api_key)
     }
+
+    # one more in the U/I
+    boxes =
+      0..length(boxes)
+      |> Enum.map(fn i ->
+        %{
+          method: String.trim(config["method_#{i}"]),
+          username: String.trim(config["username_#{i}"]),
+          password: String.trim(config["password_#{i}"]),
+          hostname: String.trim(config["hostname_#{i}"])
+        }
+      end)
+      |> Enum.reject(fn
+        %{method: ""} -> true
+        _ -> false
+      end)
 
     socket =
       cond do
@@ -907,7 +929,8 @@ defmodule LivWeb.MailLive do
         orbit_workspace: orbit_workspace,
         sending_method: sending_method,
         sending_data: sending_data,
-        reset_password: reset_password
+        reset_password: reset_password,
+        remote_mail_boxes: boxes
       )
     }
   end
@@ -926,7 +949,8 @@ defmodule LivWeb.MailLive do
             orbit_workspace: orbit_workspace,
             sending_method: sending_method,
             sending_data: sending_data,
-            reset_password: reset_password
+            reset_password: reset_password,
+            remote_mail_boxes: remote_mail_boxes
           }
         } = socket
       ) do
@@ -938,6 +962,7 @@ defmodule LivWeb.MailLive do
     |> SelfConfiger.set_env(:archive_maildir, archive_maildir)
     |> SelfConfiger.set_env(:orbit_api_key, orbit_api_key)
     |> SelfConfiger.set_env(:orbit_workspace, orbit_workspace)
+    |> Configer.update_remote_mail_boxes(remote_mail_boxes)
     |> Configer.update_sending_method(sending_method, sending_data)
 
     close_action =
