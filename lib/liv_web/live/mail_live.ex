@@ -76,6 +76,7 @@ defmodule LivWeb.MailLive do
   # :local, :remote or :sendgrid
   data sending_method, :atom, default: :local
   data sending_data, :map, default: %{username: "", password: "", hostname: "", api_key: ""}
+  data reset_password, :string, default: ""
 
   def mount(_params, _session, socket) do
     cond do
@@ -427,6 +428,7 @@ defmodule LivWeb.MailLive do
         orbit_workspace: Configer.default(:orbit_workspace),
         sending_method: sending_method,
         sending_data: sending_data,
+        reset_password: "",
         buttons: [
           {:button, "\u{1F4BE}", "config_save", false},
           {:button, "\u{2716}", "close_dialog", false}
@@ -815,7 +817,8 @@ defmodule LivWeb.MailLive do
             "username" => username,
             "password" => password,
             "hostname" => hostname,
-            "api_key" => api_key
+            "api_key" => api_key,
+            "reset_password" => reset_password
           }
         },
         %Socket{
@@ -903,7 +906,8 @@ defmodule LivWeb.MailLive do
         orbit_api_key: orbit_api_key,
         orbit_workspace: orbit_workspace,
         sending_method: sending_method,
-        sending_data: sending_data
+        sending_data: sending_data,
+        reset_password: reset_password
       )
     }
   end
@@ -921,7 +925,8 @@ defmodule LivWeb.MailLive do
             orbit_api_key: orbit_api_key,
             orbit_workspace: orbit_workspace,
             sending_method: sending_method,
-            sending_data: sending_data
+            sending_data: sending_data,
+            reset_password: reset_password
           }
         } = socket
       ) do
@@ -935,11 +940,17 @@ defmodule LivWeb.MailLive do
     |> SelfConfiger.set_env(:orbit_workspace, orbit_workspace)
     |> Configer.update_sending_method(sending_method, sending_data)
 
+    close_action =
+      case reset_password do
+        "reset password" -> Routes.mail_path(Endpoint, :set_password)
+        _ -> close_action(socket)
+      end
+
     {
       :noreply,
       socket
       |> put_flash(:info, "Config saved")
-      |> push_patch(to: close_action(socket))
+      |> push_patch(to: close_action)
     }
   end
 

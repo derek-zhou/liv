@@ -11,7 +11,7 @@
 		       opts={"phx-debounce": 500} />
 	</Field>
     </section>
-    <section>
+    <section class="twoside">
 	<Field name="my_addrs" class="field">
 	    <Label>All your addresses</Label>
 	    <TextArea value={Enum.join(@my_addrs, "\n")}
@@ -39,7 +39,7 @@
     </section>
     <section>
 	<Field name="sending_method" class="field">
-	       <Label>Sending_method</Label>
+	       <Label>Sending method</Label>
 	       <Select options={"Local SMTP": "local",
 			        "Remote SMTP": "remote",
 	  		        "Sendgrid API": "sendgrid"}
@@ -83,9 +83,11 @@
 		</a>
 	 </Label>
     </section>
-    <div class="alert alert-danger">
-	<Label>Danger!</Label>
-	<LivePatch to={Routes.mail_path(Endpoint, :set_password)}
-		      class="button">Reset your password</LivePatch>
-    </div>
+    <section>
+	<Field name="reset_password" class="long field alert alert-danger">
+	    <Label>Danger! Type "reset password" to reset password</Label>
+	    <TextInput value={@reset_password}
+		       opts={"phx-debounce": 500} />
+	</Field>
+    </section>
 </Form>

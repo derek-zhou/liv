@@ -1,8 +1,6 @@
 defmodule LivWeb.Config do
   use Surface.Component
 
-  alias LivWeb.Router.Helpers, as: Routes
-  alias LivWeb.Endpoint
   alias Surface.Components.Form
 
   alias Surface.Components.Form.{
@@ -15,8 +13,6 @@ defmodule LivWeb.Config do
     TextArea
   }
 
-  alias Surface.Components.LivePatch
-
   prop change, :event, required: true
   prop my_addr, :list, required: true
   prop my_addrs, :list, required: true
@@ -27,6 +23,7 @@ defmodule LivWeb.Config do
   prop orbit_workspace, :string, required: true
   prop sending_method, :atom, required: true
   prop sending_data, :map, required: true
+  prop reset_password, :string, default: ""
 
   defp field_class(true), do: "field"
   defp field_class(false), do: "hide"

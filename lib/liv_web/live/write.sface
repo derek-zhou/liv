@@ -1,5 +1,5 @@
 <Form for={:mail} change={@change} auto_recover={@auto_recover}>
-    <section>
+    <section class="twoside">
 	<Field name="subject" class="line">
     	    <TextInput value={@subject}
 		       opts={"phx-debounce": "blur", placeholder: "Mail Subject"} />
@@ -9,7 +9,7 @@
 		   addr: email_addr(name, addr) } />
 	{/for}
     </section>
-    <section>
+    <section class="twoside">
 	<Field name="text">
 	    <TextArea id="text-box" rows="16"
 		      opts={"phx-update": "ignore", "phx-debounce": 1000}

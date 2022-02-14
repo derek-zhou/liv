@@ -444,6 +444,9 @@ span {
 		section {
 		    @apply flex flex-row flex-wrap gap-x-4 justify-center;
 		}
+		section.twoside {
+		    @apply grid grid-cols-2 gap-x-2;
+		}
 	    }
 	    .box {
                 .thumbnail {
