@@ -17,6 +17,16 @@ LIV is a highly opinionated, minimal implemented webmail front-end that:
 
 LIV is designed to be self hosted; It is not a SaaS. You run LIV on your own email server with or without an IMAP server. If you don't want to run your own email server please stop right here. If you don't know how to run your email server please do some research first; there are many excellent tutorials out there and this page is not one of them.
 
+Although LIV is designed to run on your own email server, it can run without one running on the same machine. The experience may not be as good though. There are preliminary POP3 support (SSL on port 995 only) to get your emails, and non-local SMTP support (STARTTLS on port 587 only) to send your emails. Also, you could send emails through [Sendgrid](https://sendgrid.com/). You will also need to setup Maildir on the machine yourself:
+
+```
+$ mkdir ~/Maildir
+$ cd ~/Maildir
+$ mkdir .Archive cur new tmp
+$ cd .Archive
+$mkdir cur new tmp
+```
+
 A few screenshots below:
 
 ![inbox view](assets/static/inbox.jpg)
