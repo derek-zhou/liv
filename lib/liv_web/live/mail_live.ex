@@ -912,6 +912,13 @@ defmodule LivWeb.MailLive do
             "Sendgrid API key must not be empty"
           )
 
+        Enum.any?(boxes, &(&1.username == "" || &1.password == "" || &1.hostname == "")) ->
+          put_flash(
+            socket,
+            :error,
+            "POP3 username, password and hostname must not be empty"
+          )
+
         true ->
           clear_flash(socket)
       end
@@ -1184,11 +1191,13 @@ defmodule LivWeb.MailLive do
   end
 
   def handle_info(:new_mail, %Socket{assigns: %{new_mail_count: c}} = socket) do
+    c = c + 1
+
     {
       :noreply,
       socket
-      |> put_flash(:info, "You've got mail")
-      |> assign(new_mail_count: c + 1)
+      |> put_flash(:info, "You've got #{c} new mails")
+      |> assign(new_mail_count: c)
     }
   end
 

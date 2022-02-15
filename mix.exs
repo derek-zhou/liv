@@ -35,6 +35,7 @@ defmodule Liv.MixProject do
     [
       {:self_configer, "~> 0.1.1"},
       {:maildir_commander, path: "../maildir_commander"},
+      {:pop3client, "~> 1.3.1"},
       {:bbmustache, "~> 1.12"},
       {:memento, "~> 0.3.2"},
       {:html_sanitize_ex, "~> 1.4"},
