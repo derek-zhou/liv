@@ -358,7 +358,7 @@ defmodule Liv.MailClient do
   def parse_recipient("to", addr), do: {:to, parse_addr(addr)}
   def parse_recipient("cc", addr), do: {:cc, parse_addr(addr)}
   def parse_recipient("bcc", addr), do: {:bcc, parse_addr(addr)}
-  def parse_recipient("nil", _), do: {nil, [nil | ""]}
+  def parse_recipient("", _), do: {nil, [nil | ""]}
 
   @doc """
   send a mail
