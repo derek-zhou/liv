@@ -167,7 +167,6 @@ span {
         }
     }
     .content {
-	@apply border border-gray-100 rounded;
 	form {
 	    @apply p-2 bg-gray-50 flex flex-col;
 	    .line {
@@ -180,13 +179,7 @@ span {
 		}
 	    }
 	    .field {
-		@apply mb-2 flex flex-row flex-wrap justify-center;
-                .button[type="reset"] {
-		    @apply flex-none cursor-pointer text-white bg-pink-600 ml-1;
-                }
-                .button[type="submit"] {
-		    @apply flex-none cursor-pointer text-white bg-purple-600 ml-1;
-                }
+		@apply mb-2 flex flex-row flex-wrap justify-center gap-x-1;
 	    }
 	    .hide {
 		@apply hidden;
@@ -197,14 +190,14 @@ span {
 	    hr {
 		@apply mb-2 border-gray-200;
 	    }
+            .button[type="reset"] {
+		@apply flex-none cursor-pointer text-white bg-pink-600;
+            }
+            .button[type="submit"] {
+		@apply flex-none cursor-pointer text-white bg-purple-600;
+            }
 	    .toolbar {
-		@apply pt-2 flex flex-row flex-wrap justify-center;
-                .button[type="reset"] {
-		    @apply flex-none cursor-pointer text-white bg-pink-600 mr-1;
-                }
-                .button[type="submit"] {
-		    @apply flex-none cursor-pointer text-white bg-purple-600 mr-1;
-                }
+		@apply pt-2 flex flex-row flex-wrap justify-center gap-x-1;
 	    }
 	    section {
 		@apply pt-2 border-b;
@@ -349,9 +342,9 @@ span {
 		@apply border border-blue-600;
 	    }
 	    .toolbar {
-                @apply flex flex-wrap justify-between w-full;
+                @apply flex flex-wrap justify-between w-full bg-gray-100 p-2 gap-x-1;
                 .button {
-		    @apply border-0 text-white bg-purple-600 mt-2;
+		    @apply border-0 text-white bg-purple-600;
                 }
                 .button-danger {
 		    @apply bg-pink-600;
@@ -397,9 +390,6 @@ span {
                 }
 		.toolbar {
 		    @apply w-auto justify-start;
-		    .button {
-			@apply mr-1;
-		    }
 		}
             }
 	}
@@ -448,18 +438,6 @@ span {
 		    @apply grid grid-cols-2 gap-x-2;
 		}
 	    }
-	    .box {
-                .thumbnail {
-                    img {
-                        @apply max-w-2xl max-h-96;
-                    }
-                }
-	    }
 	}
-    }
-}
-@screen xl {
-    .viewport {
-        @apply max-w-screen-xl;
     }
 }

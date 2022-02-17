@@ -1,21 +1,23 @@
 <Form for={:search} submit={@submit}>
-    <Field name="query" class="field">
-	<Label>Enter your query:</Label>
-	<TextInput value={@default_query} />
-    </Field>
-    <div class="toolbar">
+    <section>
+        <Field name="query" class="field">
+	    <Label>Enter your query:</Label>
+	    <TextInput value={@default_query} />
+	</Field>
 	<input class="button" type="submit" value="&#128076;">
-    </div>
-    <p>
-	Or click one of the following examples:
-    </p>
-    <ul class="button-examples">
-	{#for {text, query} <- @examples}
-	<li>
-	    <button phx-click={@pick_example} form="" phx-value-query={query}>
-		{text}
-	    </button>
-	</li>
-	{/for}
-    </ul>
+    </section>
+    <section>
+	<p class="long">
+	    Or click one of the following examples:
+	</p>
+	<ul class="button-examples">
+	    {#for {text, query} <- @examples}
+	    <li>
+		<button phx-click={@pick_example} form="" phx-value-query={query}>
+		    {text}
+		</button>
+	    </li>
+	    {/for}
+	</ul>
+    </section>
 </Form>
