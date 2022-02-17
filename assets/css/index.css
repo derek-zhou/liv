@@ -342,7 +342,7 @@ span {
 		@apply border border-blue-600;
 	    }
 	    .toolbar {
-                @apply flex flex-wrap justify-between w-full bg-gray-100 p-2 gap-x-1;
+                @apply flex flex-wrap w-full bg-gray-100 p-2 gap-x-1;
                 .button {
 		    @apply border-0 text-white bg-purple-600;
                 }
@@ -388,9 +388,6 @@ span {
                 .desc {
                     @apply leading-normal;
                 }
-		.toolbar {
-		    @apply w-auto justify-start;
-		}
             }
 	}
     }
