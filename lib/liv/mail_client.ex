@@ -275,7 +275,7 @@ defmodule Liv.MailClient do
         {get_recipients(tos), nil, nil}
 
       %URI{scheme: "mailto", path: tos, query: query} ->
-        query = URI.query_decoder(query)
+        query = query |> URI.query_decoder() |> Enum.to_list()
 
         {get_recipients(tos), :proplists.get_value("subject", query, nil),
          :proplists.get_value("body", query, nil)}
