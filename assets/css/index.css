@@ -427,9 +427,6 @@ span {
     .viewport {
         @apply max-w-screen-lg;
 	.content {
-	    h1 {
-		@apply text-5xl;
-	    }
 	    h2 {
 		@apply text-4xl;
 	    }
