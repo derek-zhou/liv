@@ -27,19 +27,19 @@ span {
 /* this is for classless content, eg: from markdown */
 .content {
     h1 {
-        @apply font-bold text-4xl mb-4 leading-relaxed text-center;
+        @apply font-bold text-2xl mb-4 leading-relaxed text-center;
     }
     h2 {
-        @apply font-bold text-3xl mb-3 leading-relaxed;
+        @apply font-bold text-2xl mb-3 leading-relaxed;
     }
     h3 {
-        @apply font-bold text-2xl mb-2 leading-relaxed;
+        @apply font-bold text-xl mb-2 leading-relaxed;
     }
     h4 {
-        @apply font-bold text-xl mb-1 leading-relaxed;
+        @apply font-bold text-lg mb-1 leading-relaxed;
     }
     h5 {
-        @apply font-bold text-lg mb-1 leading-relaxed;
+        @apply font-bold uppercase mb-1 leading-relaxed;
     }
     h6 {
         @apply font-bold mb-1 leading-relaxed;
@@ -333,7 +333,7 @@ span {
                 }
 	    }
             .desc {
-                @apply font-serif text-gray-800 text-base leading-snug mb-2;
+                @apply font-serif text-gray-800 leading-snug mb-2;
 		span {
 		    @apply whitespace-normal;
 		}
@@ -424,27 +424,12 @@ span {
     }
 }
 @screen lg {
+    html {
+	@apply text-[18px];
+    }
     .viewport {
         @apply max-w-screen-lg;
 	.content {
-	    h2 {
-		@apply text-4xl;
-	    }
-	    h3 {
-		@apply text-3xl;
-	    }
-	    h4 {
-		@apply text-2xl;
-	    }
-	    h5 {
-		@apply text-xl;
-	    }
-	    h6 {
-		@apply text-lg;
-	    }
-	    p {
-		@apply text-lg;
-	    }
 	    form {
 		section {
 		    @apply flex flex-row flex-wrap gap-x-4 justify-center;
