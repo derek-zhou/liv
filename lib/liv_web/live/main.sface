@@ -12,7 +12,7 @@
 	</div>
 	<div class="nav">
 	    {#for {type, text, action, disabled} <- @buttons}
-	    <Button {... type: type, text: text, path_or_msg: action, disabled: disabled } />
+	    <Button type={type} text={text} path_or_msg={action} disabled={disabled} />
 	    {/for}
 	</div>
     </div>

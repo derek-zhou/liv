@@ -6,7 +6,7 @@ defmodule LivWeb.Search do
 
   prop default_query, :string, required: true
   prop submit, :event, required: true
-  prop pick_example, :event, required: true
+  prop pick_example, :string, required: true
 
   prop examples, :list,
     default: [

@@ -46,7 +46,7 @@ defmodule LivWeb.MailLive do
   data mail_attachment_offset, :integer, default: 0
   data mail_attachment_metas, :list, default: []
   data mail_chunk_outstanding, :boolean, default: false
-  data mail_meta, :map, default: nil
+  data mail_meta, :any, default: nil
   data mail_content, :tuple, default: {:text, ""}
   data mail_text, :string, default: ""
 

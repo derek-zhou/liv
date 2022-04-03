@@ -7,7 +7,7 @@ defmodule LivWeb.View do
 
   @max_inline_html 4096
 
-  prop meta, :map, required: true
+  prop meta, :any, required: true
   prop content, :tuple, default: {:text, ""}
   prop attachments, :list, default: []
   prop tz_offset, :integer, default: 0

@@ -36,7 +36,7 @@
     </div>
     <ul :if={!Enum.empty?(@attachments)} class="attachments">
 	{#for {name, _type, size, offset, url} <- @attachments}
-	<Attachment {... name: name, size: size, offset: offset, url: url } />
+	<Attachment name={name} size={size} offset={offset} url={url} />
 	{/for}
     </ul>
     <pre :if={is_plain_text?(@content)}>{text_part(@content)}</pre>

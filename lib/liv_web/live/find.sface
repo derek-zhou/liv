@@ -1,11 +1,9 @@
 {#for docid <- MailClient.children_of(@tree, @root)}
 <div class="node-container">
-    <MailNode {... docid: docid,
-	      meta: Map.get(@mails, docid),
-	      tz_offset: @tz_offset } />
+    <MailNode docid={docid} meta={Map.get(@mails, docid)} tz_offset={@tz_offset} />
     <div class="children-container">
 	{render(%{root: docid, tz_offset: @tz_offset, mails: @mails, tree: @tree,
-	__context__: @__context__, __surface__: @__surface__})}
+	__context__: @__context__})}
     </div>
 </div>
 {/for}
