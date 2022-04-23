@@ -109,16 +109,22 @@ defmodule Liv.MailClient do
               %{mc | docid: docid}
 
             false ->
-              {:ok, m} = MaildirCommander.flag(docid, "+S")
-              # broadcast the event
-              PubSub.local_broadcast_from(
-                Liv.PubSub,
-                self(),
-                "messages",
-                {:seen_message, docid, m}
-              )
+              case MaildirCommander.flag(docid, "+S") do
+                {:ok, m} ->
+                  # broadcast the event
+                  PubSub.local_broadcast_from(
+                    Liv.PubSub,
+                    self(),
+                    "messages",
+                    {:seen_message, docid, m}
+                  )
 
-              %{mc | docid: docid, mails: %{mails | docid => m}}
+                  %{mc | docid: docid, mails: %{mails | docid => m}}
+
+                {:error, msg} ->
+                  Logger.warn("docid: #{docid} #{msg}")
+                  %{mc | docid: docid}
+              end
           end
 
         %{path: path} = mc.mails[docid]
