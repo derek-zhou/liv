@@ -402,7 +402,6 @@ defmodule Liv.MailClient do
       Mailer.deliver(mail)
     rescue
       RuntimeError -> {:error, "deliver failed"}
-      e -> {:error, inspect(e)}
     end
   end
 

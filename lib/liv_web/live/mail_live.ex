@@ -756,7 +756,7 @@ defmodule LivWeb.MailLive do
       ) do
     case MailClient.send_mail(mc, subject, recipients, text, Enum.reverse(atts)) do
       {:error, msg} ->
-        {:noreply, put_flash(socket, :error, "Mail not sent: #{msg}")}
+        {:noreply, put_flash(socket, :error, "Mail not sent: #{inspect(msg)}")}
 
       {:ok, _} ->
         {
