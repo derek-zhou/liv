@@ -617,9 +617,11 @@ defmodule Liv.MailClient do
   defp add_references(email, %__MODULE__{docid: docid, mails: mails}) when docid > 0 do
     import Swoosh.Email
     %{msgid: msgid, references: references} = Map.fetch!(mails, docid)
-
+    # prevent very long reference chain
     references =
-      (references ++ [msgid])
+      references
+      |> Enum.take(9)
+      |> Kernel.++([msgid])
       |> Enum.map(fn str -> "<#{str}>" end)
       |> Enum.join(" ")
 
