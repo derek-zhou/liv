@@ -45,7 +45,7 @@ defmodule Liv.MixProject do
       {:mime, "~> 1.6"},
       {:hackney, "~> 1.9"},
       {:argon2_elixir, "~> 2.4"},
-      {:earmark, "~> 1.4"},
+      {:md, path: "../md"},
       {:guardian, "~> 2.1"},
       {:surface, "~> 0.7.3"},
       {:phoenix, "~> 1.6.6"},
