@@ -1,4 +1,4 @@
-<Form for={:mail} change={@change} auto_recover={@auto_recover}>
+<Form for={:mail} change={@change} submit={@submit} auto_recover={@auto_recover}>
     <section class="twoside">
 	<Field name="subject" class="line">
     	    <TextInput value={@subject}
@@ -16,4 +16,7 @@
 	</Field>
 	<Draft text={@text} />
     </section>
+    <div class="toolbar">
+	<input class="button" type="submit" value="&#128236;">
+    </div>
 </Form>

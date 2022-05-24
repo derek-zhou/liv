@@ -185,7 +185,7 @@ span {
 		@apply hidden;
 	    }
 	    .long {
-		@apply w-full;
+		@apply text-center w-full;
 	    }
 	    hr {
 		@apply mb-2 border-gray-200;

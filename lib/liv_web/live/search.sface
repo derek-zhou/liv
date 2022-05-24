@@ -1,11 +1,8 @@
 <Form for={:search} submit={@submit}>
-    <section>
-        <Field name="query" class="field">
-	    <Label>Enter your query:</Label>
-	    <TextInput value={@default_query} />
-	</Field>
-	<input class="button" type="submit" value="&#128076;">
-    </section>
+    <Field name="query" class="field">
+	<Label>Enter your query:</Label>
+	<TextInput value={@default_query} />
+    </Field>
     <section>
 	<p class="long">
 	    Or click one of the following examples:
@@ -20,4 +17,7 @@
 	    {/for}
 	</ul>
     </section>
+    <div class="toolbar">
+	<input class="button" type="submit" value="&#128269;">
+    </div>
 </Form>

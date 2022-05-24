@@ -1,4 +1,4 @@
-<Form for={:config} change={@change}>
+<Form for={:config} change={@change} submit={@submit}>
     <section>
         <Field name="my_name" class="field">
 		<Label>Your name</Label>
@@ -93,4 +93,7 @@
 		       opts={"phx-debounce": 500} />
 	</Field>
     </section>
+    <div class="toolbar">
+	<input class="button" type="submit" value="&#128190;">
+    </div>
 </Form>

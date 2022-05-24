@@ -166,6 +166,11 @@ defmodule Liv.MailClient do
   def solo_query(%__MODULE__{mails: mails, docid: docid}), do: "msgid:#{mails[docid].msgid}"
 
   @doc """
+  the query that get all mails from sender
+  """
+  def from_query(%__MODULE__{mails: mails, docid: docid}), do: "from:#{tl(mails[docid].from)}"
+
+  @doc """
   getter of the text content in quote
   """
   def quoted_text(_, nil), do: nil

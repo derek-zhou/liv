@@ -34,7 +34,7 @@ defmodule Liv.MixProject do
   defp deps do
     [
       {:self_configer, "~> 0.1.1"},
-      {:maildir_commander, "~> 0.6.1"},
+      {:maildir_commander, path: "../maildir_commander"},
       {:pop3client, "~> 1.3.1"},
       {:bbmustache, "~> 1.12"},
       {:memento, "~> 0.3.2"},
@@ -45,7 +45,7 @@ defmodule Liv.MixProject do
       {:mime, "~> 1.6"},
       {:hackney, "~> 1.9"},
       {:argon2_elixir, "~> 2.4"},
-      {:md, "~> 0.7.3"},
+      {:md, "~> 0.7.4"},
       {:string_naming, "~> 0.7.3"},
       {:guardian, "~> 2.1"},
       {:surface, "~> 0.7.3"},

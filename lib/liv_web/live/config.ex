@@ -15,6 +15,7 @@ defmodule LivWeb.Config do
   }
 
   prop change, :event, required: true
+  prop submit, :event, required: true
   prop my_addr, :list, required: true
   prop my_addrs, :list, required: true
   prop my_lists, :list, required: true

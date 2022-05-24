@@ -52,7 +52,16 @@ defmodule LivWeb.MailLive do
 
   # to refer back in later 
   data last_query, :string, default: ""
-  data default_query, :string, default: ""
+
+  # for search
+  data default_query, :string, default: @default_query
+
+  data query_examples, :list,
+    default: [
+      {"The inbox", "maildir:/"},
+      {"Unread mails", "flag:unread"},
+      {"Last 7 days", "date:7d..now flag:replied"}
+    ]
 
   # for write
   data recipients, :list, default: []
@@ -385,10 +394,21 @@ defmodule LivWeb.MailLive do
           }
         } = socket
       ) do
-    default_query =
+    examples =
       case opened do
-        true -> MailClient.solo_query(mc)
-        false -> query
+        true ->
+          [
+            {"Same thread", MailClient.solo_query(mc)},
+            {"Same sender", MailClient.from_query(mc)},
+            {"Last query", query}
+          ]
+
+        false ->
+          [
+            {"The inbox", "maildir:/"},
+            {"Unread mails", "flag:unread"},
+            {"Last 7 days", "date:7d..now flag:replied"}
+          ]
       end
 
     MailClient.snooze()
@@ -397,7 +417,8 @@ defmodule LivWeb.MailLive do
       :noreply,
       socket
       |> assign(
-        default_query: default_query,
+        default_query: examples |> hd() |> elem(1),
+        query_examples: examples,
         page_title: "Search",
         info: "Search",
         buttons: [
@@ -432,7 +453,6 @@ defmodule LivWeb.MailLive do
         sending_data: sending_data,
         reset_password: "",
         buttons: [
-          {:button, "\u{1F4BE}", "config_save", false},
           {:button, "\u{2716}", "close_dialog", false}
         ]
       )
@@ -486,7 +506,6 @@ defmodule LivWeb.MailLive do
         current_attachment: nil,
         write_chunk_outstanding: false,
         buttons: [
-          {:button, "\u{1F4EC}", "send", false},
           {:attach, "\u{1F4CE}", "write_attach", false},
           {:button, "\u{1F5D1}", "drop_attachments", false},
           {:patch, "\u{1F4C3}", Routes.mail_path(Endpoint, :draft), false},
@@ -517,7 +536,6 @@ defmodule LivWeb.MailLive do
         current_attachment: nil,
         write_chunk_outstanding: false,
         buttons: [
-          {:button, "\u{1F4EC}", "send", false},
           {:attach, "\u{1F4CE}", "write_attach", false},
           {:button, "\u{1F5D1}", "drop_attachments", false},
           {:patch, "\u{1F4C3}", Routes.mail_path(Endpoint, :draft), false},
@@ -546,7 +564,6 @@ defmodule LivWeb.MailLive do
         current_attachment: nil,
         write_chunk_outstanding: false,
         buttons: [
-          {:button, "\u{1F4EC}", "send", false},
           {:attach, "\u{1F4CE}", "write_attach", false},
           {:button, "\u{1F5D1}", "drop_attachments", false},
           {:patch, "\u{1F4C3}", Routes.mail_path(Endpoint, :draft), false},
