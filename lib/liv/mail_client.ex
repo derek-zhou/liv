@@ -496,7 +496,7 @@ defmodule Liv.MailClient do
   archiving job. Always return :ok. will log and do side effects
   """
   def archive_job() do
-    case MaildirCommander.find("maildir:/", true, :":date", false, false, false) do
+    case MaildirCommander.find_all("maildir:/", true, :":date", false, false, false) do
       {:error, reason} ->
         Logger.warn("query error: #{reason}")
 
