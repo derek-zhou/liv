@@ -2,7 +2,7 @@
     <Select id={"recipient_type_#{@index}"} name={"type_#{@index}"}
 	    options={"": "", "To:": "to", "Cc:": "cc", "Bcc:": "bcc"}
 	    selected={to_string(@type)} />
-    <EmailInput id={"recipient_addr_#{@index}"} name={"addr_#{@index}"}
+    <TextInput id={"recipient_addr_#{@index}"} name={"addr_#{@index}"}
 	       opts={"phx-debounce": 500,
 		    autocomplete: "off",
 		    list: "list_#{@index}"}
