@@ -3,12 +3,12 @@
         <Field name="my_name" class="field">
 		<Label>Your name</Label>
 		<TextInput value={hd(@my_addr)}
-			   opts={"phx-debounce": 500} />
+			   opts={"phx-debounce": "blur"} />
 	</Field>
 	<Field name="my_addr" class="field">
 	    <Label>Primary address</Label>
 	    <TextInput value={tl(@my_addr)}
-		       opts={"phx-debounce": 500} />
+		       opts={"phx-debounce": "blur"} />
 	</Field>
     </section>
     <section class="twoside">
@@ -16,25 +16,25 @@
 	    <Label>All your addresses</Label>
 	    <TextArea value={Enum.join(@my_addrs, "\n")}
 		      rows="10"
-	              opts={"phx-debounce": 500}/>
+	              opts={"phx-debounce": "blur"}/>
 	</Field>
 	<Field name="my_lists" class="field">
 	    <Label>Email lists that contain you</Label>
 	    <TextArea value={Enum.join(@my_lists, "\n")}
 		      rows="10"
-	              opts={"phx-debounce": 500}/>
+	              opts={"phx-debounce": "blur"}/>
 	</Field>
     </section>
     <section>
     	 <Field name="archive_days" class="field">
 	 	<Label>Days to keep in the Inbox</Label>
 		<NumberInput value={@days}
-			     opts={min: 1, "phx-debounce": 500} />
+			     opts={min: 1, "phx-debounce": "blur"} />
 	 </Field>
     	 <Field name="archive_maildir" class="field">
 	 	<Label>Archive target</Label>
 		<TextInput value={@maildir}
-			     opts={"phx-debounce": 500} />
+			     opts={"phx-debounce": "blur"} />
 	 </Field>
     </section>
     <section>
@@ -48,22 +48,22 @@
 	<Field name="username" class={field_class(@sending_method == :remote)}>
 	    <Label>Username</Label>
 	    <TextInput value={@sending_data.username}
-                       opts={"phx-debounce": 500} />
+                       opts={"phx-debounce": "blur"} />
 	</Field>
 	<Field name="password" class={field_class(@sending_method == :remote)}>
 	    <Label>Password</Label>
 	    <PasswordInput value={@sending_data.password}
-			   opts={"phx-debounce": 500} />
+			   opts={"phx-debounce": "blur"} />
 	</Field>
 	<Field name="hostname" class={field_class(@sending_method == :remote)}>
 	    <Label>Hostname</Label>
 	    <TextInput value={@sending_data.hostname}
-		       opts={"phx-debounce": 500} />
+		       opts={"phx-debounce": "blur"} />
 	</Field>
 	<Field name="api_key" class={field_class(@sending_method == :sendgrid)}>
 	    <Label>API key</Label>
 	    <TextInput value={@sending_data.api_key}
-		       opts={"phx-debounce": 500} />
+		       opts={"phx-debounce": "blur"} />
 	</Field>
     </section>
     {#for {box, i} <- Enum.with_index(ui_boxes(@remote_mail_boxes))}
@@ -73,12 +73,12 @@
     	 <Field name="orbit_api_key" class="field">
 	 	<Label>Orbit API key</Label>
 		<TextInput value={@orbit_api_key} class="long"
-			     opts={"phx-debounce": 500} />
+			     opts={"phx-debounce": "blur"} />
 	 </Field>
     	 <Field name="orbit_workspace" class="field">
 	 	<Label>Orbit Workspace</Label>
 		<TextInput value={@orbit_workspace}
-			     opts={"phx-debounce": 500} />
+			     opts={"phx-debounce": "blur"} />
 	 </Field>
 	 <Label :if={@orbit_workspace != ""}>
 	 	Your Orbit is <a href={"https://app.orbit.love/#{@orbit_workspace}"}>
@@ -90,7 +90,7 @@
 	<Field name="reset_password" class="long field alert alert-danger">
 	    <Label>Danger! Type "reset password" to reset password</Label>
 	    <TextInput value={@reset_password}
-		       opts={"phx-debounce": 500} />
+		       opts={"phx-debounce": "blur"} />
 	</Field>
     </section>
     <div class="toolbar">

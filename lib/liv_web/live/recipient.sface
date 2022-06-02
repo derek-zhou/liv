@@ -1,5 +1,6 @@
 <div id={"recipient_#{@index}"} class="line">
     <Select id={"recipient_type_#{@index}"} name={"type_#{@index}"}
+    	    opts={"phx-debounce": "blur"}
 	    options={"": "", "To:": "to", "Cc:": "cc", "Bcc:": "bcc"}
 	    selected={to_string(@type)} />
     <TextInput id={"recipient_addr_#{@index}"} name={"addr_#{@index}"}

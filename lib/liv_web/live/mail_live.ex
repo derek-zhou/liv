@@ -704,7 +704,7 @@ defmodule LivWeb.MailLive do
       end
 
     recipients =
-      0..(length(recipients) - 1)
+      0..length(recipients)
       |> Enum.map(fn i ->
         MailClient.parse_recipient(mail["type_#{i}"], mail["addr_#{i}"])
       end)

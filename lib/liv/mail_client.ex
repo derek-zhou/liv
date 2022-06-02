@@ -342,20 +342,9 @@ defmodule Liv.MailClient do
   end
 
   @doc """
-  normalize recipients, in the orfer of to, cc, bcc and one blank
+  normalize recipients, in the orfer of to, cc, bcc
   """
   def normalize_recipients(recipients) do
-    List.flatten([
-      Enum.filter(recipients, fn {type, _} -> type == :to end),
-      Enum.filter(recipients, fn {type, _} -> type == :cc end),
-      Enum.filter(recipients, fn {type, _} -> type == :bcc end)
-    ])
-  end
-
-  @doc """
-  finalize recipients, in the orfer of to, cc, bcc and one blank
-  """
-  def finalize_recipients(recipients) do
     List.flatten([
       Enum.filter(recipients, fn {type, _} -> type == :to end),
       Enum.filter(recipients, fn {type, _} -> type == :cc end),
