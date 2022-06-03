@@ -4,7 +4,7 @@ defmodule Liv.MixProject do
   def project do
     [
       app: :liv,
-      version: "0.6.0",
+      version: "0.7.0",
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -34,7 +34,7 @@ defmodule Liv.MixProject do
   defp deps do
     [
       {:self_configer, "~> 0.1.1"},
-      {:maildir_commander, path: "../maildir_commander"},
+      {:maildir_commander, "~> 0.6.3"},
       {:pop3client, "~> 1.3.1"},
       {:bbmustache, "~> 1.12"},
       {:memento, "~> 0.3.2"},
@@ -45,7 +45,7 @@ defmodule Liv.MixProject do
       {:mime, "~> 1.6"},
       {:hackney, "~> 1.9"},
       {:argon2_elixir, "~> 2.4"},
-      {:md, "~> 0.7.4"},
+      {:md, "~> 0.7.5"},
       {:string_naming, "~> 0.7.3"},
       {:guardian, "~> 2.1"},
       {:surface, "~> 0.7.3"},
