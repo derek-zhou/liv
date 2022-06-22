@@ -18,6 +18,13 @@ defmodule Liv.MailClient do
   ]
 
   @doc """
+  reindex in the background
+  """
+  def reindex() do
+    spawn_link(MaildirCommander, :index, [])
+  end
+
+  @doc """
   wake up the mc process. It is an optimization
   """
   def snooze(), do: MaildirCommander.snooze()
@@ -54,6 +61,7 @@ defmodule Liv.MailClient do
     case MaildirCommander.view(docid) do
       {:error, msg} ->
         Logger.warn("docid: #{docid} not found: #{msg}")
+        reindex()
         nil
 
       {:ok, meta} ->
@@ -81,6 +89,7 @@ defmodule Liv.MailClient do
         case MaildirCommander.stream_mail(path) do
           {:error, reason} ->
             Logger.warn("docid: #{docid} path: #{path} not found: #{reason}")
+            reindex()
             nil
 
           {:ok, ref} ->
@@ -123,6 +132,7 @@ defmodule Liv.MailClient do
 
                 {:error, msg} ->
                   Logger.warn("docid: #{docid} #{msg}")
+                  reindex()
                   %{mc | docid: docid}
               end
           end
@@ -133,6 +143,7 @@ defmodule Liv.MailClient do
         case MaildirCommander.stream_mail(path) do
           {:error, reason} ->
             Logger.warn("docid: #{docid} path: #{path} not found: #{reason}")
+            reindex()
             %{mc | ref: nil}
 
           {:ok, ref} ->
