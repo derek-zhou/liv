@@ -15,7 +15,13 @@ defmodule Liv.AddressVault do
   """
   def add(name, addr) do
     Memento.transaction!(fn ->
-      Memento.Query.write(%Correspondent{name: name, addr: addr, mails: []})
+      case Memento.Query.read(Correspondent, addr) do
+        nil ->
+          Memento.Query.write(%Correspondent{name: name, addr: addr, mails: []})
+
+        _ ->
+          :ok
+      end
     end)
 
     :ok
@@ -52,7 +58,7 @@ defmodule Liv.AddressVault do
     Memento.transaction!(fn ->
       case Memento.Query.read(Correspondent, addr) do
         nil ->
-          Memento.Query.write(%Correspondent{name: name, addr: addr, mails: []})
+          Memento.Query.write(%Correspondent{name: name, addr: addr, mails: [docid]})
 
         %Correspondent{mails: mails} = c ->
           Memento.Query.write(%{c | mails: [docid | mails]})

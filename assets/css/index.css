@@ -139,7 +139,7 @@ span {
     transform: translate3d(0, 0, 0);
 }
 .viewport {
-    @apply relative;
+    @apply relative min-h-screen;
     .header {
 	@apply sticky top-0 bg-gray-100 p-2 flex;
 	.brand {
