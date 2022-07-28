@@ -490,6 +490,15 @@ defmodule Liv.MailClient do
     {:attachment, filename, type, body}
   end
 
+  def receive_part(%__MODULE__{ref: ref}, ref, %{
+        content_type: type,
+        content_type_params: %{"name" => filename},
+        disposition: "attachment",
+        body: body
+      }) do
+    {:attachment, filename, type, body}
+  end
+
   def receive_part(_, _, _), do: nil
 
   @doc """
