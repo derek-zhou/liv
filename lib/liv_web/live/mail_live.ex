@@ -1321,10 +1321,6 @@ defmodule LivWeb.MailLive do
     "#{MailClient.unread_count(mc)} unread/#{MailClient.mail_count(mc)}"
   end
 
-  defp open_mail(%Socket{assigns: %{mail_meta: meta}} = socket, meta) do
-    assign(socket, mail_opened: true)
-  end
-
   defp open_mail(socket, meta) do
     socket
     |> push_event("clear_attachment", %{})
