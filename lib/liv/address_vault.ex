@@ -64,8 +64,8 @@ defmodule Liv.AddressVault do
       %AddressBookEntry{
         addr: addr,
         name: name,
-        first: mails |> List.first() |> MailClient.date_of(),
-        last: mails |> List.last() |> MailClient.date_of(),
+        last: mails |> List.first() |> MailClient.date_of(),
+        first: mails |> List.last() |> MailClient.date_of(),
         count: Enum.count(mails)
       }
     end)
