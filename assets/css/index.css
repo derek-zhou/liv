@@ -251,7 +251,7 @@ span {
 	.address-book {
 	    @apply w-full border-0;
 	    .date {
-		@apply font-bold text-sm whitespace-nowrap;
+		@apply font-bold text-sm whitespace-nowrap overflow-hidden;
 	    }
 	    th {
 		@apply px-2 py-2 align-top border-0 text-left;
@@ -259,14 +259,17 @@ span {
             td {
 		@apply px-2 py-1 align-top border-0 text-left;
             }
+	    th.address-book-from {
+		@apply w-1/2; 
+	    }
 	    th.address-book-first {
-		@apply w-32; 
+		@apply w-1/6; 
 	    }
 	    th.address-book-last {
-		@apply w-32; 
+		@apply w-1/6; 
 	    }
 	    th.address-book-count {
-		@apply w-32;
+		@apply w-1/6;
 	    }
 	    thead {
 		@apply bg-yellow-50 text-sm capitalize;
