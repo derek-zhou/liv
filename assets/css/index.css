@@ -260,13 +260,13 @@ span {
 		@apply px-2 py-1 align-top border-0 text-left;
             }
 	    th.address-book-first {
-		@apply w-24; 
+		@apply w-32; 
 	    }
 	    th.address-book-last {
-		@apply w-24; 
+		@apply w-32; 
 	    }
 	    th.address-book-count {
-		@apply w-24;
+		@apply w-32;
 	    }
 	    thead {
 		@apply bg-yellow-50 text-sm capitalize;
