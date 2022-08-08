@@ -56,12 +56,11 @@ defmodule Liv.AddressVault do
   return a list of correspondents from the address book
   """
   def all_entries() do
-    list =
-      Memento.transaction!(fn ->
-        Memento.Query.all(Correspondent)
-      end)
-
-    Enum.map(list, fn %Correspondent{addr: addr, name: name, mails: mails} ->
+    Memento.transaction!(fn ->
+      Memento.Query.all(Correspondent)
+    end)
+    |> Enum.filter(fn %Correspondent{mails: mails} -> !Enum.empty?(mails) end)
+    |> Enum.map(fn %Correspondent{addr: addr, name: name, mails: mails} ->
       %AddressBookEntry{
         addr: addr,
         name: name,
