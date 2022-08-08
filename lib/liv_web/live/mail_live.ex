@@ -89,7 +89,7 @@ defmodule LivWeb.MailLive do
   data remote_mail_boxes, :list, default: []
 
   # for address book
-  data address_book, :list, default: []
+  data address_book, :any, default: nil
   # :from, :first, :list, :count
   data sorted_by, :atom, default: :from
   data sorted_desc, :boolean, default: false

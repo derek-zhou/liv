@@ -250,8 +250,14 @@ span {
 	}
 	.address-book {
 	    @apply w-full border-0;
-            th, td {
-		@apply p-1 align-top border-0 text-left;
+	    .date {
+		@apply font-bold text-sm whitespace-nowrap;
+	    }
+	    th {
+		@apply px-2 py-2 align-top border-0 text-left;
+	    }
+            td {
+		@apply px-2 py-1 align-top border-0 text-left;
             }
 	    th.address-book-first {
 		@apply w-24; 
@@ -260,10 +266,10 @@ span {
 		@apply w-24; 
 	    }
 	    th.address-book-count {
-		@apply w-24; 
+		@apply w-24;
 	    }
 	    thead {
-		@apply bg-yellow-50 capitalize;
+		@apply bg-yellow-50 text-sm capitalize;
 	    }
             tr:nth-child(even) {
 		@apply bg-gray-50;
