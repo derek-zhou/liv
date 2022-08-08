@@ -1,0 +1,46 @@
+<table class="address-book">
+    <thead>
+    <tr>
+	{#for field <- [:from, :first, :last, :count]}
+	<th class={"address-book-#{field}"}>
+	    <LivePatch to={Routes.mail_path(Endpoint, :address_book,
+			  sorted_by: "#{field}",
+			  desc: "#{@sorted_by == field && !@desc}")}
+		       class="subject">
+		{field}
+		{#if @sorted_by == field}
+		{#if @desc}
+		▴
+		{#else}
+		▾
+		{/if}
+		{/if}
+	    </LivePatch>
+	</th>
+	{/for}
+    </tr>
+    </thead>
+    <tbody>
+    {#for %{name: name, addr: addr, first: first, last: last, count: count} <- @book}
+    <tr>
+	<td>
+	    <LivePatch to={Routes.mail_path(Endpoint, :write, addr)}
+		       class="email-addr">
+		{from(name, addr)}
+	    </LivePatch>
+	</td>
+	<td>
+	    <div class="date">{date_string(first, @tz_offset)}</div>
+	</td>
+	<td>
+	    <div class="date">{date_string(last, @tz_offset)}</div>
+	</td>
+	<td>
+	    <LivePatch to={Routes.mail_path(Endpoint, :find, "from:#{addr}")}>
+		{count}
+	    </LivePatch>
+	</td>
+    </tr>
+    {/for}
+    </tbody>
+</table>

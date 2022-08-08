@@ -6,7 +6,7 @@ defmodule LivWeb.MailLive do
   @chunk_size 65536
 
   alias Liv.{Configer, MailClient, AddressVault, DraftServer}
-  alias LivWeb.{Main, Find, Search, View, Login, Guardian, Write, Config, Draft}
+  alias LivWeb.{Main, Find, Search, View, Login, Guardian, Write, Config, Draft, AddressBook}
   alias LivWeb.Router.Helpers, as: Routes
   alias LivWeb.Endpoint
   alias :self_configer, as: SelfConfiger
@@ -87,6 +87,12 @@ defmodule LivWeb.MailLive do
   data sending_data, :map, default: %{username: "", password: "", hostname: "", api_key: ""}
   data reset_password, :string, default: ""
   data remote_mail_boxes, :list, default: []
+
+  # for address book
+  data address_book, :list, default: []
+  # :from, :first, :list, :count
+  data sorted_by, :atom, default: :from
+  data sorted_desc, :boolean, default: false
 
   def mount(_params, _session, socket) do
     cond do
@@ -209,7 +215,7 @@ defmodule LivWeb.MailLive do
           {:patch, "\u{1F527}", Routes.mail_path(Endpoint, :config), false},
           {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
           {:patch, "\u{1F4DD}", Routes.mail_path(Endpoint, :write, "#"), false},
-          {:patch, "\u{1F4A4}", Routes.mail_path(Endpoint, :login), false}
+          {:patch, "\u{1F4D2}", Routes.mail_path(Endpoint, :address_book), false}
         ]
       )
     }
@@ -570,6 +576,60 @@ defmodule LivWeb.MailLive do
           {:button, "\u{2716}", "close_write", false}
         ]
       )
+    }
+  end
+
+  def handle_params(
+        %{
+          "sorted_by" => sorted_by,
+          "desc" => desc
+        },
+        _url,
+        %Socket{
+          assigns: %{
+            live_action: :address_book,
+            address_book: book
+          }
+        } = socket
+      ) do
+    sorted_by =
+      case sorted_by do
+        "first" -> :first
+        "last" -> :last
+        "count" -> :count
+        _ -> :from
+      end
+
+    desc =
+      case desc do
+        "1" -> true
+        "t" -> true
+        "true" -> true
+        _ -> false
+      end
+
+    book = book || Liv.AddressVault.all_entries()
+
+    {
+      :noreply,
+      populate_address_book(socket, book, sorted_by, desc)
+    }
+  end
+
+  def handle_params(
+        _params,
+        _url,
+        %Socket{
+          assigns: %{
+            live_action: :address_book,
+            sorted_by: sorted_by,
+            sorted_desc: desc
+          }
+        } = socket
+      ) do
+    {
+      :noreply,
+      populate_address_book(socket, Liv.AddressVault.all_entries(), sorted_by, desc)
     }
   end
 
@@ -1509,5 +1569,32 @@ defmodule LivWeb.MailLive do
     socket
     |> assign(write_chunk_outstanding: true)
     |> push_event("read_attachment", %{name: name, offset: offset})
+  end
+
+  defp populate_address_book(socket, book, sorted_by, desc) do
+    book =
+      Enum.sort(book, fn a, b ->
+        case {sorted_by, desc} do
+          {:from, true} -> a.name >= b.name && a.addr >= b.addr
+          {:from, false} -> a.name <= b.name && a.addr <= b.addr
+          {:first, true} -> a.first >= b.first
+          {:first, false} -> a.first <= b.first
+          {:last, true} -> a.last >= b.last
+          {:last, false} -> a.last <= b.last
+          {:count, true} -> a.count >= b.count
+          {:count, false} -> a.count <= b.count
+        end
+      end)
+
+    socket
+    |> assign(
+      info: "#{Enum.count(book)} correspondents",
+      address_book: book,
+      sorted_by: sorted_by,
+      sorted_desc: desc,
+      buttons: [
+        {:button, "\u{2716}", "close_dialog", false}
+      ]
+    )
   end
 end

@@ -245,6 +245,30 @@ span {
 	.preview {
 	    @apply border rounded bg-yellow-50 p-2 overflow-auto;
 	}
+	.email-addr {
+	    @apply text-sm italic flex-grow whitespace-nowrap overflow-hidden;
+	}
+	.address-book {
+	    @apply w-full border-0;
+            th, td {
+		@apply p-1 align-top border-0 text-left;
+            }
+	    th.address-book-first {
+		@apply w-24; 
+	    }
+	    th.address-book-last {
+		@apply w-24; 
+	    }
+	    th.address-book-count {
+		@apply w-24; 
+	    }
+	    thead {
+		@apply bg-yellow-50 capitalize;
+	    }
+            tr:nth-child(even) {
+		@apply bg-gray-50;
+            }    
+	}
 	ul.button-examples {
 	    @apply list-none;
 	    li {
@@ -275,9 +299,6 @@ span {
 		@apply flex flex-row flex-wrap border-b border-gray-100 mx-2;
 		.subject {
 		    @apply w-full whitespace-nowrap overflow-hidden;
-		}
-		.email-addr {
-		    @apply text-sm italic flex-grow whitespace-nowrap overflow-hidden;
 		}
 		.date {
 		    @apply font-bold text-sm whitespace-nowrap w-24 flex-none pl-2;

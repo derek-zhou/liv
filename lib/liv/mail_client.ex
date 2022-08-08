@@ -53,6 +53,22 @@ defmodule Liv.MailClient do
   end
 
   @doc """
+  return the date of the docid
+  """
+  def date_of(nil), do: nil
+
+  def date_of(docid) do
+    case MaildirCommander.view(docid) do
+      {:error, msg} ->
+        Logger.warn("docid: #{docid} not found: #{msg}")
+        nil
+
+      {:ok, meta} ->
+        meta.date
+    end
+  end
+
+  @doc """
   mark a message seen. if the mc is nil, make a minimum mc first
   """
   def seen(nil, 0), do: nil

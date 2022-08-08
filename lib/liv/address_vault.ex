@@ -2,13 +2,17 @@ defmodule Liv.Correspondent do
   use Memento.Table, attributes: [:addr, :name, :mails]
 end
 
+defmodule Liv.AddressBookEntry do
+  defstruct addr: nil, name: nil, first: nil, last: nil, count: 0
+end
+
 defmodule Liv.AddressVault do
   @moduledoc """
   I keep track of addresses used in the system
   """
 
   require Logger
-  alias Liv.{Configer, Correspondent}
+  alias Liv.{Configer, Correspondent, AddressBookEntry, MailClient}
 
   @doc """
   add an email address to the database
@@ -45,6 +49,26 @@ defmodule Liv.AddressVault do
         String.starts_with?(name, str) -> true
         true -> false
       end
+    end)
+  end
+
+  @doc """
+  return a list of correspondents from the address book
+  """
+  def all_entries() do
+    list =
+      Memento.transaction!(fn ->
+        Memento.Query.all(Correspondent)
+      end)
+
+    Enum.map(list, fn %Correspondent{addr: addr, name: name, mails: mails} ->
+      %AddressBookEntry{
+        addr: addr,
+        name: name,
+        first: mails |> List.first() |> MailClient.date_of(),
+        last: mails |> List.last() |> MailClient.date_of(),
+        count: Enum.count(mails)
+      }
     end)
   end
 

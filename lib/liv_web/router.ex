@@ -23,6 +23,7 @@ defmodule LivWeb.Router do
     live "/config", MailLive, :config
     live "/draft", MailLive, :draft
     live "/write/:to", MailLive, :write
+    live "/address_book", MailLive, :address_book
   end
 
   if Mix.env() == :dev do
