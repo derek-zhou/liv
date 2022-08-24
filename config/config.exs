@@ -26,14 +26,6 @@ config :phoenix, :json_library, Jason
 # put the database at the user's home
 config :mnesia, dir: '#{System.get_env("HOME")}/.mnesia'
 
-# for guardian
-config :liv, LivWeb.Guardian,
-  issuer: "liv",
-  secret_key: "suNeNgK+B/Wut5YKZ5TxTm7qGaBL3p0mTyhuUUKebt1+0RKlGlZ+K4Xsd8KrJQXb",
-  token_ttl: %{
-    "access" => {30, :days}
-  }
-
 # go easier for argon
 config :argon2_elixir,
   m_cost: 14,

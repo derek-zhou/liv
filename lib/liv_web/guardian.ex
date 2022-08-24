@@ -1,23 +1,32 @@
 defmodule LivWeb.Guardian do
-  use Guardian, otp_app: :liv
+  alias Liv.Configer
+  alias :ets, as: ETS
 
-  @impl true
-  def subject_for_token(user, _claims), do: {:ok, user}
+  # name of the ETS table
+  @ets_sessions :liv_sessions
 
-  @impl true
-  def resource_from_claims(%{"sub" => str}), do: {:ok, str}
+  def init(), do: ETS.new(@ets_sessions, [:named_table, :public])
 
-  def build_token(user) do
-    case encode_and_sign(user) do
-      {:ok, token, claims} -> {:ok, token, claims}
-      _ -> raise("cannot encode token")
-    end
+  def build_token() do
+    ttl = Configer.default(:token_ttl)
+    key = :crypto.strong_rand_bytes(6)
+    now = System.convert_time_unit(System.monotonic_time(), :native, :second)
+    ETS.insert(@ets_sessions, {key, now + ttl})
+    Base.url_encode64(key)
   end
 
   def decode_token(token) do
-    case resource_from_token(token) do
-      {:ok, user, _claims} -> user
-      _ -> nil
+    now = System.convert_time_unit(System.monotonic_time(), :native, :second)
+
+    case Base.url_decode64(token) do
+      :error ->
+        nil
+
+      {:ok, key} ->
+        case ETS.lookup(@ets_sessions, key) do
+          [{^key, expired_at}] when expired_at > now -> true
+          _ -> nil
+        end
     end
   end
 end

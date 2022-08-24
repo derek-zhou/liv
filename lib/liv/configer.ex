@@ -14,6 +14,7 @@ defmodule Liv.Configer do
   def default(:archive_maildir), do: default_value(:archive_maildir, "/.Archive")
   def default(:orbit_api_key), do: default_value(:orbit_api_key, "")
   def default(:orbit_workspace), do: default_value(:orbit_workspace, "")
+  def default(:token_ttl), do: default_value(:token_ttl, 30 * 24 * 3600)
 
   def default(:remote_mail_boxes) do
     :remote_mail_boxes

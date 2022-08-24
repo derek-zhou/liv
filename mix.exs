@@ -7,7 +7,7 @@ defmodule Liv.MixProject do
       version: "0.7.0",
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      compilers: [:phoenix] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -34,7 +34,7 @@ defmodule Liv.MixProject do
   defp deps do
     [
       {:self_configer, "~> 0.1.1"},
-      {:maildir_commander, "~> 0.6.4"},
+      {:maildir_commander, "~> 0.6.5"},
       {:pop3client, "~> 1.3.1"},
       {:bbmustache, "~> 1.12"},
       {:memento, "~> 0.3.2"},
@@ -47,13 +47,12 @@ defmodule Liv.MixProject do
       {:argon2_elixir, "~> 2.4"},
       {:md, "~> 0.7.6"},
       {:string_naming, "~> 0.7.3"},
-      {:guardian, "~> 2.1"},
       {:surface, "~> 0.7.3"},
       {:phoenix, "~> 1.6.6"},
       {:phoenix_live_view, "~> 0.17.7"},
       {:floki, ">= 0.27.0", only: :test},
       {:phoenix_html, "~> 3.2"},
-      {:phoenix_live_reload, "~> 1.3.1", only: :dev},
+      {:phoenix_live_reload, "~> 1.3.3", only: :dev},
       {:phoenix_live_dashboard, "~> 0.6.5"},
       {:telemetry_metrics, "~> 0.4"},
       {:telemetry_poller, "~> 0.4"},

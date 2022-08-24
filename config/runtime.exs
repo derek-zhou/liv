@@ -13,13 +13,6 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  guardian_key =
-    System.get_env("GUARDIAN_KEY") ||
-      raise """
-      environment variable GUARDIAN_KEY is missing.
-      You can generate one by calling: mix guardian.gen.secret
-      """
-
   hostname =
     case System.get_env("MAIL_HOST") do
       nil ->
@@ -44,7 +37,4 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base,
     server: true
-
-  # for guardian
-  config :liv, LivWeb.Guardian, secret_key: guardian_key
 end

@@ -718,13 +718,11 @@ defmodule LivWeb.MailLive do
       ) do
     case Argon2.verify_pass(password, hash) do
       true ->
-        {:ok, token, _claims} = Guardian.build_token(System.get_env("USER"))
-
         {
           :noreply,
           socket
           |> clear_flash()
-          |> push_event("set_value", %{key: "token", value: token})
+          |> push_event("set_value", %{key: "token", value: Guardian.build_token()})
           |> assign(auth: :logged_in)
           |> push_patch(to: Routes.mail_path(Endpoint, :find, query))
         }
