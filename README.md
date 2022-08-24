@@ -102,13 +102,12 @@ Please set a few environment variables before running the release:
 
 ```
 export SECRET_KEY_BASE=YOUR_SECRET_KEY_BASE
-export GUARDIAN_KEY=YOUR_GUARDIAN_KEY
 export PORT=4001
 export MAIL_HOST=YOUR_MAIL_SERVER
 _build/prod/rel/liv/bin/liv start
 ```
 
-The `SECRET_KEY_BASE` and `GUARDIAN_KEY` are two random string you should generate yourself once, and keep them secret. Each user must pick a different port.
+The `SECRET_KEY_BASE` is a random string you should generate yourself once, and keep them secret. Each user must pick a different port.
 
 The entry point of is at: `https://YOUR_MAIL_SERVER/YOUR_USER_NAME`. Your reverse proxy needs to provide 2 proxy paths for each instance, one for regular route and one for websocket, as in the following Nginx example:
 
