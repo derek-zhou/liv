@@ -9,7 +9,7 @@ defmodule LivWeb.Guardian do
 
   def build_token() do
     ttl = Configer.default(:token_ttl)
-    key = :crypto.strong_rand_bytes(6)
+    key = :crypto.strong_rand_bytes(12)
     now = System.convert_time_unit(System.monotonic_time(), :native, :second)
     ETS.insert(@ets_sessions, {key, now + ttl})
     Base.url_encode64(key)
