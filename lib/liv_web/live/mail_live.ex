@@ -1154,7 +1154,12 @@ defmodule LivWeb.MailLive do
         {:noreply, put_flash(socket, :warning, "Already at the beginning")}
 
       prev ->
-        {:noreply, push_patch(socket, to: Routes.mail_path(Endpoint, :view, prev))}
+        {
+          :noreply,
+          socket
+          |> assign(mail_opened: false)
+          |> push_patch(to: Routes.mail_path(Endpoint, :view, prev))
+        }
     end
   end
 
@@ -1168,7 +1173,12 @@ defmodule LivWeb.MailLive do
         {:noreply, put_flash(socket, :warning, "Already at the end")}
 
       next ->
-        {:noreply, push_patch(socket, to: Routes.mail_path(Endpoint, :view, next))}
+        {
+          :noreply,
+          socket
+          |> assign(mail_opened: false)
+          |> push_patch(to: Routes.mail_path(Endpoint, :view, next))
+        }
     end
   end
 
