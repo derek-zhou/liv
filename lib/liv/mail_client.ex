@@ -119,7 +119,6 @@ defmodule Liv.MailClient do
     end
   end
 
-  def seen(%__MODULE__{docid: docid} = mc, docid), do: mc
   def seen(mc, 0), do: %{mc | docid: 0}
 
   def seen(%__MODULE__{mails: mails} = mc, docid) do

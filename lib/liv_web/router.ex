@@ -19,6 +19,7 @@ defmodule LivWeb.Router do
     live "/set_password", MailLive, :set_password
     live "/find/:query", MailLive, :find
     live "/view/:docid", MailLive, :view
+    live "/boomerang", MailLive, :boomerang
     live "/search", MailLive, :search
     live "/config", MailLive, :config
     live "/draft", MailLive, :draft

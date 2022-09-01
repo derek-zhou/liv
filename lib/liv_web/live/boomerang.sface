@@ -1,0 +1,18 @@
+<Form for={:boomerang} submit={@submit}>
+    <section>
+        <Field name="hours" class="field">
+	    <Label class="radio">
+		<RadioButton value="8" /> 8 hours
+	    </Label>
+	    <Label class="radio">
+		<RadioButton value="24" checked /> 1 day
+	    </Label>
+	    <Label class="radio">
+		<RadioButton value="720" /> 30 days
+	    </Label>
+	</Field>
+    </section>
+    <div class="toolbar">
+	<input class="button" type="submit" value="&#128190;">
+    </div>
+</Form>

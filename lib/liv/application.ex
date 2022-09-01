@@ -16,6 +16,8 @@ defmodule Liv.Application do
       {:self_configer, name: Liv.Configer},
       # draft server
       Liv.DraftServer,
+      # the delay marker
+      Liv.DelayMarker,
       # the orbit gen server
       Liv.Orbit,
       # Start the Endpoint (http/https)

@@ -16,6 +16,7 @@
 	    reset_password={@reset_password} remote_mail_boxes={@remote_mail_boxes} />
     <AddressBook :if={@auth == :logged_in && @live_action == :address_book} tz_offset={@tz_offset}
 		 book={@address_book} sorted_by={@sorted_by} desc={@sorted_desc} />
+    <Boomerang :if={@auth == :logged_in && @live_action == :boomerang} submit="boomerang_submit" />
     <div :if={@auth == :logged_in} hidden={@live_action != :find}>
 	<Find mails={@list_mails} tree={@list_tree} tz_offset={@tz_offset} />
     </div>
