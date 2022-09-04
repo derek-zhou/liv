@@ -399,6 +399,39 @@ span {
     }
 }
 @screen sm {
+    .content {
+	h1 {
+            @apply text-3xl;
+	}
+	h2 {
+            @apply text-3xl;
+	}
+	h3 {
+            @apply text-2xl;
+	}
+	h4 {
+            @apply text-xl;
+	}
+	h5 {
+            @apply text-lg;
+	}
+	h6 {
+            @apply text-lg;
+	}
+	p {
+            @apply text-lg leading-relaxed;
+	}
+	ol {
+            @apply text-lg;
+	}
+	ul {
+            @apply text-lg;
+	}
+	blockquote {
+            @apply text-lg leading-relaxed;
+	}
+    }
+
     .viewport {
 	.header {
 	    .nav {
@@ -427,7 +460,6 @@ span {
 }
 @screen md {
     .viewport {
-        @apply max-w-screen-md mx-auto;
 	.content {
 	    .node-container {
 		.message {
@@ -464,7 +496,7 @@ span {
 	@apply text-[18px];
     }
     .viewport {
-        @apply max-w-screen-lg;
+        @apply max-w-screen-lg mx-auto;
 	.content {
 	    form {
 		section {
