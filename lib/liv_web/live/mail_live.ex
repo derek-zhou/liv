@@ -662,11 +662,21 @@ defmodule LivWeb.MailLive do
         _ -> false
       end
 
-    book = book || Liv.AddressVault.all_entries()
+    book = sort_address_book(book || Liv.AddressVault.all_entries(), sorted_by, desc)
 
     {
       :noreply,
-      populate_address_book(socket, book, sorted_by, desc)
+      socket
+      |> assign(
+        page_title: "My address book",
+        info: "#{Enum.count(book)} correspondents",
+        address_book: book,
+        sorted_by: sorted_by,
+        sorted_desc: desc,
+        buttons: [
+          {:button, "\u{2716}", "close_dialog", false}
+        ]
+      )
     }
   end
 
@@ -681,9 +691,21 @@ defmodule LivWeb.MailLive do
           }
         } = socket
       ) do
+    book = sort_address_book(Liv.AddressVault.all_entries(), sorted_by, desc)
+
     {
       :noreply,
-      populate_address_book(socket, Liv.AddressVault.all_entries(), sorted_by, desc)
+      socket
+      |> assign(
+        page_title: "My address book",
+        info: "#{Enum.count(book)} correspondents",
+        address_book: book,
+        sorted_by: sorted_by,
+        sorted_desc: desc,
+        buttons: [
+          {:button, "\u{2716}", "close_dialog", false}
+        ]
+      )
     }
   end
 
@@ -1659,30 +1681,18 @@ defmodule LivWeb.MailLive do
     |> push_event("read_attachment", %{name: name, offset: offset})
   end
 
-  defp populate_address_book(socket, book, sorted_by, desc) do
-    book =
-      Enum.sort(book, fn a, b ->
-        case {sorted_by, desc} do
-          {:from, true} -> a.name > b.name || (a.name == b.name && a.addr >= b.addr)
-          {:from, false} -> a.name < b.name || (a.name == b.name && a.addr <= b.addr)
-          {:first, true} -> a.first >= b.first
-          {:first, false} -> a.first <= b.first
-          {:last, true} -> a.last >= b.last
-          {:last, false} -> a.last <= b.last
-          {:count, true} -> a.count >= b.count
-          {:count, false} -> a.count <= b.count
-        end
-      end)
-
-    socket
-    |> assign(
-      info: "#{Enum.count(book)} correspondents",
-      address_book: book,
-      sorted_by: sorted_by,
-      sorted_desc: desc,
-      buttons: [
-        {:button, "\u{2716}", "close_dialog", false}
-      ]
-    )
+  defp sort_address_book(book, sorted_by, desc) do
+    Enum.sort(book, fn a, b ->
+      case {sorted_by, desc} do
+        {:from, true} -> a.name > b.name || (a.name == b.name && a.addr >= b.addr)
+        {:from, false} -> a.name < b.name || (a.name == b.name && a.addr <= b.addr)
+        {:first, true} -> a.first >= b.first
+        {:first, false} -> a.first <= b.first
+        {:last, true} -> a.last >= b.last
+        {:last, false} -> a.last <= b.last
+        {:count, true} -> a.count >= b.count
+        {:count, false} -> a.count <= b.count
+      end
+    end)
   end
 end
