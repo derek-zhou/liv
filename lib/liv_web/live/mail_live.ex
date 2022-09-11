@@ -1663,8 +1663,8 @@ defmodule LivWeb.MailLive do
     book =
       Enum.sort(book, fn a, b ->
         case {sorted_by, desc} do
-          {:from, true} -> a.name >= b.name && a.addr >= b.addr
-          {:from, false} -> a.name <= b.name && a.addr <= b.addr
+          {:from, true} -> a.name > b.name || (a.name == b.name && a.addr >= b.addr)
+          {:from, false} -> a.name < b.name || (a.name == b.name && a.addr <= b.addr)
           {:first, true} -> a.first >= b.first
           {:first, false} -> a.first <= b.first
           {:last, true} -> a.last >= b.last
