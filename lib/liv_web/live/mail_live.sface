@@ -1,4 +1,5 @@
-<Main messages={@flash} info={@info} buttons={@buttons} clear_flash="clear_flash">
+<Main messages={@flash} info={@info} buttons={@buttons}
+      home_link={@home_link} clear_flash="clear_flash">
     <Login :if={@auth == :logged_out || @live_action == :set_password}
 	   prompt={@password_prompt} submit="pw_submit" />
     <Search :if={@auth == :logged_in && @live_action == :search}

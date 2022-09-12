@@ -1,10 +1,12 @@
 defmodule LivWeb.Main do
   use Surface.Component
+  alias Surface.Components.LivePatch
   alias LivWeb.Button
   alias LivWeb.Router.Helpers, as: Routes
   alias LivWeb.Endpoint
 
   slot default, required: true
+  prop home_link, :string, default: "#"
   prop messages, :map, default: %{}
   prop info, :string, default: ""
   prop buttons, :list, default: []

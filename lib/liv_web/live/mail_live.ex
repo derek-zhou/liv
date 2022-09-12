@@ -47,6 +47,7 @@ defmodule LivWeb.MailLive do
   # for the header
   data info, :string, default: "Loading..."
   data buttons, :list, default: []
+  data home_link, :string, default: "#"
 
   # for finder
   data list_mails, :map, default: %{}
@@ -145,6 +146,7 @@ defmodule LivWeb.MailLive do
       |> push_event("set_value", %{key: "token", value: ""})
       |> assign(
         auth: :logged_out,
+        home_link: "#",
         page_title: "Login as #{user}",
         password_hash: Application.get_env(:liv, :password_hash),
         password_prompt: "Enter your password: ",
@@ -184,6 +186,7 @@ defmodule LivWeb.MailLive do
       |> clear_flash()
       |> assign(
         info: "Set password of #{user}",
+        home_link: "#",
         page_title: "Set password of #{user}",
         password_hash: nil,
         saved_password: "",
@@ -218,6 +221,7 @@ defmodule LivWeb.MailLive do
       |> push_event("set_value", %{key: "recoverQuery", value: query})
       |> assign(
         info: info_mc(mc),
+        home_link: Routes.mail_path(Endpoint, :find, query),
         mail_opened: false,
         page_title: query,
         list_mails: MailClient.mails_of(mc),
@@ -279,10 +283,10 @@ defmodule LivWeb.MailLive do
               |> put_flash(:error, "Mail not found")
               |> assign(
                 info: "Mail not found",
+                home_link: Routes.mail_path(Endpoint, :find, @default_query),
                 page_title: "Mail not found",
                 buttons: [
                   {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
-                  {:patch, "\u{1f5C2}", Routes.mail_path(Endpoint, :find, @default_query), false},
                   {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), true},
                   {:button, "\u{25C0}", "backward_message", true},
                   {:button, "\u{25B6}", "forward_message", true}
@@ -300,13 +304,13 @@ defmodule LivWeb.MailLive do
               |> open_mail(meta)
               |> assign(
                 info: info_mc(mc),
+                home_link: Routes.mail_path(Endpoint, :find, query),
                 page_title: meta.subject,
                 mail_client: mc,
                 last_query: query,
                 docid: docid,
                 buttons: [
                   {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
-                  {:patch, "\u{1F5C2}", Routes.mail_path(Endpoint, :find, query), false},
                   {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), false},
                   {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, docid)},
                   {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, docid)}
@@ -322,10 +326,10 @@ defmodule LivWeb.MailLive do
           |> put_flash(:error, "Illegal docid")
           |> assign(
             info: "Mail not found",
+            home_link: Routes.mail_path(Endpoint, :find, @default_query),
             page_title: "Mail not found",
             buttons: [
               {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
-              {:patch, "\u{1F5C2}", Routes.mail_path(Endpoint, :find, @default_query), false},
               {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), true},
               {:button, "\u{25C0}", "backward_message", true},
               {:button, "\u{25B6}", "forward_message", true}
@@ -354,11 +358,11 @@ defmodule LivWeb.MailLive do
       socket
       |> assign(
         info: info_mc(mc),
+        home_link: Routes.mail_path(Endpoint, :find, query),
         page_title: meta.subject,
         docid: mc.docid,
         buttons: [
           {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
-          {:patch, "\u{1F5C2}", Routes.mail_path(Endpoint, :find, query), false},
           {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), false},
           {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, mc.docid)},
           {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, mc.docid)}
@@ -390,10 +394,10 @@ defmodule LivWeb.MailLive do
               |> put_flash(:error, "Mail not found")
               |> assign(
                 info: info_mc(mc),
+                home_link: Routes.mail_path(Endpoint, :find, query),
                 page_title: "Mail not found",
                 buttons: [
                   {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
-                  {:patch, "\u{1F5C2}", Routes.mail_path(Endpoint, :find, query), false},
                   {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), true},
                   {:button, "\u{25C0}", "backward_message", true},
                   {:button, "\u{25B6}", "forward_message", true}
@@ -408,12 +412,12 @@ defmodule LivWeb.MailLive do
               |> open_mail(meta)
               |> assign(
                 info: info_mc(mc),
+                home_link: Routes.mail_path(Endpoint, :find, query),
                 page_title: meta.subject,
                 mail_client: mc,
                 docid: docid,
                 buttons: [
                   {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
-                  {:patch, "\u{1F5C2}", Routes.mail_path(Endpoint, :find, query), false},
                   {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), false},
                   {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, docid)},
                   {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, docid)}
@@ -429,10 +433,10 @@ defmodule LivWeb.MailLive do
           |> put_flash(:error, "Illegal docid")
           |> assign(
             info: info_mc(mc),
+            home_link: Routes.mail_path(Endpoint, :find, query),
             page_title: "Mail not found",
             buttons: [
               {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
-              {:patch, "\u{1F5C2}", Routes.mail_path(Endpoint, :find, query), false},
               {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), true},
               {:button, "\u{25C0}", "backward_message", true},
               {:button, "\u{25B6}", "forward_message", true}
@@ -481,6 +485,7 @@ defmodule LivWeb.MailLive do
         query_examples: examples,
         page_title: "Search",
         info: "Search",
+        home_link: "#",
         buttons: [
           {:button, "\u{2716}", "close_dialog", false}
         ]
@@ -528,6 +533,7 @@ defmodule LivWeb.MailLive do
       |> assign(
         page_title: "Draft",
         info: subject || "",
+        home_link: "#",
         recipients: recipients,
         subject: subject || "",
         write_text: text || "",
@@ -558,6 +564,7 @@ defmodule LivWeb.MailLive do
       |> assign(
         page_title: "Write",
         info: "",
+        home_link: "#",
         recipients: recipients || MailClient.default_recipients(),
         subject: subject || "",
         write_text: text || "",
@@ -588,6 +595,7 @@ defmodule LivWeb.MailLive do
       |> assign(
         page_title: "Write",
         info: "",
+        home_link: "#",
         recipients: recipients || MailClient.default_recipients(),
         subject: subject || "",
         write_text: MailClient.quoted_text(nil, text) || "",
@@ -616,6 +624,7 @@ defmodule LivWeb.MailLive do
       |> assign(
         page_title: "Write",
         info: "",
+        home_link: "#",
         recipients: MailClient.default_recipients(mc, to),
         subject: MailClient.reply_subject(mc),
         write_text: MailClient.quoted_text(mc, text),
@@ -670,6 +679,7 @@ defmodule LivWeb.MailLive do
       |> assign(
         page_title: "My address book",
         info: "#{Enum.count(book)} correspondents",
+        home_link: "#",
         address_book: book,
         sorted_by: sorted_by,
         sorted_desc: desc,
@@ -699,6 +709,7 @@ defmodule LivWeb.MailLive do
       |> assign(
         page_title: "My address book",
         info: "#{Enum.count(book)} correspondents",
+        home_link: "#",
         address_book: book,
         sorted_by: sorted_by,
         sorted_desc: desc,
@@ -731,6 +742,7 @@ defmodule LivWeb.MailLive do
       :noreply,
       assign(socket,
         info: "Boomerang a Mail",
+        home_link: "#",
         page_title: "Boomerang a Mail",
         buttons: [
           {:button, "\u{2716}", "close_dialog", false}
