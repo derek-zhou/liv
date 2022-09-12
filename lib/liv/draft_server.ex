@@ -5,7 +5,7 @@ defmodule Liv.DraftServer do
   alias Liv.{Sanitizer, Parser}
   alias HtmlSanitizeEx.Scrubber
 
-  defstruct [:subject, :body, :msgid, recipients: [], references: [], attachments: []]
+  defstruct [:subject, :body, :msgid, recipients: [], references: []]
 
   @doc """
   get draft
@@ -18,34 +18,34 @@ defmodule Liv.DraftServer do
   get the body text as a pasteboard
   """
   def get_pasteboard() do
-    {_, _, body, _, _, _} = GenServer.call(__MODULE__, :get_draft)
+    {_, _, body, _, _} = GenServer.call(__MODULE__, :get_draft)
     body || ""
   end
 
   @doc """
   put the draft
   """
-  def put_draft(subject, recipients, body, msgid \\ nil, refs \\ [], atts \\ []) do
+  def put_draft(subject, recipients, body, msgid \\ nil, refs \\ []) do
     # broadcast the event
     PubSub.local_broadcast_from(
       Liv.PubSub,
       self(),
       "messages",
-      {:draft_update, subject, recipients, body, msgid, refs, atts}
+      {:draft_update, subject, recipients, body}
     )
 
-    GenServer.cast(__MODULE__, {:put_draft, subject, recipients, body, msgid, refs, atts})
+    GenServer.cast(__MODULE__, {:put_draft, subject, recipients, body, msgid, refs})
   end
 
   @doc """
   clear the draft
   """
-  def clear_draft(), do: put_draft(nil, [], nil, nil, [], [])
+  def clear_draft(), do: put_draft(nil, [], nil, nil, [])
 
   @doc """
   put the text into the body of draft
   """
-  def put_pasteboard(subject, text), do: put_draft(subject, [], text, nil, [], [])
+  def put_pasteboard(subject, text), do: put_draft(subject, [], text, nil, [])
 
   @doc """
   return the text of the draft, draft can be html or markdown, depends on the first char
@@ -80,7 +80,7 @@ defmodule Liv.DraftServer do
   end
 
   @impl true
-  def handle_cast({:put_draft, subject, recipients, body, msgid, refs, atts}, state) do
+  def handle_cast({:put_draft, subject, recipients, body, msgid, refs}, state) do
     {:noreply,
      %{
        state
@@ -88,8 +88,7 @@ defmodule Liv.DraftServer do
          recipients: recipients,
          body: body,
          msgid: msgid,
-         references: refs,
-         attachments: atts
+         references: refs
      }}
   end
 
@@ -102,10 +101,9 @@ defmodule Liv.DraftServer do
           recipients: recipients,
           body: body,
           msgid: msgid,
-          references: refs,
-          attachments: atts
+          references: refs
         } = state
       ) do
-    {:reply, {subject, recipients, body, msgid, refs, atts}, state}
+    {:reply, {subject, recipients, body, msgid, refs}, state}
   end
 end

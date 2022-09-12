@@ -424,13 +424,13 @@ defmodule Liv.MailClient do
     import Swoosh.Email
 
     case DraftServer.get_draft() do
-      {nil, _, _, _, _, _} ->
+      {nil, _, _, _, _} ->
         {:error, "no subject"}
 
-      {_, _, nil, _, _, _} ->
+      {_, _, nil, _, _} ->
         {:error, "no draft"}
 
-      {subject, _recipients, draft, msgid, references, atts} ->
+      {subject, _recipients, draft, msgid, references} ->
         try do
           new()
           |> from(addr_to_swoosh(Configer.default(:my_address)))
@@ -440,10 +440,9 @@ defmodule Liv.MailClient do
           |> header("X-Mailer", "LivMail 0.1.0")
           |> text_body(DraftServer.text(draft))
           |> html_body(DraftServer.html(draft, %{name: name, addr: addr}))
-          |> add_attachments(atts)
           |> Mailer.deliver()
 
-          :ok
+          DraftServer.put_draft(subject, [to: [name | addr]], draft, msgid, references)
         rescue
           RuntimeError -> {:error, "deliver failed"}
         end

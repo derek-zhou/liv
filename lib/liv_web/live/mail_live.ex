@@ -527,7 +527,7 @@ defmodule LivWeb.MailLive do
   end
 
   def handle_params(_params, _url, %Socket{assigns: %{live_action: :draft}} = socket) do
-    {subject, recipients, text, msgid, refs, atts} = DraftServer.get_draft()
+    {subject, recipients, text, msgid, refs} = DraftServer.get_draft()
 
     {
       :noreply,
@@ -541,7 +541,7 @@ defmodule LivWeb.MailLive do
         write_text: text || "",
         replying_msgid: msgid,
         replying_references: refs,
-        write_attachments: atts,
+        write_attachments: [],
         buttons: [
           {:patch, "\u{1F4DD}", Routes.mail_path(Endpoint, :write, "#draft"), false},
           {:button, "\u{2716}", "close_write", false}
@@ -555,14 +555,14 @@ defmodule LivWeb.MailLive do
         _url,
         %Socket{assigns: %{live_action: :write}} = socket
       ) do
-    {subject, recipients, text, msgid, refs, atts} = DraftServer.get_draft()
+    {subject, recipients, text, msgid, refs} = DraftServer.get_draft()
 
     {
       :noreply,
       socket
       |> assign(
         page_title: "Write",
-        info: attachments_info(atts, 0),
+        info: "",
         home_link: "#",
         incoming_attachments: [],
         current_attachment: nil,
@@ -572,7 +572,7 @@ defmodule LivWeb.MailLive do
         write_text: text || "",
         replying_msgid: msgid,
         replying_references: refs,
-        write_attachments: atts,
+        write_attachments: [],
         buttons: [
           {:attach, "\u{1F4CE}", "write_attach", false},
           {:button, "\u{1F5D1}", "drop_attachments", false},
@@ -589,7 +589,7 @@ defmodule LivWeb.MailLive do
         %Socket{assigns: %{live_action: :write, mail_opened: false}} = socket
       ) do
     {recipients, subject, text} = MailClient.parse_mailto(to)
-    {d_subject, d_recipients, d_text, msgid, refs, atts} = DraftServer.get_draft()
+    {d_subject, d_recipients, d_text, msgid, refs} = DraftServer.get_draft()
 
     recipients =
       case {recipients, d_recipients} do
@@ -603,12 +603,12 @@ defmodule LivWeb.MailLive do
       socket
       |> assign(
         page_title: "Write",
-        info: attachments_info(atts, 0),
+        info: "",
         home_link: "#",
         recipients: recipients,
         subject: subject || d_subject || "",
         write_text: MailClient.quoted_text(nil, text) || d_text || "",
-        write_attachments: atts,
+        write_attachments: [],
         replying_msgid: msgid,
         replying_references: refs,
         incoming_attachments: [],
@@ -629,7 +629,11 @@ defmodule LivWeb.MailLive do
         _url,
         %Socket{assigns: %{live_action: :write, mail_client: mc, mail_text: text}} = socket
       ) do
-    %{msgid: msgid, references: refs} = MailClient.mail_meta(mc, mc.docid)
+    {msgid, refs} =
+      case MailClient.mail_meta(mc, mc.docid) do
+        %{msgid: msgid, references: refs} -> {msgid, refs}
+        _ -> {nil, []}
+      end
 
     {
       :noreply,
@@ -885,8 +889,7 @@ defmodule LivWeb.MailLive do
           assigns: %{
             recipients: recipients,
             replying_msgid: msgid,
-            replying_references: refs,
-            write_attachments: atts
+            replying_references: refs
           }
         } = socket
       ) do
@@ -904,7 +907,7 @@ defmodule LivWeb.MailLive do
       end)
       |> MailClient.normalize_recipients()
 
-    DraftServer.put_draft(subject, recipients, text, msgid, refs, atts)
+    DraftServer.put_draft(subject, recipients, text, msgid, refs)
 
     {
       :noreply,
@@ -937,8 +940,8 @@ defmodule LivWeb.MailLive do
         box -> box
       end)
 
-    {_, _, _, msgid, refs, atts} = DraftServer.get_draft()
-    DraftServer.put_draft(subject, recipients, text, msgid, refs, atts)
+    {_, _, _, msgid, refs} = DraftServer.get_draft()
+    DraftServer.put_draft(subject, recipients, text, msgid, refs)
 
     {
       :noreply,
@@ -947,8 +950,7 @@ defmodule LivWeb.MailLive do
         subject: subject,
         write_text: text,
         replying_msgid: msgid,
-        replying_references: refs,
-        write_attachments: atts
+        replying_references: refs
       )
     }
   end
