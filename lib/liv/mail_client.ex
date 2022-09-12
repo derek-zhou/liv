@@ -318,15 +318,15 @@ defmodule Liv.MailClient do
          :proplists.get_value("body", query, nil)}
 
       %URI{path: nil} ->
-        {nil, nil, nil}
+        {[], nil, nil}
 
       %URI{path: to_addr} ->
         {get_recipients([to_addr]), nil, nil}
     end
   end
 
-  defp get_recipients(nil), do: nil
-  defp get_recipients([]), do: nil
+  defp get_recipients(nil), do: []
+  defp get_recipients([]), do: []
 
   defp get_recipients(str) when is_binary(str) do
     str |> String.split(~r/\s*,\s*/) |> get_recipients()
@@ -389,66 +389,58 @@ defmodule Liv.MailClient do
   @doc """
   send a mail
   """
-  def send_mail(_, "", _, _, _), do: {:error, "no subject"}
-  def send_mail(_, _, _, "", _), do: {:error, "no text"}
+  def send_mail(subject, recipients, text, msgid \\ nil, references \\ [], atts \\ [])
 
-  def send_mail(mc, subject, [{:to, _} | _] = recipients, text, atts) do
+  def send_mail("", _, _, _, _, _), do: {:error, "no subject"}
+  def send_mail(_, _, "", _, _, _), do: {:error, "no text"}
+
+  def send_mail(subject, [{:to, _} | _] = recipients, text, msgid, references, atts) do
     import Swoosh.Email
 
     try do
-      mail =
-        new()
-        |> from(addr_to_swoosh(Configer.default(:my_address)))
-        |> subject(subject)
-        |> add_recipients(recipients)
-        |> add_references(mc)
-        |> header("X-Mailer", "LivMail 0.1.0")
-        |> text_body(DraftServer.text(text))
-        |> html_body(DraftServer.html(text))
+      new()
+      |> from(addr_to_swoosh(Configer.default(:my_address)))
+      |> subject(subject)
+      |> add_recipients(recipients)
+      |> add_references(msgid, references)
+      |> header("X-Mailer", "LivMail 0.1.0")
+      |> text_body(DraftServer.text(text))
+      |> html_body(DraftServer.html(text))
+      |> add_attachments(atts)
+      |> Mailer.deliver()
 
-      mail =
-        Enum.reduce(atts, mail, fn {name, _size, data}, mail ->
-          attachment(
-            mail,
-            Swoosh.Attachment.new(
-              {:data, IO.iodata_to_binary(data)},
-              filename: name,
-              content_type: MIME.from_path(name),
-              type: :attachment
-            )
-          )
-        end)
-
-      Mailer.deliver(mail)
+      DraftServer.clear_draft()
     rescue
       RuntimeError -> {:error, "deliver failed"}
     end
   end
 
-  def send_mail(_, _, _, _), do: {:error, "no To: recipient"}
+  def send_mail(_, _, _, _, _, _), do: {:error, "no To: recipient"}
 
   @doc """
-  Send the html draft from draft server
+  Send the html draft from draft server, draft is kept for future usage
   """
   def send_draft(name, addr) do
     import Swoosh.Email
 
     case DraftServer.get_draft() do
-      {nil, _, _} ->
+      {nil, _, _, _, _, _} ->
         {:error, "no subject"}
 
-      {_, _, nil} ->
+      {_, _, nil, _, _, _} ->
         {:error, "no draft"}
 
-      {subject, _recipients, draft} ->
+      {subject, _recipients, draft, msgid, references, atts} ->
         try do
           new()
           |> from(addr_to_swoosh(Configer.default(:my_address)))
           |> subject(subject)
           |> to({name, addr})
+          |> add_references(msgid, references)
           |> header("X-Mailer", "LivMail 0.1.0")
           |> text_body(DraftServer.text(draft))
           |> html_body(DraftServer.html(draft, %{name: name, addr: addr}))
+          |> add_attachments(atts)
           |> Mailer.deliver()
 
           :ok
@@ -643,9 +635,28 @@ defmodule Liv.MailClient do
     end)
   end
 
-  defp add_references(email, %__MODULE__{docid: docid, mails: mails}) when docid > 0 do
+  defp add_attachments(email, atts) do
     import Swoosh.Email
-    %{msgid: msgid, references: references} = Map.fetch!(mails, docid)
+
+    atts
+    |> Enum.reverse()
+    |> Enum.reduce(email, fn {name, _size, data}, mail ->
+      attachment(
+        mail,
+        Swoosh.Attachment.new(
+          {:data, IO.iodata_to_binary(data)},
+          filename: name,
+          content_type: MIME.from_path(name),
+          type: :attachment
+        )
+      )
+    end)
+  end
+
+  defp add_references(email, nil, _), do: email
+
+  defp add_references(email, msgid, references) do
+    import Swoosh.Email
     # prevent very long reference chain
     references =
       references
@@ -658,8 +669,6 @@ defmodule Liv.MailClient do
     |> header("In-Reply-To", "<#{msgid}>")
     |> header("References", references)
   end
-
-  defp add_references(email, _), do: email
 
   defp is_recent(%{date: date}, horizon) when date > horizon, do: true
   defp is_recent(%{flags: flags}, _horizon), do: Enum.member?(flags, :unread)

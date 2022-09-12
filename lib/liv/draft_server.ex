@@ -5,7 +5,7 @@ defmodule Liv.DraftServer do
   alias Liv.{Sanitizer, Parser}
   alias HtmlSanitizeEx.Scrubber
 
-  defstruct [:subject, :recipients, :body]
+  defstruct [:subject, :body, :msgid, recipients: [], references: [], attachments: []]
 
   @doc """
   get draft
@@ -18,34 +18,34 @@ defmodule Liv.DraftServer do
   get the body text as a pasteboard
   """
   def get_pasteboard() do
-    {_, _, body} = GenServer.call(__MODULE__, :get_draft)
+    {_, _, body, _, _, _} = GenServer.call(__MODULE__, :get_draft)
     body || ""
   end
 
   @doc """
   put the draft
   """
-  def put_draft(subject, recipients, body) do
+  def put_draft(subject, recipients, body, msgid \\ nil, refs \\ [], atts \\ []) do
     # broadcast the event
     PubSub.local_broadcast_from(
       Liv.PubSub,
       self(),
       "messages",
-      {:draft_update, subject, recipients, body}
+      {:draft_update, subject, recipients, body, msgid, refs, atts}
     )
 
-    GenServer.cast(__MODULE__, {:put_draft, subject, recipients, body})
+    GenServer.cast(__MODULE__, {:put_draft, subject, recipients, body, msgid, refs, atts})
   end
 
   @doc """
   clear the draft
   """
-  def clear_draft(), do: put_draft(nil, nil, nil)
+  def clear_draft(), do: put_draft(nil, [], nil, nil, [], [])
 
   @doc """
   put the text into the body of draft
   """
-  def put_pasteboard(subject, text), do: put_draft(subject, nil, text)
+  def put_pasteboard(subject, text), do: put_draft(subject, [], text, nil, [], [])
 
   @doc """
   return the text of the draft, draft can be html or markdown, depends on the first char
@@ -80,16 +80,32 @@ defmodule Liv.DraftServer do
   end
 
   @impl true
-  def handle_cast({:put_draft, subject, recipients, body}, state) do
-    {:noreply, %{state | subject: subject, recipients: recipients, body: body}}
+  def handle_cast({:put_draft, subject, recipients, body, msgid, refs, atts}, state) do
+    {:noreply,
+     %{
+       state
+       | subject: subject,
+         recipients: recipients,
+         body: body,
+         msgid: msgid,
+         references: refs,
+         attachments: atts
+     }}
   end
 
   @impl true
   def handle_call(
         :get_draft,
         _from,
-        %__MODULE__{subject: subject, recipients: recipients, body: body} = state
+        %__MODULE__{
+          subject: subject,
+          recipients: recipients,
+          body: body,
+          msgid: msgid,
+          references: refs,
+          attachments: atts
+        } = state
       ) do
-    {:reply, {subject, recipients, body}, state}
+    {:reply, {subject, recipients, body, msgid, refs, atts}, state}
   end
 end

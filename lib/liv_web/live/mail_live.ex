@@ -83,9 +83,11 @@ defmodule LivWeb.MailLive do
   data addr_options, :list, default: []
   data subject, :string, default: ""
   data write_text, :string, default: ""
+  data replying_msgid, :any, default: nil
+  data replying_references, :list, default: []
   data preview_html, :string, default: ""
   data write_attachments, :list, default: []
-  data current_attachment, :tuple, default: nil
+  data current_Attachment, :tuple, default: nil
   data incoming_attachments, :list, default: []
   data write_chunk_outstanding, :boolean, default: false
 
@@ -525,7 +527,7 @@ defmodule LivWeb.MailLive do
   end
 
   def handle_params(_params, _url, %Socket{assigns: %{live_action: :draft}} = socket) do
-    {subject, recipients, text} = DraftServer.get_draft()
+    {subject, recipients, text, msgid, refs, atts} = DraftServer.get_draft()
 
     {
       :noreply,
@@ -537,6 +539,9 @@ defmodule LivWeb.MailLive do
         recipients: recipients,
         subject: subject || "",
         write_text: text || "",
+        replying_msgid: msgid,
+        replying_references: refs,
+        write_attachments: atts,
         buttons: [
           {:patch, "\u{1F4DD}", Routes.mail_path(Endpoint, :write, "#draft"), false},
           {:button, "\u{2716}", "close_write", false}
@@ -548,30 +553,26 @@ defmodule LivWeb.MailLive do
   def handle_params(
         %{"to" => "#draft"},
         _url,
-        %Socket{
-          assigns: %{
-            live_action: :write,
-            mail_opened: false,
-            recipients: recipients,
-            subject: subject,
-            write_text: text
-          }
-        } = socket
+        %Socket{assigns: %{live_action: :write}} = socket
       ) do
+    {subject, recipients, text, msgid, refs, atts} = DraftServer.get_draft()
+
     {
       :noreply,
       socket
       |> assign(
         page_title: "Write",
-        info: "",
+        info: attachments_info(atts, 0),
         home_link: "#",
-        recipients: recipients || MailClient.default_recipients(),
-        subject: subject || "",
-        write_text: text || "",
-        write_attachments: [],
         incoming_attachments: [],
         current_attachment: nil,
         write_chunk_outstanding: false,
+        recipients: recipients,
+        subject: subject || "",
+        write_text: text || "",
+        replying_msgid: msgid,
+        replying_references: refs,
+        write_attachments: atts,
         buttons: [
           {:attach, "\u{1F4CE}", "write_attach", false},
           {:button, "\u{1F5D1}", "drop_attachments", false},
@@ -588,18 +589,28 @@ defmodule LivWeb.MailLive do
         %Socket{assigns: %{live_action: :write, mail_opened: false}} = socket
       ) do
     {recipients, subject, text} = MailClient.parse_mailto(to)
+    {d_subject, d_recipients, d_text, msgid, refs, atts} = DraftServer.get_draft()
+
+    recipients =
+      case {recipients, d_recipients} do
+        {[], []} -> MailClient.default_recipients()
+        {[], _} -> d_recipients
+        _ -> recipients
+      end
 
     {
       :noreply,
       socket
       |> assign(
         page_title: "Write",
-        info: "",
+        info: attachments_info(atts, 0),
         home_link: "#",
-        recipients: recipients || MailClient.default_recipients(),
-        subject: subject || "",
-        write_text: MailClient.quoted_text(nil, text) || "",
-        write_attachments: [],
+        recipients: recipients,
+        subject: subject || d_subject || "",
+        write_text: MailClient.quoted_text(nil, text) || d_text || "",
+        write_attachments: atts,
+        replying_msgid: msgid,
+        replying_references: refs,
         incoming_attachments: [],
         current_attachment: nil,
         write_chunk_outstanding: false,
@@ -618,6 +629,8 @@ defmodule LivWeb.MailLive do
         _url,
         %Socket{assigns: %{live_action: :write, mail_client: mc, mail_text: text}} = socket
       ) do
+    %{msgid: msgid, references: refs} = MailClient.mail_meta(mc, mc.docid)
+
     {
       :noreply,
       socket
@@ -629,6 +642,8 @@ defmodule LivWeb.MailLive do
         subject: MailClient.reply_subject(mc),
         write_text: MailClient.quoted_text(mc, text),
         write_attachments: [],
+        replying_msgid: msgid,
+        replying_references: refs,
         incoming_attachments: [],
         current_attachment: nil,
         write_chunk_outstanding: false,
@@ -866,7 +881,14 @@ defmodule LivWeb.MailLive do
   def handle_event(
         "write_change",
         %{"_target" => [target | _], "mail" => %{"subject" => subject, "text" => text}} = mail,
-        %Socket{assigns: %{recipients: recipients}} = socket
+        %Socket{
+          assigns: %{
+            recipients: recipients,
+            replying_msgid: msgid,
+            replying_references: refs,
+            write_attachments: atts
+          }
+        } = socket
       ) do
     completion_list =
       cond do
@@ -882,7 +904,7 @@ defmodule LivWeb.MailLive do
       end)
       |> MailClient.normalize_recipients()
 
-    DraftServer.put_draft(subject, recipients, text)
+    DraftServer.put_draft(subject, recipients, text, msgid, refs, atts)
 
     {
       :noreply,
@@ -915,14 +937,18 @@ defmodule LivWeb.MailLive do
         box -> box
       end)
 
-    DraftServer.put_draft(subject, recipients, text)
+    {_, _, _, msgid, refs, atts} = DraftServer.get_draft()
+    DraftServer.put_draft(subject, recipients, text, msgid, refs, atts)
 
     {
       :noreply,
       assign(socket,
         recipients: recipients,
         subject: subject,
-        write_text: text
+        write_text: text,
+        replying_msgid: msgid,
+        replying_references: refs,
+        write_attachments: atts
       )
     }
   end
@@ -933,17 +959,18 @@ defmodule LivWeb.MailLive do
         %Socket{
           assigns: %{
             auth: :logged_in,
+            replying_msgid: msgid,
+            replying_references: refs,
             write_attachments: atts,
             current_attachment: nil,
             incoming_attachments: [],
             subject: subject,
             recipients: recipients,
-            write_text: text,
-            mail_client: mc
+            write_text: text
           }
         } = socket
       ) do
-    case MailClient.send_mail(mc, subject, recipients, text, Enum.reverse(atts)) do
+    case MailClient.send_mail(subject, recipients, text, msgid, refs, atts) do
       {:error, msg} ->
         {:noreply, put_flash(socket, :error, "Mail not sent: #{inspect(msg)}")}
 
@@ -956,6 +983,8 @@ defmodule LivWeb.MailLive do
             recipients: [],
             write_text: "",
             subject: "",
+            replying_msgid: nil,
+            replying_references: [],
             write_attachments: [],
             incoming_attachments: []
           )
@@ -974,6 +1003,8 @@ defmodule LivWeb.MailLive do
         %Socket{assigns: %{auth: :logged_in, incoming_attachments: [], current_attachment: nil}} =
           socket
       ) do
+    DraftServer.clear_draft()
+
     {
       :noreply,
       socket
@@ -981,6 +1012,8 @@ defmodule LivWeb.MailLive do
         recipients: [],
         write_text: "",
         subject: "",
+        replying_msgid: nil,
+        replying_references: [],
         write_attachments: [],
         incoming_attachments: []
       )
