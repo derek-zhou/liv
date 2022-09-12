@@ -976,7 +976,7 @@ defmodule LivWeb.MailLive do
       {:error, msg} ->
         {:noreply, put_flash(socket, :error, "Mail not sent: #{inspect(msg)}")}
 
-      {:ok, _} ->
+      :ok ->
         {
           :noreply,
           socket
