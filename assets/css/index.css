@@ -340,7 +340,8 @@ span {
 		}
 	    }
 	    .mail-body {
-		@apply w-full h-screen;
+		@apply w-full truncate;
+		height: 96rem;
 	    }
 	    pre {
 		@apply whitespace-pre-line;

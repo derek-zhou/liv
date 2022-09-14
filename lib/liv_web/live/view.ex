@@ -5,7 +5,7 @@ defmodule LivWeb.View do
   alias Surface.Components.LivePatch
   alias Liv.DraftServer
 
-  @max_inline_html 4096
+  @max_inline_html 16384
 
   prop meta, :any, required: true
   prop content, :tuple, default: {:text, ""}
