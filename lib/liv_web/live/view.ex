@@ -5,8 +5,6 @@ defmodule LivWeb.View do
   alias Surface.Components.LivePatch
   alias Liv.DraftServer
 
-  @max_inline_html 16384
-
   prop meta, :any, required: true
   prop content, :tuple, default: {:text, ""}
   prop attachments, :list, default: []
@@ -30,12 +28,6 @@ defmodule LivWeb.View do
 
   defp is_plain_text?({:text, _}), do: true
   defp is_plain_text?({:html, _}), do: false
-
-  defp oversized?({:text, _}), do: false
-  defp oversized?({:html, html}), do: byte_size(html) >= @max_inline_html
-
-  defp inlined?({:text, _}), do: false
-  defp inlined?({:html, html}), do: byte_size(html) < @max_inline_html
 
   defp text_part({_, text}), do: html_escape(text)
   defp html_part({_, html}), do: html

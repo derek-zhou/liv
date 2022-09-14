@@ -60,13 +60,13 @@ span {
         @apply p-1 w-full text-sm border rounded border-gray-600;
     }
     table {
-        @apply mb-4 border-collapse border-2 border-gray-400;
+        @apply mb-4 border-collapse border-0;
         th, td {
-            @apply p-3 align-top border border-gray-400;
+            @apply p-0 align-top border-0;
         }
         thead {
             th {
-                @apply align-bottom border-2;
+                @apply align-bottom border-0;
             }
 	}
         tr.odd {
