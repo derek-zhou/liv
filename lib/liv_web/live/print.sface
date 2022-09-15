@@ -1,5 +1,5 @@
-<pre :if={is_plain_text?(@content)}>{text_part(@content)}</pre>
-<iframe :if={!is_plain_text?(@content)} class="mail-body" scrolling="no"
-	srcdoc={html_part(@content)} sandbox />
+<pre :if={is_plain_text?(@content)} class="box">{text_part(@content)}</pre>
+<iframe :if={!is_plain_text?(@content)} class="box" srcdoc={html_part(@content)}
+	sandbox />
     
 
