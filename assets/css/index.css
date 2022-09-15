@@ -331,7 +331,7 @@ span {
 	}
 	.mail-body {
 	    @apply w-full;
-	    height: 200rem;
+	    height: 174rem;
 	}
 	.message-view {
 	    @apply flex-grow;
