@@ -330,7 +330,8 @@ span {
 	    }
 	}
 	.mail-body {
-	    @apply w-full h-screen;
+	    @apply w-full;
+	    height: 200rem;
 	}
 	.message-view {
 	    @apply flex-grow;
