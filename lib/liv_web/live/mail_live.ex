@@ -12,6 +12,7 @@ defmodule LivWeb.MailLive do
     Find,
     Search,
     View,
+    Print,
     Login,
     Guardian,
     Write,
@@ -222,7 +223,7 @@ defmodule LivWeb.MailLive do
       socket
       |> push_event("set_value", %{key: "recoverQuery", value: query})
       |> assign(
-        info: info_mc(mc),
+        info: "#{MailClient.unread_count(mc)} unread/#{MailClient.mail_count(mc)}",
         home_link: Routes.mail_path(Endpoint, :find, query),
         mail_opened: false,
         page_title: query,
@@ -290,6 +291,7 @@ defmodule LivWeb.MailLive do
                 buttons: [
                   {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
                   {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), true},
+                  {:patch, "\u{1F5A8}", Routes.mail_path(Endpoint, :print), true},
                   {:button, "\u{25C0}", "backward_message", true},
                   {:button, "\u{25B6}", "forward_message", true}
                 ]
@@ -305,7 +307,7 @@ defmodule LivWeb.MailLive do
               socket
               |> open_mail(meta)
               |> assign(
-                info: info_mc(mc),
+                info: "",
                 home_link: Routes.mail_path(Endpoint, :find, query),
                 page_title: meta.subject,
                 mail_client: mc,
@@ -314,6 +316,7 @@ defmodule LivWeb.MailLive do
                 buttons: [
                   {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
                   {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), false},
+                  {:patch, "\u{1F5A8}", Routes.mail_path(Endpoint, :print), false},
                   {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, docid)},
                   {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, docid)}
                 ]
@@ -333,6 +336,7 @@ defmodule LivWeb.MailLive do
             buttons: [
               {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
               {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), true},
+              {:patch, "\u{1F5A8}", Routes.mail_path(Endpoint, :print), true},
               {:button, "\u{25C0}", "backward_message", true},
               {:button, "\u{25B6}", "forward_message", true}
             ]
@@ -359,13 +363,14 @@ defmodule LivWeb.MailLive do
       :noreply,
       socket
       |> assign(
-        info: info_mc(mc),
+        info: "",
         home_link: Routes.mail_path(Endpoint, :find, query),
         page_title: meta.subject,
         docid: mc.docid,
         buttons: [
           {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
           {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), false},
+          {:patch, "\u{1F5A8}", Routes.mail_path(Endpoint, :print), false},
           {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, mc.docid)},
           {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, mc.docid)}
         ]
@@ -395,12 +400,13 @@ defmodule LivWeb.MailLive do
               socket
               |> put_flash(:error, "Mail not found")
               |> assign(
-                info: info_mc(mc),
+                info: "",
                 home_link: Routes.mail_path(Endpoint, :find, query),
                 page_title: "Mail not found",
                 buttons: [
                   {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
                   {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), true},
+                  {:patch, "\u{1F5A8}", Routes.mail_path(Endpoint, :print), true},
                   {:button, "\u{25C0}", "backward_message", true},
                   {:button, "\u{25B6}", "forward_message", true}
                 ]
@@ -413,7 +419,7 @@ defmodule LivWeb.MailLive do
               socket
               |> open_mail(meta)
               |> assign(
-                info: info_mc(mc),
+                info: "",
                 home_link: Routes.mail_path(Endpoint, :find, query),
                 page_title: meta.subject,
                 mail_client: mc,
@@ -421,6 +427,7 @@ defmodule LivWeb.MailLive do
                 buttons: [
                   {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
                   {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), false},
+                  {:patch, "\u{1F5A8}", Routes.mail_path(Endpoint, :print), false},
                   {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, docid)},
                   {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, docid)}
                 ]
@@ -434,18 +441,42 @@ defmodule LivWeb.MailLive do
           socket
           |> put_flash(:error, "Illegal docid")
           |> assign(
-            info: info_mc(mc),
+            info: "",
             home_link: Routes.mail_path(Endpoint, :find, query),
             page_title: "Mail not found",
             buttons: [
               {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
               {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), true},
+              {:patch, "\u{1F5A8}", Routes.mail_path(Endpoint, :print), true},
               {:button, "\u{25C0}", "backward_message", true},
               {:button, "\u{25B6}", "forward_message", true}
             ]
           )
         }
     end
+  end
+
+  def handle_params(
+        _params,
+        _url,
+        %Socket{
+          assigns: %{
+            live_action: :print,
+            mail_opened: true
+          }
+        } = socket
+      ) do
+    {
+      :noreply,
+      socket
+      |> assign(
+        info: "Print",
+        home_link: "#",
+        buttons: [
+          {:button, "\u{2716}", "close_dialog", false}
+        ]
+      )
+    }
   end
 
   def handle_params(
@@ -742,19 +773,6 @@ defmodule LivWeb.MailLive do
   def handle_params(
         _params,
         _url,
-        %Socket{
-          assigns: %{
-            live_action: :welcome,
-            recover_query: query
-          }
-        } = socket
-      ) do
-    {:noreply, push_patch(socket, to: Routes.mail_path(Endpoint, :find, query))}
-  end
-
-  def handle_params(
-        _params,
-        _url,
         %Socket{assigns: %{live_action: :boomerang}} = socket
       ) do
     {
@@ -768,6 +786,19 @@ defmodule LivWeb.MailLive do
         ]
       )
     }
+  end
+
+  def handle_params(
+        _params,
+        _url,
+        %Socket{
+          assigns: %{
+            recover_query: query
+          }
+        } = socket
+      ) do
+    query = query || @default_query
+    {:noreply, push_patch(socket, to: Routes.mail_path(Endpoint, :find, query))}
   end
 
   def handle_event(
@@ -1531,12 +1562,6 @@ defmodule LivWeb.MailLive do
   end
 
   defp fetch_recover_query(socket, _), do: assign(socket, recover_query: @default_query)
-
-  defp info_mc(nil), do: "0/0"
-
-  defp info_mc(mc) do
-    "#{MailClient.unread_count(mc)} unread/#{MailClient.mail_count(mc)}"
-  end
 
   defp open_mail(socket, meta) do
     socket

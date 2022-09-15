@@ -139,7 +139,10 @@ span {
     transform: translate3d(0, 0, 0);
 }
 .viewport {
-    @apply relative min-h-screen;
+    @apply relative min-h-screen flex flex-col;
+    .phx-connected {
+	@apply flex-grow flex flex-col;
+    }
     .header {
 	@apply sticky top-0 bg-gray-100 p-2 flex;
 	.brand {
@@ -167,6 +170,7 @@ span {
         }
     }
     .content {
+	@apply flex-grow flex flex-col;
 	form {
 	    @apply p-2 bg-gray-50 flex flex-col;
 	    .line {
@@ -325,6 +329,13 @@ span {
 		@apply border-l-4 border-yellow-600 ml-2;
 	    }
 	}
+	.mail-body {
+	    @apply w-full truncate;
+	    height: 120rem;
+	}
+	.message-view {
+	    @apply flex-grow;
+	}
 	.box {
             @apply bg-white p-2 flow-root w-full overflow-x-hidden;
 	    .line {
@@ -338,10 +349,6 @@ span {
 		.flags {
 		    @apply font-bold text-sm;
 		}
-	    }
-	    .mail-body {
-		@apply w-full truncate;
-		height: 96rem;
 	    }
 	    pre {
 		@apply whitespace-pre-line;

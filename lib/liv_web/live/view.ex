@@ -29,8 +29,7 @@ defmodule LivWeb.View do
   defp is_plain_text?({:text, _}), do: true
   defp is_plain_text?({:html, _}), do: false
 
-  defp text_part({_, text}), do: html_escape(text)
-  defp html_part({_, html}), do: html
+  defp text_part({:text, text}), do: html_escape(text)
 
-  defp sanitize({_, html}), do: html |> DraftServer.safe_html() |> raw()
+  defp sanitize({:html, html}), do: html |> DraftServer.safe_html() |> raw()
 end

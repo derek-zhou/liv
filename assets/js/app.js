@@ -57,8 +57,8 @@ Hooks.View = {
     blobURLs: [],
     
     mounted() {
-	this.el.addEventListener("touchstart", (e) => this.browseTouchStart(e.touches[0]));
-	this.el.addEventListener("touchmove", (e) => this.browseTouchMove(e.touches[0]));
+	this.el.parentElement.addEventListener("touchstart", (e) => this.browseTouchStart(e.touches[0]));
+	this.el.parentElement.addEventListener("touchmove", (e) => this.browseTouchMove(e.touches[0]));
 	this.handleEvent("clear_attachments", () => {
 	    for (let url of this.blobURLs.values()) {
 		URL.revokeObjectURL(url);

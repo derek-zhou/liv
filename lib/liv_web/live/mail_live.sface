@@ -18,10 +18,11 @@
     <AddressBook :if={@auth == :logged_in && @live_action == :address_book} tz_offset={@tz_offset}
 		 book={@address_book} sorted_by={@sorted_by} desc={@sorted_desc} />
     <Boomerang :if={@auth == :logged_in && @live_action == :boomerang} submit="boomerang_submit" />
+    <Print :if={@auth == :logged_in && @live_action == :print} content={@mail_content} />
     <div :if={@auth == :logged_in} hidden={@live_action != :find}>
 	<Find mails={@list_mails} tree={@list_tree} tz_offset={@tz_offset} />
     </div>
-    <div :if={@auth == :logged_in} hidden={@live_action != :view}>
+    <div class="message-view" :if={@auth == :logged_in} hidden={@live_action != :view}>
 	<View meta={@mail_meta} content={@mail_content}
 	      attachments={@mail_attachment_metas} tz_offset={@tz_offset} />
     </div>
