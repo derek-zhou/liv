@@ -211,10 +211,12 @@ defmodule LivWeb.MailLive do
           }
         } = socket
       ) do
+    mc = MailClient.close(mc)
+
     mc =
       cond do
         count > 0 -> MailClient.new_search(query)
-        mc && query == last_query -> MailClient.seen(mc, 0)
+        mc && query == last_query -> mc
         true -> MailClient.new_search(query)
       end
 
@@ -258,7 +260,7 @@ defmodule LivWeb.MailLive do
         {mc, query} =
           case query do
             "" ->
-              case MailClient.seen(nil, docid) do
+              case MailClient.open(nil, docid) do
                 nil -> {nil, nil}
                 mc -> {mc, nil}
               end
@@ -268,13 +270,13 @@ defmodule LivWeb.MailLive do
 
               case MailClient.mail_meta(mc, docid) do
                 nil ->
-                  case MailClient.seen(nil, docid) do
+                  case MailClient.open(nil, docid) do
                     nil -> {nil, nil}
                     mc -> {mc, nil}
                   end
 
                 _ ->
-                  {MailClient.seen(mc, docid), query}
+                  {MailClient.open(mc, docid), query}
               end
           end
 
@@ -391,7 +393,7 @@ defmodule LivWeb.MailLive do
       ) do
     case Integer.parse(docid) do
       {docid, ""} ->
-        mc = MailClient.seen(mc, docid)
+        mc = MailClient.open(mc, docid)
 
         case MailClient.mail_meta(mc, docid) do
           nil ->

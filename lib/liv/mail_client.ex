@@ -69,37 +69,55 @@ defmodule Liv.MailClient do
   end
 
   @doc """
-  mark a message seen. if the mc is nil, make a minimum mc first
+  close a message by setting docid to 0 and mark the old message seen
   """
-  def seen(nil, 0), do: nil
+  def close(nil), do: nil
+  def close(%__MODULE__{docid: 0} = mc), do: mc
 
-  def seen(nil, docid) do
+  def close(%__MODULE__{mails: mails, docid: docid} = mc) do
+    case Map.get(mails, docid) do
+      nil ->
+        %{mc | docid: 0}
+
+      %{flags: flags} ->
+        case Enum.member?(flags, :seen) do
+          true ->
+            %{mc | docid: 0}
+
+          false ->
+            case MaildirCommander.flag(docid, "+S") do
+              {:ok, m} ->
+                # broadcast the event
+                PubSub.local_broadcast_from(
+                  Liv.PubSub,
+                  self(),
+                  "messages",
+                  {:seen_message, docid, m}
+                )
+
+                %{mc | mails: %{mails | docid => m}, docid: 0}
+
+              {:error, msg} ->
+                Logger.warn("docid: #{docid} #{msg}")
+                reindex()
+                %{mc | docid: 0}
+            end
+        end
+    end
+  end
+
+  @doc """
+  open a message. if the mc is nil, make a minimum mc first.
+  then stream the content of the mail
+  """
+  def open(nil, docid) do
     case MaildirCommander.view(docid) do
       {:error, msg} ->
         Logger.warn("docid: #{docid} not found: #{msg}")
         reindex()
         nil
 
-      {:ok, meta} ->
-        %{path: path} =
-          meta =
-          case Enum.member?(meta.flags, :seen) do
-            true ->
-              meta
-
-            false ->
-              {:ok, m} = MaildirCommander.flag(docid, "+S")
-              # broadcast the event
-              PubSub.local_broadcast_from(
-                Liv.PubSub,
-                self(),
-                "messages",
-                {:seen_message, docid, m}
-              )
-
-              m
-          end
-
+      {:ok, %{path: path} = meta} ->
         Logger.debug("streaming #{path}")
 
         case MaildirCommander.stream_mail(path) do
@@ -119,50 +137,24 @@ defmodule Liv.MailClient do
     end
   end
 
-  def seen(mc, 0), do: %{mc | docid: 0}
+  def open(mc, docid) do
+    %__MODULE__{mails: mails} = mc = close(mc)
 
-  def seen(%__MODULE__{mails: mails} = mc, docid) do
     case Map.get(mails, docid) do
       nil ->
         mc
 
-      %{flags: flags} ->
-        mc =
-          case Enum.member?(flags, :seen) do
-            true ->
-              %{mc | docid: docid}
-
-            false ->
-              case MaildirCommander.flag(docid, "+S") do
-                {:ok, m} ->
-                  # broadcast the event
-                  PubSub.local_broadcast_from(
-                    Liv.PubSub,
-                    self(),
-                    "messages",
-                    {:seen_message, docid, m}
-                  )
-
-                  %{mc | docid: docid, mails: %{mails | docid => m}}
-
-                {:error, msg} ->
-                  Logger.warn("docid: #{docid} #{msg}")
-                  reindex()
-                  %{mc | docid: docid}
-              end
-          end
-
-        %{path: path} = mc.mails[docid]
+      %{path: path} ->
         Logger.debug("streaming #{path}")
 
         case MaildirCommander.stream_mail(path) do
           {:error, reason} ->
             Logger.warn("docid: #{docid} path: #{path} not found: #{reason}")
             reindex()
-            %{mc | ref: nil}
+            %{mc | docid: docid, ref: nil}
 
           {:ok, ref} ->
-            %{mc | ref: ref}
+            %{mc | docid: docid, ref: ref}
         end
     end
   end
