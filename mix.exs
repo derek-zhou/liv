@@ -7,7 +7,7 @@ defmodule Liv.MixProject do
       version: "0.7.0",
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix] ++ Mix.compilers(),
+      compilers: Mix.compilers() ++ [:phoenix, :surface],
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()

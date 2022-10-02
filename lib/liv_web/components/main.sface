@@ -1,4 +1,4 @@
-<div id="main-content" class="content" phx-hook="Main">
+<div id="main-content" class="content" :hook>
     {#for type <- Map.keys(@messages)}
     <div role="alert" class={"alert", alert_class(type)} phx-value-key={type}
 	 phx-click={@clear_flash}>
