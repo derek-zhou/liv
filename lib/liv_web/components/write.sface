@@ -14,7 +14,9 @@
 		      opts={"phx-update": "ignore", "phx-debounce": 100}
 		      value={@text} />
 	</Field>
-	<Draft text={@text} />
+	<div class="content">
+	    <Draft text={@text} />
+	</div>
     </section>
     <div class="toolbar">
 	<input class="button" type="submit" value="&#128236;">

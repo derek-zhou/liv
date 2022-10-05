@@ -66,8 +66,7 @@ defmodule Liv.DraftServer do
   @doc """
   return a version html that is safe to be embedded in our page.
   """
-  def safe_html(<<"<", _::binary>> = draft), do: Scrubber.scrub(draft, Sanitizer)
-  def safe_html(draft), do: Md.generate(draft, Parser, format: :none)
+  def safe_html(html), do: Scrubber.scrub(html, Sanitizer)
 
   @doc false
   def start_link(args) do
