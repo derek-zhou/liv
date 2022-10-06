@@ -29,10 +29,27 @@ defmodule Liv.DelayMarker do
     GenServer.call(__MODULE__, :ping)
   end
 
+  defp flag_it(docid, flag) do
+    case MaildirCommander.flag(docid, flag) do
+      {:ok, m} ->
+        # broadcast the event
+        PubSub.local_broadcast(Liv.PubSub, "messages", {:seen_message, docid, m})
+
+      {:error, msg} ->
+        Logger.warn("docid: #{docid} #{msg}")
+    end
+  end
+
   @impl true
   def init(_) do
     Process.send_after(self(), :poll, @poll_interval)
     {:ok, []}
+  end
+
+  @impl true
+  def terminate(_reason, queue) do
+    # flag everthing regardless time
+    Enum.each(queue, fn {docid, _at, flag} -> flag_it(docid, flag) end)
   end
 
   @impl true
@@ -57,15 +74,7 @@ defmodule Liv.DelayMarker do
 
     cond do
       at < now ->
-        case MaildirCommander.flag(docid, flag) do
-          {:ok, m} ->
-            # broadcast the event
-            PubSub.local_broadcast(Liv.PubSub, "messages", {:seen_message, docid, m})
-
-          {:error, msg} ->
-            Logger.warn("docid: #{docid} #{msg}")
-        end
-
+        flag_it(docid, flag)
         send(self(), :poll)
         {:noreply, tail}
 
