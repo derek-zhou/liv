@@ -207,7 +207,10 @@ span {
 		@apply pt-2 flex flex-row flex-wrap justify-center gap-x-1;
 	    }
 	    section {
-		@apply pt-2 border-b;
+		@apply pt-2 border-b flex flex-row flex-wrap justify-center gap-x-2;
+	    }
+	    section.twoside {
+		@apply flex-col;
 	    }
 	    section:last-child {
 		@apply border-b-0 pb-0;
@@ -482,6 +485,11 @@ span {
 @screen md {
     .viewport {
 	.content {
+	    form {
+		section.twoside {
+		    @apply grid grid-cols-2;
+		}
+	    }
 	    .box {
 		img {
 		    @apply max-w-md;
@@ -504,15 +512,5 @@ span {
     }
     .viewport {
         @apply max-w-screen-lg mx-auto;
-	.content {
-	    form {
-		section {
-		    @apply flex flex-row flex-wrap gap-x-4 justify-center;
-		}
-		section.twoside {
-		    @apply grid grid-cols-2 gap-x-2;
-		}
-	    }
-	}
     }
 }
