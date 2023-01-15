@@ -70,7 +70,7 @@ defmodule Liv.MailClient do
       {:ok, tree, mails} ->
         tree
         |> MCTree.root_list()
-        |> Enum.map(fn docid -> mails |> Map.fetch!(docid) |> Map.fetch(:date) end)
+        |> Enum.map(fn docid -> mails |> Map.fetch!(docid) |> Map.fetch!(:date) end)
     end
   end
 
