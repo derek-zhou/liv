@@ -13,6 +13,8 @@ defmodule LivWeb.AddressBook do
   defp from(nil, addr), do: addr
   defp from(name, _addr), do: name
 
+  def query_for(addr), do: "from:#{addr} flag:replied"
+
   defp date_string(nil, _tz_offset), do: ""
 
   defp date_string(datei, tz_offset) do

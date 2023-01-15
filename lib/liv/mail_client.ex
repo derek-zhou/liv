@@ -53,18 +53,19 @@ defmodule Liv.MailClient do
   end
 
   @doc """
-  return the date of the docid
+  return the replied mails from an addr
   """
-  def date_of(nil), do: nil
-
-  def date_of(docid) do
-    case MaildirCommander.view(docid) do
-      {:error, msg} ->
-        Logger.warn("docid: #{docid} not found: #{msg}")
-        nil
-
-      {:ok, meta} ->
-        meta.date
+  def dates_from(addr) do
+    case MaildirCommander.find(
+           "from:#{addr} flag:replied",
+           false,
+           :":date",
+           false,
+           true,
+           false
+         ) do
+      {:error, msg} -> raise(msg)
+      {:ok, _tree, mails} -> Enum.map(mails, & &1.date)
     end
   end
 
@@ -706,7 +707,6 @@ defmodule Liv.MailClient do
         unless Enum.member?(flags, :replied) do
           Logger.notice("marking mail (#{docid})")
           {:ok, mail} = MaildirCommander.flag(docid, "+R")
-          AddressVault.mark(mail.from, docid)
           # broadcast the event
           PubSub.local_broadcast(Liv.PubSub, "messages", {:mark_message, docid, mail})
         end
@@ -724,7 +724,6 @@ defmodule Liv.MailClient do
         if Enum.member?(flags, :replied) do
           Logger.notice("unmarking mail (#{docid})")
           {:ok, mail} = MaildirCommander.flag(docid, "-R")
-          AddressVault.unmark(mail.from, docid)
           # broadcast the event
           PubSub.local_broadcast(Liv.PubSub, "messages", {:unmark_message, docid, mail})
         end

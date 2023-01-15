@@ -32,6 +32,17 @@ defmodule Liv.AddressVault do
   end
 
   @doc """
+  remove an email addr from the database
+  """
+  def remove(addr) do
+    Memento.transaction!(fn ->
+      Memento.Query.delete(Correspondent, addr)
+    end)
+
+    :ok
+  end
+
+  @doc """
   return a list of email addresses that contains the string
   """
   def start_with(str) do
@@ -61,57 +72,18 @@ defmodule Liv.AddressVault do
     Memento.transaction!(fn ->
       Memento.Query.all(Correspondent)
     end)
-    |> Enum.filter(fn %Correspondent{mails: mails} -> !Enum.empty?(mails) end)
     |> Enum.reject(&MapSet.member?(my_addresses, &1.addr))
-    |> Enum.map(fn %Correspondent{addr: addr, name: name, mails: mails} ->
+    |> Enum.map(fn %Correspondent{addr: addr, name: name} ->
+      dates = MailClient.dates_from(addr)
+
       %AddressBookEntry{
         addr: addr,
         name: name,
-        last: mails |> List.first() |> MailClient.date_of(),
-        first: mails |> List.last() |> MailClient.date_of(),
-        count: Enum.count(mails)
+        last: List.last(dates),
+        first: List.first(dates),
+        count: length(dates)
       }
     end)
-  end
-
-  @doc """
-  mark a docid as from one address
-  """
-  def mark([_ | nil], _), do: :ok
-  def mark([_ | ""], _), do: :ok
-
-  def mark([name | addr], docid) do
-    Memento.transaction!(fn ->
-      case Memento.Query.read(Correspondent, addr) do
-        nil ->
-          Memento.Query.write(%Correspondent{name: name, addr: addr, mails: [docid]})
-
-        %Correspondent{mails: mails} = c ->
-          Memento.Query.write(%{c | mails: [docid | mails]})
-      end
-    end)
-
-    :ok
-  end
-
-  @doc """
-  undo the mark of a docid as from one address
-  """
-  def unmark([_ | nil], _), do: :ok
-  def unmark([_ | ""], _), do: :ok
-
-  def unmark([_ | addr], docid) do
-    Memento.transaction!(fn ->
-      case Memento.Query.read(Correspondent, addr) do
-        nil ->
-          :ok
-
-        %Correspondent{mails: mails} = c ->
-          Memento.Query.write(%{c | mails: Enum.reject(mails, &(&1 == docid))})
-      end
-    end)
-
-    :ok
   end
 
   @doc """

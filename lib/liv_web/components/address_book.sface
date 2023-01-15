@@ -36,7 +36,7 @@
 	    <div class="date">{date_string(last, @tz_offset)}</div>
 	</td>
 	<td>
-	    <LivePatch to={Routes.mail_path(Endpoint, :find, "from:#{addr}")}>
+	    <LivePatch to={Routes.mail_path(Endpoint, :find, query_for(addr))}>
 		{count}
 	    </LivePatch>
 	</td>
