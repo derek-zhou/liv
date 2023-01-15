@@ -64,8 +64,13 @@ defmodule Liv.MailClient do
            true,
            false
          ) do
-      {:error, msg} -> raise(msg)
-      {:ok, _tree, mails} -> Enum.map(mails, & &1.date)
+      {:error, msg} ->
+        raise(msg)
+
+      {:ok, tree, mails} ->
+        tree
+        |> MCTree.root_list()
+        |> Enum.map(fn docid -> mails |> Map.fetch!(docid) |> Map.fetch(:date) end)
     end
   end
 
