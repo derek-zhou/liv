@@ -266,8 +266,11 @@ span {
             td {
 		@apply px-2 py-1 align-top border-0 text-left;
             }
+	    th.address-book-delete {
+		@apply w-1/12;
+	    }
 	    th.address-book-from {
-		@apply w-1/2; 
+		@apply w-5/12;
 	    }
 	    th.address-book-first {
 		@apply w-1/6; 

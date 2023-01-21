@@ -916,6 +916,21 @@ defmodule LivWeb.MailLive do
   end
 
   def handle_event(
+        "delete_address",
+        %{"address" => addr},
+        %Socket{assigns: %{address_book: book}} = socket
+      ) do
+    AddressVault.remove(addr)
+    book = Enum.reject(book, fn entry -> entry.addr == addr end)
+
+    {:noreply,
+     assign(socket,
+       info: "#{Enum.count(book)} correspondents",
+       address_book: book
+     )}
+  end
+
+  def handle_event(
         "write_change",
         %{"_target" => [target | _], "mail" => %{"subject" => subject, "text" => text}} = mail,
         %Socket{

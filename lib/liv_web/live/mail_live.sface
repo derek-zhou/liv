@@ -16,7 +16,8 @@
 	    sending_method={@sending_method} sending_data={@sending_data}
 	    reset_password={@reset_password} remote_mail_boxes={@remote_mail_boxes} />
     <AddressBook :if={@auth == :logged_in && @live_action == :address_book} tz_offset={@tz_offset}
-		 book={@address_book} sorted_by={@sorted_by} desc={@sorted_desc} />
+		 book={@address_book} sorted_by={@sorted_by} desc={@sorted_desc}
+		 delete="delete_address"/>
     <Boomerang :if={@auth == :logged_in && @live_action == :boomerang} submit="boomerang_submit" />
     <Print :if={@auth == :logged_in && @live_action == :print} content={@mail_content} />
     <div class="fill" :if={@auth == :logged_in} hidden={@live_action != :find}>

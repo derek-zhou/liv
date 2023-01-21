@@ -9,6 +9,7 @@ defmodule LivWeb.AddressBook do
   prop sorted_by, :atom, default: :from
   prop desc, :boolean, default: false
   prop tz_offset, :integer, default: 0
+  prop delete, :string, required: true
 
   defp from(nil, addr), do: addr
   defp from(name, _addr), do: name
