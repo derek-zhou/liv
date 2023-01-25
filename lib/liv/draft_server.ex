@@ -61,7 +61,15 @@ defmodule Liv.DraftServer do
   """
   def html(draft, map \\ %{})
   def html(<<"<", _::binary>> = draft, map), do: BBMustache.render(draft, map, key_type: :atom)
-  def html(draft, _map), do: Md.generate(draft, Parser, format: :none)
+
+  def html(draft, _map) do
+    try do
+      Md.generate(draft, Parser, format: :none)
+    rescue
+      _e ->
+        "illegal Markdown syntax"
+    end
+  end
 
   @doc """
   return a version html that is safe to be embedded in our page.
