@@ -44,6 +44,7 @@ defmodule LivWeb.MailLive do
   data password_hash, :string, default: ""
   data saved_password, :string, default: ""
   data password_prompt, :string, default: "Enter your password: "
+  data saved_path, :string, default: "/"
 
   # for the header
   data info, :string, default: "Loading..."
@@ -159,14 +160,16 @@ defmodule LivWeb.MailLive do
     }
   end
 
-  def handle_params(_params, _url, %Socket{assigns: %{auth: :logged_out}} = socket) do
+  def handle_params(_params, url, %Socket{assigns: %{auth: :logged_out}} = socket) do
+    uri = URI.parse(url)
+
     case Application.get_env(:liv, :password_hash) do
       nil ->
         # temporarily log user in to set the password
         {
           :noreply,
           socket
-          |> assign(auth: :logged_in)
+          |> assign(auth: :logged_in, saved_path: uri.path)
           |> push_patch(to: Routes.mail_path(Endpoint, :set_password))
         }
 
@@ -174,7 +177,7 @@ defmodule LivWeb.MailLive do
         {
           :noreply,
           socket
-          |> assign(password_hash: hash)
+          |> assign(password_hash: hash, saved_path: uri.path)
           |> push_patch(to: Routes.mail_path(Endpoint, :login))
         }
     end
@@ -850,7 +853,7 @@ defmodule LivWeb.MailLive do
   def handle_event(
         "pw_submit",
         %{"login" => %{"password" => password}},
-        %Socket{assigns: %{recover_query: query, password_hash: nil, saved_password: password}} =
+        %Socket{assigns: %{saved_path: path, password_hash: nil, saved_password: password}} =
           socket
       ) do
     hash = Argon2.hash_pwd_salt(password)
@@ -861,7 +864,7 @@ defmodule LivWeb.MailLive do
       socket
       |> clear_flash()
       |> assign(password_hash: hash)
-      |> push_patch(to: Routes.mail_path(Endpoint, :find, query))
+      |> push_patch(to: path)
     }
   end
 
@@ -880,7 +883,7 @@ defmodule LivWeb.MailLive do
   def handle_event(
         "pw_submit",
         %{"login" => %{"password" => password}},
-        %Socket{assigns: %{recover_query: query, password_hash: hash}} = socket
+        %Socket{assigns: %{saved_path: path, password_hash: hash}} = socket
       ) do
     case Argon2.verify_pass(password, hash) do
       true ->
@@ -890,7 +893,7 @@ defmodule LivWeb.MailLive do
           |> clear_flash()
           |> push_event("set_value", %{key: "token", value: Guardian.build_token()})
           |> assign(auth: :logged_in)
-          |> push_patch(to: Routes.mail_path(Endpoint, :find, query))
+          |> push_patch(to: path)
         }
 
       false ->
