@@ -5,7 +5,7 @@ defmodule Liv.MixProject do
     [
       app: :liv,
       version: "0.7.0",
-      elixir: "~> 1.12",
+      elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers() ++ [:phoenix, :surface],
       start_permanent: Mix.env() == :prod,
@@ -33,6 +33,8 @@ defmodule Liv.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:surface, path: "../surface"},
+      {:phoenix_copy, "~> 0.1.3"},
       {:self_configer, "~> 0.1.1"},
       {:maildir_commander, path: "../maildir_commander"},
       {:pop3client, "~> 1.3.1"},
@@ -47,9 +49,8 @@ defmodule Liv.MixProject do
       {:argon2_elixir, "~> 2.4"},
       {:md, "~> 0.9.1"},
       {:string_naming, "~> 0.7.3"},
-      {:surface, "~> 0.9.1"},
       {:phoenix, "~> 1.6.6"},
-      {:phoenix_live_view, "~> 0.18.0"},
+      {:phoenix_live_view, "== 0.18.16"},
       {:phoenix_html, "~> 3.2"},
       {:phoenix_live_reload, "~> 1.3.3", only: :dev},
       {:phoenix_live_dashboard, "~> 0.7.0"},
@@ -69,7 +70,8 @@ defmodule Liv.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "cmd npm install --prefix assets"]
+      setup: ["deps.get", "cmd npm install --prefix assets"],
+      deploy: ["compile", "phx.copy default", "phx.digest", "release --overwrite"]
     ]
   end
 end

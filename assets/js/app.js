@@ -1,7 +1,7 @@
-import "phoenix_html"
-import {Socket} from "phoenix"
-import {LiveSocket} from "phoenix_live_view"
-import Hooks from "./_hooks";
+import "./phoenix_html.js";
+import {Socket} from "./phoenix.js";
+import {LiveSocket} from "./phoenix_live_view.js";
+import Hooks from "./_hooks/index.js";
 
 function show_progress_bar() {
     var bar = document.querySelector("div#app-progress-bar");

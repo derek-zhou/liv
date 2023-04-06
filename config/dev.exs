@@ -12,11 +12,7 @@ config :liv, LivWeb.Endpoint,
   code_reloader: true,
   check_origin: false,
   watchers: [
-    npm: [
-      "run",
-      "watch",
-      cd: Path.expand("../assets", __DIR__)
-    ]
+    asset_copy: {Phoenix.Copy, :watch, [:default]}
   ]
 
 # Watch static and templates for browser reloading.

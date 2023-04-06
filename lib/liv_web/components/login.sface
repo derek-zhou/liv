@@ -1,4 +1,4 @@
-<Form for={:login} submit={@submit}>
+<Form for={%{}} as={:login} submit={@submit}>
     <Field name="password" class="field">
 	<Label>{@prompt}</Label>
 	<PasswordInput />

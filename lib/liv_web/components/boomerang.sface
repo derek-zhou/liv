@@ -1,4 +1,4 @@
-<Form for={:boomerang} submit={@submit}>
+<Form for={%{}} as={:boomerang} submit={@submit}>
     <section>
         <Field name="hours" class="field">
 	    <Label class="radio">

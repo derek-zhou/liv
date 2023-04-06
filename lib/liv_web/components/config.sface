@@ -1,4 +1,4 @@
-<Form for={:config} change={@change} submit={@submit}>
+<Form for={%{}} as={:config} change={@change} submit={@submit}>
     <section>
         <Field name="my_name" class="field">
 		<Label>Your name</Label>

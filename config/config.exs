@@ -31,6 +31,12 @@ config :argon2_elixir,
   m_cost: 14,
   parallelism: 1
 
+config :phoenix_copy,
+  default: [
+    source: Path.expand("../assets/", __DIR__),
+    destination: Path.expand("../priv/static/", __DIR__)
+  ]
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
