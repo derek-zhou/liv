@@ -70,7 +70,7 @@ defmodule Liv.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "cmd npm install --prefix assets"],
+      start: ["compile", "phx.copy default", "phx.server"],
       deploy: ["compile", "phx.copy default", "phx.digest", "release --overwrite"]
     ]
   end

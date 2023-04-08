@@ -29,13 +29,13 @@ $mkdir cur new tmp
 
 A few screenshots below:
 
-![inbox view](assets/static/inbox.jpg)
+![inbox view](assets/images/inbox.jpg)
 
-![inbox view on a phone](assets/static/phone_screen.jpg)
+![inbox view on a phone](assets/images/phone_screen.jpg)
 
-![sample search query](assets/static/search_dialog.jpg)
+![sample search query](assets/images/search_dialog.jpg)
 
-![compose in markdown](assets/static/compose.jpg)
+![compose in markdown](assets/images/compose.jpg)
 
 ## Your personal webmail
 
