@@ -201,8 +201,6 @@ a:focus, a:hover {
   flex-direction: column;
 }
 .viewport .header {
-  position: sticky;
-  top: 0px;
   display: flex;
   background-color: rgb(243 244 246);
   padding: 0.5rem;
