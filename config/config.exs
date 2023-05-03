@@ -9,6 +9,7 @@ import Config
 
 # Configures the endpoint
 config :liv, LivWeb.Endpoint,
+  adapter: Bandit.PhoenixAdapter,
   url: [host: "localhost"],
   secret_key_base: "4D1+yC63Qxp6AP6f8I54SGPhzvCCe0W0RCQCxsflI20MvGIgP7+KSEKJZp8u1W52",
   render_errors: [view: LivWeb.ErrorView, accepts: ~w(html json), layout: false],
@@ -33,6 +34,7 @@ config :argon2_elixir,
 
 config :phoenix_copy,
   default: [
+    debounce: 100,
     source: Path.expand("../assets/", __DIR__),
     destination: Path.expand("../priv/static/", __DIR__)
   ]
