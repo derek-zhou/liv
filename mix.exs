@@ -7,7 +7,7 @@ defmodule Liv.MixProject do
       version: "0.7.0",
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: Mix.compilers() ++ [:phoenix, :surface],
+      compilers: Mix.compilers() ++ [:surface],
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -50,13 +50,14 @@ defmodule Liv.MixProject do
       {:argon2_elixir, "~> 2.4"},
       {:md, "~> 0.9.1"},
       {:string_naming, "~> 0.7.3"},
-      {:phoenix, "~> 1.6.6"},
+      {:phoenix, "~> 1.7.2"},
       {:phoenix_html, "~> 3.2"},
-      {:phoenix_live_reload, "~> 1.3.3", only: :dev},
-      {:phoenix_live_dashboard, "~> 0.7.0"},
+      {:phoenix_view, "~> 2.0"},
+      {:phoenix_live_reload, "~> 1.4.1", only: :dev},
+      {:phoenix_live_dashboard, "~> 0.7.2"},
       {:telemetry_metrics, "~> 0.6.1"},
       {:telemetry_poller, "~> 1.0"},
-      {:gettext, "~> 0.11"},
+      {:gettext, "~> 0.18"},
       {:jason, "~> 1.0"}
     ]
   end
