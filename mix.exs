@@ -70,7 +70,13 @@ defmodule Liv.MixProject do
   defp aliases do
     [
       start: ["compile", "phx.copy default", "phx.server"],
-      deploy: ["compile", "phx.copy default", "phx.digest", "release --overwrite"]
+      deploy: [
+        "compile",
+        "phx.digest.clean",
+        "phx.copy default",
+        "phx.digest",
+        "release --overwrite"
+      ]
     ]
   end
 end
