@@ -1,4 +1,4 @@
-<Form for={%{}} as={:mail} change={@change} submit={@submit} auto_recover={@auto_recover}>
+<Form for={%{}} change={@change} submit={@submit} auto_recover={@auto_recover}>
     <section class="twoside">
 	<Field name="subject" class="line">
     	    <TextInput value={@subject}

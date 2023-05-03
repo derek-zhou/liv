@@ -808,7 +808,7 @@ defmodule LivWeb.MailLive do
 
   def handle_event(
         "boomerang_submit",
-        %{"boomerang" => %{"hours" => hours}},
+        %{"hours" => hours},
         %Socket{assigns: %{mail_client: mc}} = socket
       ) do
     DelayMarker.flag(mc.docid, String.to_integer(hours) * 3600)
@@ -828,7 +828,7 @@ defmodule LivWeb.MailLive do
 
   def handle_event(
         "pw_submit",
-        %{"login" => %{"password" => ""}},
+        %{"password" => ""},
         %Socket{assigns: %{password_hash: nil, saved_password: ""}} = socket
       ) do
     {:noreply, socket}
@@ -836,7 +836,7 @@ defmodule LivWeb.MailLive do
 
   def handle_event(
         "pw_submit",
-        %{"login" => %{"password" => password}},
+        %{"password" => password},
         %Socket{assigns: %{password_hash: nil, saved_password: ""}} = socket
       ) do
     {
@@ -852,7 +852,7 @@ defmodule LivWeb.MailLive do
 
   def handle_event(
         "pw_submit",
-        %{"login" => %{"password" => password}},
+        %{"password" => password},
         %Socket{assigns: %{saved_path: path, password_hash: nil, saved_password: password}} =
           socket
       ) do
@@ -882,7 +882,7 @@ defmodule LivWeb.MailLive do
 
   def handle_event(
         "pw_submit",
-        %{"login" => %{"password" => password}},
+        %{"password" => password},
         %Socket{assigns: %{saved_path: path, password_hash: hash}} = socket
       ) do
     case Argon2.verify_pass(password, hash) do
@@ -901,11 +901,11 @@ defmodule LivWeb.MailLive do
     end
   end
 
-  def handle_event("search", %{"search" => %{"query" => ""}}, socket) do
+  def handle_event("search", %{"query" => ""}, socket) do
     {:noreply, put_flash(socket, :error, "Query cannot be empty")}
   end
 
-  def handle_event("search", %{"search" => %{"query" => query}}, socket) do
+  def handle_event("search", %{"query" => query}, socket) do
     {
       :noreply,
       socket
@@ -935,7 +935,7 @@ defmodule LivWeb.MailLive do
 
   def handle_event(
         "write_change",
-        %{"_target" => [target | _], "mail" => %{"subject" => subject, "text" => text}} = mail,
+        %{"_target" => [target | _], "subject" => subject, "text" => text} = mail,
         %Socket{
           assigns: %{
             recipients: recipients,
@@ -973,7 +973,7 @@ defmodule LivWeb.MailLive do
 
   def handle_event(
         "write_recover",
-        %{"mail" => %{"subject" => subject, "text" => text}} = mail,
+        %{"subject" => subject, "text" => text} = mail,
         socket
       ) do
     count =
@@ -1081,24 +1081,21 @@ defmodule LivWeb.MailLive do
   def handle_event(
         "config_change",
         %{
-          "config" =>
-            %{
-              "my_name" => name,
-              "my_addr" => addr,
-              "my_addrs" => addrs,
-              "my_lists" => lists,
-              "archive_days" => days,
-              "archive_maildir" => maildir,
-              "orbit_api_key" => orbit_api_key,
-              "orbit_workspace" => workspace,
-              "sending_method" => sending_method,
-              "username" => username,
-              "password" => password,
-              "hostname" => hostname,
-              "api_key" => api_key,
-              "reset_password" => reset_password
-            } = config
-        },
+          "my_name" => name,
+          "my_addr" => addr,
+          "my_addrs" => addrs,
+          "my_lists" => lists,
+          "archive_days" => days,
+          "archive_maildir" => maildir,
+          "orbit_api_key" => orbit_api_key,
+          "orbit_workspace" => workspace,
+          "sending_method" => sending_method,
+          "username" => username,
+          "password" => password,
+          "hostname" => hostname,
+          "api_key" => api_key,
+          "reset_password" => reset_password
+        } = config,
         %Socket{
           assigns: %{sending_data: sending_data, remote_mail_boxes: boxes}
         } = socket

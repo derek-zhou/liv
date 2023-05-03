@@ -1,4 +1,4 @@
-<Form for={%{}} as={:search} submit={@submit}>
+<Form for={%{}} submit={@submit}>
     <Field name="query" class="field">
 	<Label>Enter your query:</Label>
 	<TextInput value={@default_query} />
