@@ -8,6 +8,7 @@ defmodule LivWeb.Write do
   prop change, :event, required: true
   prop submit, :event, required: true
   prop auto_recover, :event, required: true
+  prop debounce, :integer, default: 1000
   prop subject, :string, default: ""
   prop recipients, :list, default: []
   prop text, :string, default: ""

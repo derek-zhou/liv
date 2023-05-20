@@ -8,10 +8,10 @@
 	<Recipient index={i} type={type} options={@addr_options} addr={email_addr(name, addr)} />
 	{/for}
     </section>
-    <section class="twoside">
+    <section class="twoside" id="text-box-container" :hook>
 	<Field name="text">
-	    <TextArea id="text-box" rows="16"
-		      opts={"phx-update": "ignore", "phx-debounce": 100}
+	    <TextArea class="compose" id="text-box" rows="8"
+		      opts={"phx-update": "ignore", "phx-debounce": @debounce}
 		      value={@text} />
 	</Field>
 	<div class="content">

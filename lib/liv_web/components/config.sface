@@ -29,12 +29,17 @@
     	 <Field name="archive_days" class="field">
 	 	<Label>Days to keep in the Inbox</Label>
 		<NumberInput value={@days}
-			     opts={min: 1, "phx-debounce": "blur"} />
+			     opts={min: 1} />
 	 </Field>
     	 <Field name="archive_maildir" class="field">
 	 	<Label>Archive target</Label>
 		<TextInput value={@maildir}
 			     opts={"phx-debounce": "blur"} />
+	 </Field>
+    	 <Field name="compose_debounce" class="field">
+	 	<Label>Miliseconds between previewing draft</Label>
+		<NumberInput value={@miliseconds}
+			     opts={min: 100, max: 1000, step: 100} />
 	 </Field>
     </section>
     <section>

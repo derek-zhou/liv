@@ -27,6 +27,7 @@ defmodule LivWeb.Config do
   prop sending_data, :map, required: true
   prop reset_password, :string, default: ""
   prop remote_mail_boxes, :list, default: []
+  prop miliseconds, :integer, required: true
 
   defp ui_boxes(boxes) do
     boxes ++ [%{method: "", username: "", password: "", hostname: ""}]

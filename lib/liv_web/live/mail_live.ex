@@ -106,6 +106,7 @@ defmodule LivWeb.MailLive do
   data sending_data, :map, default: %{username: "", password: "", hostname: "", api_key: ""}
   data reset_password, :string, default: ""
   data remote_mail_boxes, :list, default: []
+  data compose_debounce, :integer, default: 1000
 
   # for address book
   data address_book, :any, default: nil
@@ -548,6 +549,7 @@ defmodule LivWeb.MailLive do
         my_addrs: Configer.default(:my_addresses),
         my_lists: Configer.default(:my_email_lists),
         archive_days: Configer.default(:archive_days),
+        compose_debounce: Configer.default(:compose_debounce),
         archive_maildir: Configer.default(:archive_maildir),
         orbit_api_key: Configer.default(:orbit_api_key),
         orbit_workspace: Configer.default(:orbit_workspace),
@@ -1087,6 +1089,7 @@ defmodule LivWeb.MailLive do
           "my_lists" => lists,
           "archive_days" => days,
           "archive_maildir" => maildir,
+          "compose_debounce" => miliseconds,
           "orbit_api_key" => orbit_api_key,
           "orbit_workspace" => workspace,
           "sending_method" => sending_method,
@@ -1116,6 +1119,12 @@ defmodule LivWeb.MailLive do
       case Integer.parse(days) do
         {n, ""} when n > 0 -> n
         _ -> Configer.default(:archive_days)
+      end
+
+    compose_debounce =
+      case Integer.parse(miliseconds) do
+        {n, ""} when n > 0 -> n
+        _ -> Configer.default(:compose_debounce)
       end
 
     sending_method =
@@ -1165,6 +1174,13 @@ defmodule LivWeb.MailLive do
             "Days must be a positive integer"
           )
 
+        to_string(compose_debounce) != miliseconds ->
+          put_flash(
+            socket,
+            :error,
+            "Miliseconds must be a positive integer"
+          )
+
         sending_method == :remote &&
             (sending_data.username == "" || sending_data.password == "" ||
                sending_data.hostname == "") ->
@@ -1201,6 +1217,7 @@ defmodule LivWeb.MailLive do
         my_lists: my_lists,
         archive_days: archive_days,
         archive_maildir: archive_maildir,
+        compose_debounce: compose_debounce,
         orbit_api_key: orbit_api_key,
         orbit_workspace: orbit_workspace,
         sending_method: sending_method,
@@ -1221,6 +1238,7 @@ defmodule LivWeb.MailLive do
             my_lists: my_lists,
             archive_days: archive_days,
             archive_maildir: archive_maildir,
+            compose_debounce: compose_debounce,
             orbit_api_key: orbit_api_key,
             orbit_workspace: orbit_workspace,
             sending_method: sending_method,
@@ -1236,6 +1254,7 @@ defmodule LivWeb.MailLive do
     |> SelfConfiger.set_env(:my_email_lists, my_lists)
     |> SelfConfiger.set_env(:archive_days, archive_days)
     |> SelfConfiger.set_env(:archive_maildir, archive_maildir)
+    |> SelfConfiger.set_env(:compose_debounce, compose_debounce)
     |> SelfConfiger.set_env(:orbit_api_key, orbit_api_key)
     |> SelfConfiger.set_env(:orbit_workspace, orbit_workspace)
     |> Configer.update_remote_mail_boxes(remote_mail_boxes)
