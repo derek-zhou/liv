@@ -4,6 +4,7 @@ defmodule LivWeb.MailLive do
 
   @default_query "maildir:/"
   @chunk_size 65536
+  @burst_size 1024
 
   alias Liv.{Configer, MailClient, AddressVault, DraftServer, DelayMarker}
 
@@ -1641,7 +1642,8 @@ defmodule LivWeb.MailLive do
              mail_attachment_offset: offset
            }
          } = socket
-       ) do
+       )
+       when is_binary(content) do
     content_size = byte_size(content)
 
     {atts, first} =
@@ -1664,6 +1666,51 @@ defmodule LivWeb.MailLive do
       cond do
         offset == content_size -> {tail, 0, true}
         true -> {list, offset, false}
+      end
+
+    socket
+    |> push_event("attachment_chunk", %{first: first, last: last, chunk: chunk})
+    |> assign(
+      mail_chunk_outstanding: true,
+      mail_attachments: atts_in,
+      mail_attachment_offset: offset,
+      mail_attachment_metas: atts
+    )
+  end
+
+  defp stream_attachments(
+         %Socket{
+           assigns: %{
+             mail_attachments: [{name, type, content} | tail],
+             mail_attachment_metas: atts,
+             mail_attachment_offset: offset
+           }
+         } = socket
+       )
+       when is_list(content) do
+    content_size = Enum.count(content)
+
+    {atts, first} =
+      cond do
+        offset == 0 -> {atts, true}
+        true -> {Enum.drop(atts, -1), false}
+      end
+
+    push_size =
+      cond do
+        content_size <= @burst_size -> content_size
+        true -> @burst_size
+      end
+
+    {sending, remaining} = Enum.split(content, push_size)
+    atts = atts ++ [{name, type, content_size + offset, offset, ""}]
+    offset = offset + push_size
+    chunk = sending |> Enum.map(&String.trim_trailing/1) |> Enum.join()
+
+    {atts_in, offset, last} =
+      cond do
+        push_size == content_size -> {tail, 0, true}
+        true -> {[{name, type, remaining} | tail], offset, false}
       end
 
     socket
