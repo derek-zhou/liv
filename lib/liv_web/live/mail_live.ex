@@ -3,7 +3,7 @@ defmodule LivWeb.MailLive do
   require Logger
 
   @default_query "maildir:/"
-  @chunk_size 65536
+  @chunk_size 60000
 
   alias Liv.{Configer, MailClient, AddressVault, DraftServer, DelayMarker}
 
