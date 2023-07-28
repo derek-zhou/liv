@@ -6,7 +6,7 @@
     </div>
     <a :if={@url != ""} id={"attachment-#{@name}"}
        class="attachment-download"
-       href={@url} download={@name}>
+       href={@url} target="_blank" download={@name}>
 	{@name}
     </a>
 </li>
