@@ -7,11 +7,16 @@
 	{#for {{type, [name | addr]}, i} <- Enum.with_index(ui_recs(@recipients))}
 	<Recipient index={i} type={type} options={@addr_options} addr={email_addr(name, addr)} />
 	{/for}
+	<Field name="update_preview">
+	    <Label>Auto update preview: </Label>
+	    <Checkbox value={@update_preview} />
+	</Field>
     </section>
     <section class="twoside" id="text-box-container" :hook>
 	<Field name="text">
 	    <TextArea class="compose" id="text-box" rows="8"
-		      opts={"phx-update": "ignore", "phx-debounce": @debounce}
+		      opts={"phx-update": "ignore",
+			    "phx-debounce": text_debounce(@update_preview)}
 		      value={@text} />
 	</Field>
 	<div class="content">

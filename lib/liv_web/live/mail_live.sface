@@ -7,13 +7,12 @@
 	    submit="search" pick_example="pick_search_example" />
     <Write :if={@auth == :logged_in && @live_action == :write}
 	   change="write_change" auto_recover="write_recover" submit="send" subject={@subject}
-	   debounce={@compose_debounce}
+	   update_preview={@update_preview}
 	   recipients={@recipients} addr_options={@addr_options} text={@write_text} />
     <Draft :if={@auth == :logged_in && @live_action == :draft} text={@write_text} />
     <Config :if={@auth == :logged_in && @live_action == :config}
 	    change="config_change" submit="config_save" my_addr={@my_addr} my_addrs={@my_addrs}
 	    my_lists={@my_lists} days={@archive_days} maildir={@archive_maildir}
-	    miliseconds={@compose_debounce}
 	    orbit_api_key={@orbit_api_key} orbit_workspace={@orbit_workspace}
 	    sending_method={@sending_method} sending_data={@sending_data}
 	    reset_password={@reset_password} remote_mail_boxes={@remote_mail_boxes} />
