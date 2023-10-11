@@ -74,7 +74,14 @@ defmodule Liv.DraftServer do
   @doc """
   return a version html that is safe to be embedded in our page.
   """
-  def safe_html(html), do: Scrubber.scrub(html, Sanitizer)
+  def safe_html(html) do
+    try do
+      Scrubber.scrub(html, Sanitizer)
+    rescue
+      _e ->
+        "<pre>illegal HTML syntax</pre>"
+    end
+  end
 
   @doc false
   def start_link(args) do

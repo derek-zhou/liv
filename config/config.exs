@@ -25,7 +25,7 @@ config :logger, :console,
 config :phoenix, :json_library, Jason
 
 # put the database at the user's home
-config :mnesia, dir: '#{System.get_env("HOME")}/.mnesia'
+config :mnesia, dir: ~c"#{System.get_env("HOME")}/.mnesia"
 
 # go easier for argon
 config :argon2_elixir,

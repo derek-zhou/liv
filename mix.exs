@@ -54,7 +54,7 @@ defmodule Liv.MixProject do
       {:phoenix_html, "~> 3.2"},
       {:phoenix_view, "~> 2.0"},
       {:phoenix_live_reload, "~> 1.4.1", only: :dev},
-      {:phoenix_live_dashboard, "~> 0.7.2"},
+      {:phoenix_live_dashboard, "~> 0.7"},
       {:telemetry_metrics, "~> 0.6.1"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.18"},
