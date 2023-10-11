@@ -4,5 +4,10 @@ defmodule LivWeb.Draft do
 
   prop text, :string, default: ""
 
-  defp html_draft(text), do: DraftServer.html(text)
+  defp html_draft(text) do
+    case DraftServer.html(text) do
+      {:ok, html} -> html
+      {:error, _e} -> "Illegal Markdown syntax"
+    end
+  end
 end

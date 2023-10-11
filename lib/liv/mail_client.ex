@@ -395,21 +395,27 @@ defmodule Liv.MailClient do
   def send_mail(subject, [{:to, _} | _] = recipients, text, msgid, references, atts) do
     import Swoosh.Email
 
-    try do
-      new()
-      |> from(addr_to_swoosh(Configer.default(:my_address)))
-      |> subject(subject)
-      |> add_recipients(recipients)
-      |> add_references(msgid, references)
-      |> header("X-Mailer", "LivMail 0.1.0")
-      |> text_body(DraftServer.text(text))
-      |> html_body(DraftServer.html(text))
-      |> add_attachments(atts)
-      |> Mailer.deliver()
+    case DraftServer.html(text) do
+      {:ok, html} ->
+        try do
+          new()
+          |> from(addr_to_swoosh(Configer.default(:my_address)))
+          |> subject(subject)
+          |> add_recipients(recipients)
+          |> add_references(msgid, references)
+          |> header("X-Mailer", "LivMail 0.1.0")
+          |> text_body(DraftServer.text(text))
+          |> html_body(html)
+          |> add_attachments(atts)
+          |> Mailer.deliver()
 
-      DraftServer.clear_draft()
-    rescue
-      RuntimeError -> {:error, "deliver failed"}
+          DraftServer.clear_draft()
+        rescue
+          _e -> {:error, "deliver failed"}
+        end
+
+      {:error, e} ->
+        {:error, e}
     end
   end
 
@@ -429,20 +435,26 @@ defmodule Liv.MailClient do
         {:error, "no draft"}
 
       {subject, _recipients, draft, msgid, references} ->
-        try do
-          new()
-          |> from(addr_to_swoosh(Configer.default(:my_address)))
-          |> subject(subject)
-          |> to({name, addr})
-          |> add_references(msgid, references)
-          |> header("X-Mailer", "LivMail 0.1.0")
-          |> text_body(DraftServer.text(draft))
-          |> html_body(DraftServer.html(draft, %{name: name, addr: addr}))
-          |> Mailer.deliver()
+        case DraftServer.html(draft, %{name: name, addr: addr}) do
+          {:ok, html} ->
+            try do
+              new()
+              |> from(addr_to_swoosh(Configer.default(:my_address)))
+              |> subject(subject)
+              |> to({name, addr})
+              |> add_references(msgid, references)
+              |> header("X-Mailer", "LivMail 0.1.0")
+              |> text_body(DraftServer.text(draft))
+              |> html_body(html)
+              |> Mailer.deliver()
 
-          DraftServer.put_draft(subject, [to: [name | addr]], draft, msgid, references)
-        rescue
-          RuntimeError -> {:error, "deliver failed"}
+              DraftServer.put_draft(subject, [to: [name | addr]], draft, msgid, references)
+            rescue
+              _e -> {:error, "deliver failed"}
+            end
+
+          {:error, e} ->
+            {:error, e}
         end
     end
   end

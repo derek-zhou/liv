@@ -31,5 +31,18 @@ defmodule LivWeb.View do
 
   defp text_part({:text, text}), do: html_escape(text)
 
-  defp sanitize({:html, html}), do: html |> DraftServer.safe_html() |> raw()
+  defp sanitize({:html, html}) do
+    case DraftServer.safe_html(html) do
+      {:ok, html} ->
+        raw(html)
+
+      {:error, e} ->
+        raw("""
+        <h2>Error: #{e}</h2>
+        <p>
+        Cannot view this email inline. You can try print mode.
+        </p>
+        """)
+    end
+  end
 end

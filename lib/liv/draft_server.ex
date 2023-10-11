@@ -60,14 +60,20 @@ defmodule Liv.DraftServer do
   html draft is a mustache template, to be render with the map
   """
   def html(draft, map \\ %{})
-  def html(<<"<", _::binary>> = draft, map), do: BBMustache.render(draft, map, key_type: :atom)
+
+  def html(<<"<", _::binary>> = draft, map) do
+    try do
+      {:ok, BBMustache.render(draft, map, key_type: :atom)}
+    rescue
+      _e -> {:error, "Illegal Mustache syntax"}
+    end
+  end
 
   def html(draft, _map) do
     try do
-      Md.generate(draft, Parser, format: :none)
+      {:ok, Md.generate(draft, Parser, format: :none)}
     rescue
-      _e ->
-        "illegal Markdown syntax"
+      _e -> {:error, "Illegal Markdown syntax"}
     end
   end
 
@@ -76,10 +82,9 @@ defmodule Liv.DraftServer do
   """
   def safe_html(html) do
     try do
-      Scrubber.scrub(html, Sanitizer)
+      {:ok, Scrubber.scrub(html, Sanitizer)}
     rescue
-      _e ->
-        "<pre>illegal HTML syntax</pre>"
+      _e -> {:error, "Illegal HTML syntax"}
     end
   end
 
