@@ -36,7 +36,7 @@ defmodule Liv.DelayMarker do
         PubSub.local_broadcast(Liv.PubSub, "messages", {:seen_message, docid, m})
 
       {:error, msg} ->
-        Logger.warn("docid: #{docid} #{msg}")
+        Logger.warning("docid: #{docid} #{msg}")
     end
   end
 

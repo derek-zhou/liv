@@ -104,7 +104,7 @@ defmodule Liv.MailClient do
                 %{mc | mails: %{mails | docid => m}, docid: 0}
 
               {:error, msg} ->
-                Logger.warn("docid: #{docid} #{msg}")
+                Logger.warning("docid: #{docid} #{msg}")
                 reindex()
                 %{mc | docid: 0}
             end
@@ -119,7 +119,7 @@ defmodule Liv.MailClient do
   def open(nil, docid) do
     case MaildirCommander.view(docid) do
       {:error, msg} ->
-        Logger.warn("docid: #{docid} not found: #{msg}")
+        Logger.warning("docid: #{docid} not found: #{msg}")
         reindex()
         nil
 
@@ -128,7 +128,7 @@ defmodule Liv.MailClient do
 
         case MaildirCommander.stream_mail(path) do
           {:error, reason} ->
-            Logger.warn("docid: #{docid} path: #{path} not found: #{reason}")
+            Logger.warning("docid: #{docid} path: #{path} not found: #{reason}")
             reindex()
             nil
 
@@ -155,7 +155,7 @@ defmodule Liv.MailClient do
 
         case MaildirCommander.stream_mail(path) do
           {:error, reason} ->
-            Logger.warn("docid: #{docid} path: #{path} not found: #{reason}")
+            Logger.warning("docid: #{docid} path: #{path} not found: #{reason}")
             reindex()
             %{mc | docid: docid, ref: nil}
 
@@ -511,7 +511,7 @@ defmodule Liv.MailClient do
   def archive_job() do
     case MaildirCommander.find_all("maildir:/", true, :":date", false, false, false) do
       {:error, reason} ->
-        Logger.warn("query error: #{reason}")
+        Logger.warning("query error: #{reason}")
 
       {:ok, tree, messages} ->
         horizon = System.system_time(:second) - Configer.default(:archive_days) * 86400

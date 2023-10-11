@@ -90,8 +90,8 @@ defmodule Liv.Orbit do
         :ok
 
       {:ok, %HTTPoison.Response{status_code: code, body: body}} ->
-        Logger.warn("api call #{inspect(data)} failed with response code: #{code}")
-        Logger.warn("response #{inspect(Jason.decode!(body))}")
+        Logger.warning("api call #{inspect(data)} failed with response code: #{code}")
+        Logger.warning("response #{inspect(Jason.decode!(body))}")
         :ok
     end
   end
