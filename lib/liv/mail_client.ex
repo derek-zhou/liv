@@ -491,19 +491,20 @@ defmodule Liv.MailClient do
   def receive_part(%__MODULE__{ref: ref}, ref, :eof), do: :eof
 
   def receive_part(%__MODULE__{ref: ref}, ref, %{content_type: "text/plain", body: body}) do
-    {:text, body}
+    {"", "text/plain", body}
   end
 
   def receive_part(%__MODULE__{ref: ref}, ref, %{content_type: "text/html", body: body}) do
-    {:html, body}
+    {"", "text/html", body}
   end
 
   def receive_part(%__MODULE__{ref: ref}, ref, %{
         content_type: type,
         disposition_params: %{"filename" => filename},
         body: body
-      }) do
-    {:attachment, filename, type, body}
+      })
+      when filename != "" do
+    {filename, type, body}
   end
 
   def receive_part(%__MODULE__{ref: ref}, ref, %{
@@ -511,8 +512,9 @@ defmodule Liv.MailClient do
         content_type_params: %{"name" => filename},
         disposition: "attachment",
         body: body
-      }) do
-    {:attachment, filename, type, body}
+      })
+      when filename != "" do
+    {filename, type, body}
   end
 
   def receive_part(_, _, _), do: nil

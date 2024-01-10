@@ -3,10 +3,8 @@ defmodule LivWeb.View do
   alias LivWeb.Router.Helpers, as: Routes
   alias LivWeb.{Endpoint, Attachment}
   alias Surface.Components.LivePatch
-  alias Liv.DraftServer
 
   prop meta, :any, required: true
-  prop content, :tuple, default: {:text, ""}
   prop attachments, :list, default: []
   prop tz_offset, :integer, default: 0
 
@@ -24,25 +22,5 @@ defmodule LivWeb.View do
     flags
     |> Enum.map(&to_string/1)
     |> Enum.join(", ")
-  end
-
-  defp is_plain_text?({:text, _}), do: true
-  defp is_plain_text?({:html, _}), do: false
-
-  defp text_part({:text, text}), do: html_escape(text)
-
-  defp sanitize({:html, html}) do
-    case DraftServer.safe_html(html) do
-      {:ok, html} ->
-        raw(html)
-
-      {:error, e} ->
-        raw("""
-        <h2>Error: #{e}</h2>
-        <p>
-        Cannot view this email inline. You can try print mode.
-        </p>
-        """)
-    end
   end
 end

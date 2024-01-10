@@ -1,12 +1,12 @@
 <li>
-    <div :if={@url == ""} id={"attachment-#{@name}"}
+    <div :if={@url == ""} id={"attachment-#{@seq}"}
 	 class="progress-box">
 	<div class="progress"
 	     style={"width:#{percentage(@offset, @size)}%"}/>
     </div>
-    <a :if={@url != ""} id={"attachment-#{@name}"}
+    <a :if={@url != ""} id={"attachment-#{@seq}"}
        class="attachment-download"
-       href={@url} target="_blank" download={@name}>
-	{@name}
+       href={@url} target="_blank" download={display_name(@name, @type)}>
+	{display_name(@name, @type)}
     </a>
 </li>

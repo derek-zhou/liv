@@ -35,10 +35,15 @@
 	Date: <span class="date">{date_string(@meta.date, @tz_offset)}</span>
     </div>
     <ul :if={!Enum.empty?(@attachments)} class="attachments">
-	{#for {name, _type, size, offset, url} <- @attachments}
-	<Attachment name={name} size={size} offset={offset} url={url} />
+	{#for {seq, name, type, size, offset, url} <- @attachments}
+	<Attachment seq={seq} name={name} type={type}
+		    size={size} offset={offset} url={url} />
 	{/for}
     </ul>
-    <pre :if={is_plain_text?(@content)}>{text_part(@content)}</pre>
-    <div :if={!is_plain_text?(@content)} class="desc">{sanitize(@content)}</div>
+    <div phx-update="ignore" id="view-content">
+	<pre></pre>
+	<div hidden class="desc"></div>
+    </div>
+    <iframe phx-update="ignore" width="0" height="0" id="view-sanitizer" hidden
+	    sandbox="allow-same-origin"></iframe>
 </div>

@@ -3,7 +3,7 @@ defmodule LivWeb.MailLive do
   require Logger
 
   @default_query "maildir:/"
-  @chunk_size 60000
+  @chunk_size 60_000
 
   alias Liv.{Configer, MailClient, AddressVault, DraftServer, DelayMarker}
 
@@ -12,7 +12,6 @@ defmodule LivWeb.MailLive do
     Find,
     Search,
     View,
-    Print,
     Login,
     Guardian,
     Write,
@@ -27,6 +26,7 @@ defmodule LivWeb.MailLive do
   alias :self_configer, as: SelfConfiger
   alias Phoenix.LiveView.Socket
   alias Phoenix.PubSub
+  import Bitwise
 
   # client side state
   # nil, logged_in, logged_out
@@ -64,7 +64,6 @@ defmodule LivWeb.MailLive do
   data mail_attachment_metas, :list, default: []
   data mail_chunk_outstanding, :boolean, default: false
   data mail_meta, :any, default: nil
-  data mail_content, :tuple, default: {:text, ""}
   data mail_text, :string, default: ""
 
   # to refer back in later 
@@ -297,7 +296,6 @@ defmodule LivWeb.MailLive do
                 buttons: [
                   {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
                   {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), true},
-                  {:patch, "\u{1F5A8}", Routes.mail_path(Endpoint, :print), true},
                   {:button, "\u{25C0}", "backward_message", true},
                   {:button, "\u{25B6}", "forward_message", true}
                 ]
@@ -322,7 +320,6 @@ defmodule LivWeb.MailLive do
                 buttons: [
                   {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
                   {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), false},
-                  {:patch, "\u{1F5A8}", Routes.mail_path(Endpoint, :print), false},
                   {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, docid)},
                   {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, docid)}
                 ]
@@ -342,7 +339,6 @@ defmodule LivWeb.MailLive do
             buttons: [
               {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
               {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), true},
-              {:patch, "\u{1F5A8}", Routes.mail_path(Endpoint, :print), true},
               {:button, "\u{25C0}", "backward_message", true},
               {:button, "\u{25B6}", "forward_message", true}
             ]
@@ -376,7 +372,6 @@ defmodule LivWeb.MailLive do
         buttons: [
           {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
           {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), false},
-          {:patch, "\u{1F5A8}", Routes.mail_path(Endpoint, :print), false},
           {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, mc.docid)},
           {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, mc.docid)}
         ]
@@ -412,7 +407,6 @@ defmodule LivWeb.MailLive do
                 buttons: [
                   {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
                   {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), true},
-                  {:patch, "\u{1F5A8}", Routes.mail_path(Endpoint, :print), true},
                   {:button, "\u{25C0}", "backward_message", true},
                   {:button, "\u{25B6}", "forward_message", true}
                 ]
@@ -433,7 +427,6 @@ defmodule LivWeb.MailLive do
                 buttons: [
                   {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
                   {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), false},
-                  {:patch, "\u{1F5A8}", Routes.mail_path(Endpoint, :print), false},
                   {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, docid)},
                   {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, docid)}
                 ]
@@ -453,36 +446,12 @@ defmodule LivWeb.MailLive do
             buttons: [
               {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
               {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), true},
-              {:patch, "\u{1F5A8}", Routes.mail_path(Endpoint, :print), true},
               {:button, "\u{25C0}", "backward_message", true},
               {:button, "\u{25B6}", "forward_message", true}
             ]
           )
         }
     end
-  end
-
-  def handle_params(
-        _params,
-        _url,
-        %Socket{
-          assigns: %{
-            live_action: :print,
-            mail_opened: true
-          }
-        } = socket
-      ) do
-    {
-      :noreply,
-      socket
-      |> assign(
-        info: "Print",
-        home_link: "#",
-        buttons: [
-          {:button, "\u{2716}", "close_dialog", false}
-        ]
-      )
-    }
   end
 
   def handle_params(
@@ -1305,17 +1274,30 @@ defmodule LivWeb.MailLive do
     end
   end
 
-  def handle_event("ack_attachment_chunk", params, socket) do
-    socket =
-      case Map.get(params, "url") do
-        nil -> socket
-        url -> append_attachment_url(socket, url)
-      end
+  def handle_event(
+        "ack_attachment_chunk",
+        _params,
+        %Socket{assigns: %{mail_attachment_offset: 0}} = socket
+      ) do
+    # wait for the url update
+    {:noreply, socket}
+  end
 
+  def handle_event("ack_attachment_chunk", _params, socket) do
     {
       :noreply,
       socket
       |> assign(mail_chunk_outstanding: false)
+      |> stream_attachments()
+    }
+  end
+
+  def handle_event("update_attachment_url", %{"url" => url}, socket) do
+    {
+      :noreply,
+      socket
+      |> assign(mail_chunk_outstanding: false)
+      |> append_attachment_url(url)
       |> stream_attachments()
     }
   end
@@ -1391,8 +1373,6 @@ defmodule LivWeb.MailLive do
         %Socket{
           assigns: %{
             mail_client: mc,
-            mail_text: text,
-            mail_content: {type, html},
             mail_attachments: attachments
           }
         } = socket
@@ -1402,37 +1382,17 @@ defmodule LivWeb.MailLive do
         {:noreply, socket}
 
       :eof ->
-        # if we have not seen a html part by now, promote the text
-        case {text, type, html} do
-          {"", _, _} -> {:noreply, socket}
-          {_, :text, ""} -> {:noreply, assign(socket, mail_content: {:text, text})}
-          _ -> {:noreply, socket}
-        end
+        {:noreply, socket}
 
-      {:text, body} ->
-        case text do
-          "" -> {:noreply, assign(socket, mail_text: body)}
-          _ -> {:noreply, socket}
-        end
+      {"", "text/plain", body} ->
+        {
+          :noreply,
+          socket
+          |> assign(mail_text: body, mail_attachments: attachments ++ [{"", "text/plain", body}])
+          |> stream_attachments()
+        }
 
-      {:html, body} ->
-        case {type, html} do
-          {:text, ""} ->
-            {:noreply, assign(socket, mail_content: {:html, String.trim_leading(body)})}
-
-          _ ->
-            {:noreply, socket}
-        end
-
-      {:attachment, name, type, body} ->
-        # if we have not seen a html part by now, promote the text
-        socket =
-          case {text, type, html} do
-            {"", _, _} -> socket
-            {_, :text, ""} -> assign(socket, mail_content: {:text, text})
-            _ -> socket
-          end
-
+      {name, type, body} ->
         {
           :noreply,
           socket
@@ -1595,7 +1555,6 @@ defmodule LivWeb.MailLive do
       mail_opened: true,
       mail_meta: meta,
       mail_text: "",
-      mail_content: {:text, ""},
       mail_attachments: [],
       mail_attachment_offset: 0,
       mail_attachment_metas: []
@@ -1625,38 +1584,48 @@ defmodule LivWeb.MailLive do
   defp stream_attachments(
          %Socket{
            assigns: %{
-             mail_attachments: [{name, type, content} | tail] = list,
+             mail_attachments: [{name, <<"text/", _::binary>> = type, content} | tail],
+             mail_attachment_metas: atts,
+             mail_attachment_offset: 0
+           }
+         } = socket
+       )
+       when byte_size(content) <= @chunk_size do
+    socket
+    |> push_event("attachment_start", %{type: type})
+    |> push_event("attachment_chunk", %{chunk: content})
+    |> push_event("attachment_end", %{name: name})
+    |> assign(
+      mail_chunk_outstanding: true,
+      mail_attachments: tail,
+      mail_attachment_metas: atts ++ [{Enum.count(atts), name, type, byte_size(content), 0, ""}]
+    )
+  end
+
+  defp stream_attachments(
+         %Socket{
+           assigns: %{
+             mail_attachments: [{name, <<"text/", _::binary>> = type, content} | tail] = list,
              mail_attachment_metas: atts,
              mail_attachment_offset: offset
            }
          } = socket
        ) do
-    content_size = byte_size(content)
-
-    {atts, first} =
-      cond do
-        offset == 0 -> {atts, true}
-        true -> {Enum.drop(atts, -1), false}
-      end
-
-    push_size =
-      cond do
-        content_size - offset <= @chunk_size -> content_size - offset
-        true -> @chunk_size
-      end
-
-    atts = atts ++ [{name, type, content_size, offset, ""}]
-    chunk = Base.encode64(binary_part(content, offset, push_size))
+    content_size = String.length(content)
+    first? = offset == 0
+    atts = unless first?, do: Enum.drop(atts, -1), else: atts
+    push_size = min(content_size - offset, @chunk_size >>> 2)
+    chunk = String.slice(content, offset, push_size)
+    atts = atts ++ [{Enum.count(atts), name, type, content_size, offset, ""}]
     offset = offset + push_size
-
-    {atts_in, offset, last} =
-      cond do
-        offset == content_size -> {tail, 0, true}
-        true -> {list, offset, false}
-      end
+    last? = offset == content_size
+    atts_in = if last?, do: tail, else: list
+    offset = if last?, do: 0, else: offset
 
     socket
-    |> push_event("attachment_chunk", %{first: first, last: last, chunk: chunk})
+    |> maybe_push(first?, "attachment_start", %{type: type})
+    |> push_event("attachment_chunk", %{chunk: chunk})
+    |> maybe_push(last?, "attachment_end", %{name: name})
     |> assign(
       mail_chunk_outstanding: true,
       mail_attachments: atts_in,
@@ -1664,6 +1633,62 @@ defmodule LivWeb.MailLive do
       mail_attachment_metas: atts
     )
   end
+
+  defp stream_attachments(
+         %Socket{
+           assigns: %{
+             mail_attachments: [{name, type, content} | tail],
+             mail_attachment_metas: atts,
+             mail_attachment_offset: 0
+           }
+         } = socket
+       )
+       when byte_size(content) <= @chunk_size do
+    socket
+    |> push_event("attachment_start", %{type: type})
+    |> push_event("attachment_chunk", %{chunk: Base.encode64(content)})
+    |> push_event("attachment_end", %{name: name})
+    |> assign(
+      mail_chunk_outstanding: true,
+      mail_attachments: tail,
+      mail_attachment_metas: atts ++ [{Enum.count(atts), name, type, byte_size(content), 0, ""}]
+    )
+  end
+
+  defp stream_attachments(
+         %Socket{
+           assigns: %{
+             mail_attachments: [{name, type, content} | tail] = list,
+             mail_attachment_metas: atts,
+             mail_attachment_offset: offset
+           }
+         } = socket
+       ) do
+    content_size = byte_size(content)
+    first? = offset == 0
+    atts = unless first?, do: Enum.drop(atts, -1), else: atts
+    push_size = min(content_size - offset, @chunk_size)
+    chunk = Base.encode64(binary_part(content, offset, push_size))
+    atts = atts ++ [{Enum.count(atts), name, type, content_size, offset, ""}]
+    offset = offset + push_size
+    last? = offset == content_size
+    atts_in = if last?, do: tail, else: list
+    offset = if last?, do: 0, else: offset
+
+    socket
+    |> maybe_push(first?, "attachment_start", %{type: type})
+    |> push_event("attachment_chunk", %{chunk: chunk})
+    |> maybe_push(last?, "attachment_end", %{name: name})
+    |> assign(
+      mail_chunk_outstanding: true,
+      mail_attachments: atts_in,
+      mail_attachment_offset: offset,
+      mail_attachment_metas: atts
+    )
+  end
+
+  defp maybe_push(socket, true, name, payload), do: push_event(socket, name, payload)
+  defp maybe_push(socket, false, _, _), do: socket
 
   defp append_attachment_url(
          %Socket{assigns: %{mail_attachment_metas: []}} = socket,
@@ -1676,8 +1701,8 @@ defmodule LivWeb.MailLive do
          %Socket{assigns: %{mail_attachment_metas: atts}} = socket,
          url
        ) do
-    {atts, [{name, type, size, _offset, _url}]} = Enum.split(atts, -1)
-    atts = atts ++ [{name, type, size, size, url}]
+    {atts, [{seq, name, type, size, _offset, _url}]} = Enum.split(atts, -1)
+    atts = atts ++ [{seq, name, type, size, size, url}]
     assign(socket, mail_attachment_metas: atts)
   end
 
