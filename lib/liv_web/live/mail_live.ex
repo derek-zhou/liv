@@ -1584,7 +1584,7 @@ defmodule LivWeb.MailLive do
 
   defp open_mail(socket, meta) do
     socket
-    |> push_event("clear_attachment", %{})
+    |> push_event("clear_attachments", %{})
     |> assign(
       mail_opened: true,
       mail_meta: meta,
