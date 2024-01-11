@@ -1277,29 +1277,63 @@ defmodule LivWeb.MailLive do
   def handle_event(
         "ack_attachment_chunk",
         _params,
+        %Socket{assigns: %{mail_client: nil}} = socket
+      ) do
+    # unsolicited ack
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "ack_attachment_chunk",
+        _params,
         %Socket{assigns: %{mail_attachment_offset: 0}} = socket
       ) do
     # wait for the url update
     {:noreply, socket}
   end
 
-  def handle_event("ack_attachment_chunk", _params, socket) do
-    {
-      :noreply,
-      socket
-      |> assign(mail_chunk_outstanding: false)
-      |> stream_attachments()
-    }
+  def handle_event(
+        "ack_attachment_chunk",
+        %{"ref" => ref},
+        %Socket{assigns: %{mail_client: mc}} = socket
+      ) do
+    if ref == MailClient.ref_string(mc) do
+      {
+        :noreply,
+        socket
+        |> assign(mail_chunk_outstanding: false)
+        |> stream_attachments()
+      }
+    else
+      {:noreply, socket}
+    end
   end
 
-  def handle_event("update_attachment_url", %{"url" => url}, socket) do
-    {
-      :noreply,
-      socket
-      |> assign(mail_chunk_outstanding: false)
-      |> append_attachment_url(url)
-      |> stream_attachments()
-    }
+  def handle_event(
+        "update_attachment_url",
+        _params,
+        %Socket{assigns: %{mail_client: nil}} = socket
+      ) do
+    # unsolicited ack
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "update_attachment_url",
+        %{"ref" => ref, "url" => url},
+        %Socket{assigns: %{mail_client: mc}} = socket
+      ) do
+    if ref == MailClient.ref_string(mc) do
+      {
+        :noreply,
+        socket
+        |> assign(mail_chunk_outstanding: false)
+        |> append_attachment_url(url)
+        |> stream_attachments()
+      }
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event(
@@ -1555,6 +1589,7 @@ defmodule LivWeb.MailLive do
       mail_opened: true,
       mail_meta: meta,
       mail_text: "",
+      mail_chunk_outstanding: false,
       mail_attachments: [],
       mail_attachment_offset: 0,
       mail_attachment_metas: []
@@ -1584,6 +1619,7 @@ defmodule LivWeb.MailLive do
   defp stream_attachments(
          %Socket{
            assigns: %{
+             mail_client: mc,
              mail_attachments: [{name, <<"text/", _::binary>> = type, content} | tail],
              mail_attachment_metas: atts,
              mail_attachment_offset: 0
@@ -1593,8 +1629,8 @@ defmodule LivWeb.MailLive do
        when byte_size(content) <= @chunk_size do
     socket
     |> push_event("attachment_start", %{type: type})
-    |> push_event("attachment_chunk", %{chunk: content})
-    |> push_event("attachment_end", %{name: name})
+    |> push_event("attachment_chunk", %{ref: MailClient.ref_string(mc), chunk: content})
+    |> push_event("attachment_end", %{ref: MailClient.ref_string(mc), name: name})
     |> assign(
       mail_chunk_outstanding: true,
       mail_attachments: tail,
@@ -1605,6 +1641,7 @@ defmodule LivWeb.MailLive do
   defp stream_attachments(
          %Socket{
            assigns: %{
+             mail_client: mc,
              mail_attachments: [{name, <<"text/", _::binary>> = type, content} | tail] = list,
              mail_attachment_metas: atts,
              mail_attachment_offset: offset
@@ -1624,8 +1661,8 @@ defmodule LivWeb.MailLive do
 
     socket
     |> maybe_push(first?, "attachment_start", %{type: type})
-    |> push_event("attachment_chunk", %{chunk: chunk})
-    |> maybe_push(last?, "attachment_end", %{name: name})
+    |> push_event("attachment_chunk", %{ref: MailClient.ref_string(mc), chunk: chunk})
+    |> maybe_push(last?, "attachment_end", %{ref: MailClient.ref_string(mc), name: name})
     |> assign(
       mail_chunk_outstanding: true,
       mail_attachments: atts_in,
@@ -1637,6 +1674,7 @@ defmodule LivWeb.MailLive do
   defp stream_attachments(
          %Socket{
            assigns: %{
+             mail_client: mc,
              mail_attachments: [{name, type, content} | tail],
              mail_attachment_metas: atts,
              mail_attachment_offset: 0
@@ -1646,8 +1684,11 @@ defmodule LivWeb.MailLive do
        when byte_size(content) <= @chunk_size do
     socket
     |> push_event("attachment_start", %{type: type})
-    |> push_event("attachment_chunk", %{chunk: Base.encode64(content)})
-    |> push_event("attachment_end", %{name: name})
+    |> push_event("attachment_chunk", %{
+      ref: MailClient.ref_string(mc),
+      chunk: Base.encode64(content)
+    })
+    |> push_event("attachment_end", %{ref: MailClient.ref_string(mc), name: name})
     |> assign(
       mail_chunk_outstanding: true,
       mail_attachments: tail,
@@ -1658,6 +1699,7 @@ defmodule LivWeb.MailLive do
   defp stream_attachments(
          %Socket{
            assigns: %{
+             mail_client: mc,
              mail_attachments: [{name, type, content} | tail] = list,
              mail_attachment_metas: atts,
              mail_attachment_offset: offset
@@ -1677,8 +1719,8 @@ defmodule LivWeb.MailLive do
 
     socket
     |> maybe_push(first?, "attachment_start", %{type: type})
-    |> push_event("attachment_chunk", %{chunk: chunk})
-    |> maybe_push(last?, "attachment_end", %{name: name})
+    |> push_event("attachment_chunk", %{ref: MailClient.ref_string(mc), chunk: chunk})
+    |> maybe_push(last?, "attachment_end", %{ref: MailClient.ref_string(mc), name: name})
     |> assign(
       mail_chunk_outstanding: true,
       mail_attachments: atts_in,
