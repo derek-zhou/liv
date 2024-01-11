@@ -1285,15 +1285,6 @@ defmodule LivWeb.MailLive do
 
   def handle_event(
         "ack_attachment_chunk",
-        _params,
-        %Socket{assigns: %{mail_attachment_offset: 0}} = socket
-      ) do
-    # wait for the url update
-    {:noreply, socket}
-  end
-
-  def handle_event(
-        "ack_attachment_chunk",
         %{"ref" => ref},
         %Socket{assigns: %{mail_client: mc}} = socket
       ) do
@@ -1320,17 +1311,17 @@ defmodule LivWeb.MailLive do
 
   def handle_event(
         "update_attachment_url",
-        %{"ref" => ref, "url" => url},
-        %Socket{assigns: %{mail_client: mc}} = socket
+        %{"ref" => ref, "seq" => seq, "url" => url},
+        %Socket{assigns: %{mail_client: mc, mail_attachment_metas: atts}} = socket
       ) do
     if ref == MailClient.ref_string(mc) do
-      {
-        :noreply,
-        socket
-        |> assign(mail_chunk_outstanding: false)
-        |> append_attachment_url(url)
-        |> stream_attachments()
-      }
+      atts =
+        Enum.map(atts, fn
+          {^seq, name, type, size, offset, _url} -> {seq, name, type, size, offset, url}
+          v -> v
+        end)
+
+      {:noreply, assign(socket, mail_attachment_metas: atts)}
     else
       {:noreply, socket}
     end
@@ -1627,14 +1618,17 @@ defmodule LivWeb.MailLive do
          } = socket
        )
        when byte_size(content) <= @chunk_size do
+    seq = Enum.count(atts)
+    ref = MailClient.ref_string(mc)
+
     socket
     |> push_event("attachment_start", %{type: type})
-    |> push_event("attachment_chunk", %{ref: MailClient.ref_string(mc), chunk: content})
-    |> push_event("attachment_end", %{ref: MailClient.ref_string(mc), name: name})
+    |> push_event("attachment_chunk", %{ref: ref, chunk: content})
+    |> push_event("attachment_end", %{ref: ref, seq: seq, name: name})
     |> assign(
       mail_chunk_outstanding: true,
       mail_attachments: tail,
-      mail_attachment_metas: atts ++ [{Enum.count(atts), name, type, byte_size(content), 0, ""}]
+      mail_attachment_metas: atts ++ [{seq, name, type, byte_size(content), 0, ""}]
     )
   end
 
@@ -1653,7 +1647,9 @@ defmodule LivWeb.MailLive do
     atts = unless first?, do: Enum.drop(atts, -1), else: atts
     push_size = min(content_size - offset, @chunk_size >>> 2)
     chunk = String.slice(content, offset, push_size)
-    atts = atts ++ [{Enum.count(atts), name, type, content_size, offset, ""}]
+    seq = Enum.count(atts)
+    ref = MailClient.ref_string(mc)
+    atts = atts ++ [{seq, name, type, content_size, offset, ""}]
     offset = offset + push_size
     last? = offset == content_size
     atts_in = if last?, do: tail, else: list
@@ -1661,8 +1657,8 @@ defmodule LivWeb.MailLive do
 
     socket
     |> maybe_push(first?, "attachment_start", %{type: type})
-    |> push_event("attachment_chunk", %{ref: MailClient.ref_string(mc), chunk: chunk})
-    |> maybe_push(last?, "attachment_end", %{ref: MailClient.ref_string(mc), name: name})
+    |> push_event("attachment_chunk", %{ref: ref, chunk: chunk})
+    |> maybe_push(last?, "attachment_end", %{ref: ref, seq: seq, name: name})
     |> assign(
       mail_chunk_outstanding: true,
       mail_attachments: atts_in,
@@ -1682,17 +1678,17 @@ defmodule LivWeb.MailLive do
          } = socket
        )
        when byte_size(content) <= @chunk_size do
+    seq = Enum.count(atts)
+    ref = MailClient.ref_string(mc)
+
     socket
     |> push_event("attachment_start", %{type: type})
-    |> push_event("attachment_chunk", %{
-      ref: MailClient.ref_string(mc),
-      chunk: Base.encode64(content)
-    })
-    |> push_event("attachment_end", %{ref: MailClient.ref_string(mc), name: name})
+    |> push_event("attachment_chunk", %{ref: ref, chunk: Base.encode64(content)})
+    |> push_event("attachment_end", %{ref: ref, seq: seq, name: name})
     |> assign(
       mail_chunk_outstanding: true,
       mail_attachments: tail,
-      mail_attachment_metas: atts ++ [{Enum.count(atts), name, type, byte_size(content), 0, ""}]
+      mail_attachment_metas: atts ++ [{seq, name, type, byte_size(content), 0, ""}]
     )
   end
 
@@ -1711,7 +1707,9 @@ defmodule LivWeb.MailLive do
     atts = unless first?, do: Enum.drop(atts, -1), else: atts
     push_size = min(content_size - offset, @chunk_size)
     chunk = Base.encode64(binary_part(content, offset, push_size))
-    atts = atts ++ [{Enum.count(atts), name, type, content_size, offset, ""}]
+    seq = Enum.count(atts)
+    ref = MailClient.ref_string(mc)
+    atts = atts ++ [{seq, name, type, content_size, offset, ""}]
     offset = offset + push_size
     last? = offset == content_size
     atts_in = if last?, do: tail, else: list
@@ -1719,8 +1717,8 @@ defmodule LivWeb.MailLive do
 
     socket
     |> maybe_push(first?, "attachment_start", %{type: type})
-    |> push_event("attachment_chunk", %{ref: MailClient.ref_string(mc), chunk: chunk})
-    |> maybe_push(last?, "attachment_end", %{ref: MailClient.ref_string(mc), name: name})
+    |> push_event("attachment_chunk", %{ref: ref, chunk: chunk})
+    |> maybe_push(last?, "attachment_end", %{ref: ref, seq: seq, name: name})
     |> assign(
       mail_chunk_outstanding: true,
       mail_attachments: atts_in,
@@ -1731,22 +1729,6 @@ defmodule LivWeb.MailLive do
 
   defp maybe_push(socket, true, name, payload), do: push_event(socket, name, payload)
   defp maybe_push(socket, false, _, _), do: socket
-
-  defp append_attachment_url(
-         %Socket{assigns: %{mail_attachment_metas: []}} = socket,
-         _url
-       ) do
-    socket
-  end
-
-  defp append_attachment_url(
-         %Socket{assigns: %{mail_attachment_metas: atts}} = socket,
-         url
-       ) do
-    {atts, [{seq, name, type, size, _offset, _url}]} = Enum.split(atts, -1)
-    atts = atts ++ [{seq, name, type, size, size, url}]
-    assign(socket, mail_attachment_metas: atts)
-  end
 
   defp accept_chunk(
          %Socket{
