@@ -2,8 +2,7 @@ defmodule Liv.DraftServer do
   use GenServer
   alias Phoenix.PubSub
   alias :bbmustache, as: BBMustache
-  alias Liv.{Sanitizer, Parser}
-  alias HtmlSanitizeEx.Scrubber
+  alias Liv.Parser
 
   defstruct [:subject, :body, :msgid, recipients: [], references: []]
 
@@ -74,17 +73,6 @@ defmodule Liv.DraftServer do
       {:ok, Md.generate(draft, Parser, format: :none)}
     rescue
       _e -> {:error, "Illegal Markdown syntax"}
-    end
-  end
-
-  @doc """
-  return a version html that is safe to be embedded in our page.
-  """
-  def safe_html(html) do
-    try do
-      {:ok, Scrubber.scrub(html, Sanitizer)}
-    rescue
-      _e -> {:error, "Illegal HTML syntax"}
     end
   end
 

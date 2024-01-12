@@ -4,7 +4,7 @@ defmodule Liv.MixProject do
   def project do
     [
       app: :liv,
-      version: "0.7.0",
+      version: "0.8.0",
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers() ++ [:surface],
@@ -41,7 +41,6 @@ defmodule Liv.MixProject do
       {:pop3client, "~> 1.3.1"},
       {:bbmustache, "~> 1.12"},
       {:memento, "~> 0.3.2"},
-      {:html_sanitize_ex, "~> 1.4"},
       {:swoosh, "~> 1.5"},
       {:gen_smtp, "~> 1.1"},
       {:httpoison, "~> 1.7"},
