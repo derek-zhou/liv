@@ -172,11 +172,6 @@ defmodule Liv.MailClient do
   def mail_meta(%__MODULE__{mails: mails}, docid), do: Map.get(mails, docid)
 
   @doc """
-  getter of the ref in string format
-  """
-  def ref_string(%__MODULE__{ref: ref}), do: ref |> :erlang.ref_to_list() |> to_string()
-
-  @doc """
   setter of a specific mail metadata. nil is delete
   """
   def set_meta(nil, _docid, _meta), do: nil
