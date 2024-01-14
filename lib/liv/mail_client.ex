@@ -13,7 +13,8 @@ defmodule Liv.MailClient do
   defstruct [
     :tree,
     mails: %{},
-    docid: 0,
+    query: nil,
+    stale?: false,
     ref: nil
   ]
 
@@ -30,9 +31,17 @@ defmodule Liv.MailClient do
   def snooze(), do: MaildirCommander.snooze()
 
   @doc """
-  run a query. query can be a query string or a docid integer
+  set it stale, force search next time
   """
-  def new_search(query) do
+  def set_stale(%__MODULE__{stale?: true} = mc), do: mc
+  def set_stale(%__MODULE__{} = mc), do: %{mc | stale?: true}
+
+  @doc """
+  run a query. query can be a query string
+  """
+  def search(%__MODULE__{stale?: false, query: query} = mc, query), do: mc
+
+  def search(_, query) do
     # we piggy back pop to new mail query
     if String.match?(query, ~r/flag:unread/), do: pop_all()
 
@@ -48,7 +57,7 @@ defmodule Liv.MailClient do
         raise(msg)
 
       {:ok, tree, mails} ->
-        %__MODULE__{tree: MCTree.collapse(tree), mails: mails}
+        %__MODULE__{tree: MCTree.collapse(tree), mails: mails, query: query}
     end
   end
 
@@ -75,20 +84,19 @@ defmodule Liv.MailClient do
   end
 
   @doc """
-  close a message by setting docid to 0 and mark the old message seen
+  close a message. clear the ref, mark the old message seen
   """
-  def close(nil), do: nil
-  def close(%__MODULE__{docid: 0} = mc), do: mc
+  def close(nil, _), do: nil
 
-  def close(%__MODULE__{mails: mails, docid: docid} = mc) do
+  def close(%__MODULE__{mails: mails} = mc, docid) do
     case Map.get(mails, docid) do
       nil ->
-        %{mc | docid: 0}
+        %{mc | ref: nil}
 
       %{flags: flags} ->
         case Enum.member?(flags, :seen) do
           true ->
-            %{mc | docid: 0}
+            %{mc | ref: nil}
 
           false ->
             case MaildirCommander.flag(docid, "+S") do
@@ -101,12 +109,12 @@ defmodule Liv.MailClient do
                   {:seen_message, docid, m}
                 )
 
-                %{mc | mails: %{mails | docid => m}, docid: 0}
+                %{mc | mails: %{mails | docid => m}, ref: nil}
 
               {:error, msg} ->
                 Logger.warning("docid: #{docid} #{msg}")
                 reindex()
-                %{mc | docid: 0}
+                mc
             end
         end
     end
@@ -123,7 +131,7 @@ defmodule Liv.MailClient do
         reindex()
         nil
 
-      {:ok, %{path: path} = meta} ->
+      {:ok, %{path: path, msgid: msgid} = meta} ->
         Logger.debug("streaming #{path}")
 
         case MaildirCommander.stream_mail(path) do
@@ -136,19 +144,18 @@ defmodule Liv.MailClient do
             %__MODULE__{
               tree: MCTree.single(docid),
               mails: %{docid => meta},
-              docid: docid,
+              query: "msgid:#{msgid}",
+              stale?: true,
               ref: ref
             }
         end
     end
   end
 
-  def open(mc, docid) do
-    %__MODULE__{mails: mails} = mc = close(mc)
-
+  def open(%__MODULE__{mails: mails} = mc, docid) do
     case Map.get(mails, docid) do
       nil ->
-        mc
+        open(nil, docid)
 
       %{path: path} ->
         Logger.debug("streaming #{path}")
@@ -157,10 +164,10 @@ defmodule Liv.MailClient do
           {:error, reason} ->
             Logger.warning("docid: #{docid} path: #{path} not found: #{reason}")
             reindex()
-            %{mc | docid: docid, ref: nil}
+            %{mc | ref: nil}
 
           {:ok, ref} ->
-            %{mc | docid: docid, ref: ref}
+            %{mc | ref: ref}
         end
     end
   end
@@ -187,30 +194,40 @@ defmodule Liv.MailClient do
   @doc """
   the query that get one mail
   """
-  def solo_query(%__MODULE__{mails: mails, docid: docid}), do: "msgid:#{mails[docid].msgid}"
+  def solo_query(%__MODULE__{mails: mails}, docid) do
+    case Map.get(mails, docid) do
+      nil -> nil
+      %{msgid: msgid} -> "msgid:#{msgid}"
+    end
+  end
 
   @doc """
   the query that get all mails from sender
   """
-  def from_query(%__MODULE__{mails: mails, docid: docid}), do: "from:#{tl(mails[docid].from)}"
+  def from_query(%__MODULE__{mails: mails}, docid) do
+    case Map.get(mails, docid) do
+      nil -> nil
+      %{from: from} -> "from:#{tl(from)}"
+    end
+  end
 
   @doc """
   getter of the text content in quote
   """
-  def quoted_text(_, nil), do: nil
-  def quoted_text(_, ""), do: ""
-  def quoted_text(nil, text), do: "> #{text}\n"
+  def quoted_text(_, _, nil), do: nil
+  def quoted_text(_, _, ""), do: ""
+  def quoted_text(nil, _, text), do: "> #{text}\n"
 
-  def quoted_text(%__MODULE__{mails: mails, docid: docid}, text) do
+  def quoted_text(%__MODULE__{mails: mails}, docid, text) do
     case Map.get(mails, docid) do
       nil ->
         ""
 
-      meta ->
-        {:ok, date} = DateTime.from_unix(meta.date)
+      %{date: date, from: from} ->
+        {:ok, date} = DateTime.from_unix(date)
 
         IO.chardata_to_string([
-          "On #{date}, #{hd(meta.from)} wrote:\n",
+          "On #{date}, #{hd(from)} wrote:\n",
           text
           |> String.split(~r/\n/)
           |> Enum.map(fn str -> "> #{str}\n" end)
@@ -352,8 +369,8 @@ defmodule Liv.MailClient do
   @doc """
   getter of default to, cc and bcc for this email
   """
-  def default_recipients(mc, to_addr) do
-    addr_map = addresses_map(mc)
+  def default_recipients(mc, docid, to_addr) do
+    addr_map = addresses_map(mc, docid)
 
     List.flatten([
       {:to, default_to(addr_map, to_addr)},
@@ -462,12 +479,15 @@ defmodule Liv.MailClient do
   @doc """
   getter of the default reply subject
   """
-  def reply_subject(%__MODULE__{docid: docid, mails: mails}) when docid > 0 do
-    case mails[docid].subject do
-      "" ->
+  def reply_subject(%__MODULE__{mails: mails}, docid) do
+    case Map.get(mails, docid) do
+      nil ->
         ""
 
-      sub ->
+      %{subject: ""} ->
+        ""
+
+      %{subject: sub} ->
         case Regex.run(~r/^re:\s*(.*)/i, sub) do
           nil -> "Re: " <> sub
           [_, ""] -> ""
@@ -476,13 +496,13 @@ defmodule Liv.MailClient do
     end
   end
 
-  def reply_subject(_), do: ""
+  def reply_subject(_, _), do: ""
 
   @doc """
   getter of to name from relevent addresses
   """
-  def find_address(mc, to_addr) do
-    [Map.get(addresses_map(mc), to_addr) | to_addr]
+  def find_address(mc, docid, to_addr) do
+    [Map.get(addresses_map(mc, docid), to_addr) | to_addr]
   end
 
   @doc """
@@ -576,17 +596,19 @@ defmodule Liv.MailClient do
     end)
   end
 
-  defp addresses_map(%__MODULE__{docid: docid, mails: mails}) when docid > 0 do
-    %{from: from, to: to, cc: cc} = Map.fetch!(mails, docid)
+  defp addresses_map(nil, _), do: %{}
 
-    map = %{tl(from) => hd(from)}
-    map = Enum.reduce(to, map, fn [n | a], m -> Map.put_new(m, a, n) end)
-    map = Enum.reduce(cc, map, fn [n | a], m -> Map.put_new(m, a, n) end)
+  defp addresses_map(%__MODULE__{mails: mails}, docid) do
+    case Map.get(mails, docid) do
+      nil ->
+        %{}
 
-    map
+      %{from: from, to: to, cc: cc} ->
+        map = %{tl(from) => hd(from)}
+        map = Enum.reduce(to, map, fn [n | a], m -> Map.put_new(m, a, n) end)
+        Enum.reduce(cc, map, fn [n | a], m -> Map.put_new(m, a, n) end)
+    end
   end
-
-  defp addresses_map(_), do: %{}
 
   # to is whatever I can find from the map
   defp default_to(_, "#"), do: [nil | ""]

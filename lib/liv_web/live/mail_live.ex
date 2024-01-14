@@ -32,13 +32,9 @@ defmodule LivWeb.MailLive do
   # nil, logged_in, logged_out
   data auth, :atom, default: nil
   data tz_offset, :integer, default: 0
-  data recover_query, :string, default: @default_query
 
   # the mail client app state
   data mail_client, :map, default: nil
-
-  # new mail count since last checking
-  data new_mail_count, :integer, default: 0
 
   # for login
   data password_hash, :string, default: ""
@@ -55,30 +51,18 @@ defmodule LivWeb.MailLive do
   data list_mails, :map, default: %{}
   data list_tree, :tuple, default: nil
 
-  # if this is true, we should return to viewer instead of finder
-  data mail_opened, :boolean, default: false
-
   # for the viewer
+  data mail_docid, :integer, default: 0
   data mail_attachments, :list, default: []
   data mail_attachment_offset, :integer, default: 0
   data mail_attachment_metas, :list, default: []
   data mail_chunk_outstanding, :boolean, default: false
-  data mail_chunk_ref, :string, default: ""
   data mail_meta, :any, default: nil
   data mail_text, :string, default: ""
 
-  # to refer back in later 
-  data last_query, :string, default: ""
-
   # for search
   data default_query, :string, default: @default_query
-
-  data query_examples, :list,
-    default: [
-      {"The inbox", "maildir:/"},
-      {"Unread mails", "flag:unread"},
-      {"Last 7 days", "date:7d..now flag:replied"}
-    ]
+  data query_examples, :list, default: []
 
   # for write
   data recipients, :list, default: []
@@ -128,7 +112,6 @@ defmodule LivWeb.MailLive do
           |> fetch_token(values)
           |> fetch_tz_offset(values)
           |> fetch_locale(values)
-          |> fetch_recover_query(values)
         }
 
       true ->
@@ -210,34 +193,23 @@ defmodule LivWeb.MailLive do
           assigns: %{
             live_action: :find,
             mail_client: mc,
-            last_query: last_query,
-            new_mail_count: count
+            mail_docid: docid
           }
         } = socket
       ) do
-    mc = MailClient.close(mc)
-
-    mc =
-      cond do
-        count > 0 -> MailClient.new_search(query)
-        mc && query == last_query -> mc
-        true -> MailClient.new_search(query)
-      end
+    mc = mc |> MailClient.close(docid) |> MailClient.search(query)
 
     {
       :noreply,
       socket
-      |> push_event("set_value", %{key: "recoverQuery", value: query})
       |> assign(
         info: "#{MailClient.unread_count(mc)} unread/#{MailClient.mail_count(mc)}",
         home_link: Routes.mail_path(Endpoint, :find, query),
-        mail_opened: false,
+        mail_docid: 0,
         page_title: query,
         list_mails: MailClient.mails_of(mc),
         list_tree: MailClient.tree_of(mc),
         mail_client: mc,
-        last_query: query,
-        new_mail_count: 0,
         buttons: [
           {:patch, "\u{1F527}", Routes.mail_path(Endpoint, :config), false},
           {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
@@ -254,204 +226,26 @@ defmodule LivWeb.MailLive do
         %Socket{
           assigns: %{
             live_action: :view,
-            recover_query: query,
-            mail_client: nil
-          }
-        } = socket
-      ) do
-    case Integer.parse(docid) do
-      {docid, ""} ->
-        {mc, query} =
-          case query do
-            "" ->
-              case MailClient.open(nil, docid) do
-                nil -> {nil, nil}
-                mc -> {mc, nil}
-              end
-
-            _ ->
-              mc = MailClient.new_search(query)
-
-              case MailClient.mail_meta(mc, docid) do
-                nil ->
-                  case MailClient.open(nil, docid) do
-                    nil -> {nil, nil}
-                    mc -> {mc, nil}
-                  end
-
-                _ ->
-                  {MailClient.open(mc, docid), query}
-              end
-          end
-
-        case mc do
-          nil ->
-            {
-              :noreply,
-              socket
-              |> put_flash(:error, "Mail not found")
-              |> assign(
-                info: "Mail not found",
-                home_link: Routes.mail_path(Endpoint, :find, @default_query),
-                page_title: "Mail not found",
-                buttons: [
-                  {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
-                  {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), true},
-                  {:button, "\u{25C0}", "backward_message", true},
-                  {:button, "\u{25B6}", "forward_message", true}
-                ]
-              )
-            }
-
-          _ ->
-            meta = MailClient.mail_meta(mc, docid)
-            query = query || MailClient.solo_query(mc)
-
-            {
-              :noreply,
-              socket
-              |> open_mail(meta)
-              |> assign(
-                info: "",
-                home_link: Routes.mail_path(Endpoint, :find, query),
-                page_title: meta.subject,
-                mail_client: mc,
-                last_query: query,
-                docid: docid,
-                buttons: [
-                  {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
-                  {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), false},
-                  {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, docid)},
-                  {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, docid)}
-                ]
-              )
-            }
-        end
-
-      _ ->
-        {
-          :noreply,
-          socket
-          |> put_flash(:error, "Illegal docid")
-          |> assign(
-            info: "Mail not found",
-            home_link: Routes.mail_path(Endpoint, :find, @default_query),
-            page_title: "Mail not found",
-            buttons: [
-              {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
-              {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), true},
-              {:button, "\u{25C0}", "backward_message", true},
-              {:button, "\u{25B6}", "forward_message", true}
-            ]
-          )
-        }
-    end
-  end
-
-  def handle_params(
-        _params,
-        _url,
-        %Socket{
-          assigns: %{
-            live_action: :view,
-            mail_opened: true,
-            last_query: query,
-            mail_client: mc
-          }
-        } = socket
-      ) do
-    meta = MailClient.mail_meta(mc, mc.docid)
-
-    {
-      :noreply,
-      socket
-      |> assign(
-        info: "",
-        home_link: Routes.mail_path(Endpoint, :find, query),
-        page_title: meta.subject,
-        docid: mc.docid,
-        buttons: [
-          {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
-          {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), false},
-          {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, mc.docid)},
-          {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, mc.docid)}
-        ]
-      )
-    }
-  end
-
-  def handle_params(
-        %{"docid" => docid},
-        _url,
-        %Socket{
-          assigns: %{
-            live_action: :view,
             mail_client: mc,
-            last_query: query
+            mail_docid: old_docid
           }
         } = socket
       ) do
     case Integer.parse(docid) do
+      {0, ""} ->
+        {:noreply, mail_not_found(socket, mc)}
+
+      {^old_docid, ""} ->
+        {:noreply, mail_unchanged(socket, mc, old_docid)}
+
       {docid, ""} ->
-        mc = MailClient.open(mc, docid)
-
-        case MailClient.mail_meta(mc, docid) do
-          nil ->
-            {
-              :noreply,
-              socket
-              |> put_flash(:error, "Mail not found")
-              |> assign(
-                info: "",
-                home_link: Routes.mail_path(Endpoint, :find, query),
-                page_title: "Mail not found",
-                buttons: [
-                  {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
-                  {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), true},
-                  {:button, "\u{25C0}", "backward_message", true},
-                  {:button, "\u{25B6}", "forward_message", true}
-                ]
-              )
-            }
-
-          meta ->
-            {
-              :noreply,
-              socket
-              |> open_mail(meta)
-              |> assign(
-                info: "",
-                home_link: Routes.mail_path(Endpoint, :find, query),
-                page_title: meta.subject,
-                mail_client: mc,
-                docid: docid,
-                buttons: [
-                  {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
-                  {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), false},
-                  {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, docid)},
-                  {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, docid)}
-                ]
-              )
-            }
+        case MailClient.open(mc, docid) do
+          nil -> {:noreply, mail_not_found(socket, mc)}
+          mc -> {:noreply, mail_found(socket, mc, docid)}
         end
 
       _ ->
-        {
-          :noreply,
-          socket
-          |> put_flash(:error, "Illegal docid")
-          |> assign(
-            info: "",
-            home_link: Routes.mail_path(Endpoint, :find, query),
-            page_title: "Mail not found",
-            buttons: [
-              {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
-              {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), true},
-              {:button, "\u{25C0}", "backward_message", true},
-              {:button, "\u{25B6}", "forward_message", true}
-            ]
-          )
-        }
+        {:noreply, mail_not_found(socket, mc)}
     end
   end
 
@@ -461,36 +255,63 @@ defmodule LivWeb.MailLive do
         %Socket{
           assigns: %{
             live_action: :search,
-            last_query: query,
-            mail_opened: opened,
+            mail_docid: 0,
             mail_client: mc
           }
         } = socket
       ) do
     examples =
-      case opened do
-        true ->
-          [
-            {"Same thread", MailClient.solo_query(mc)},
-            {"Same sender", MailClient.from_query(mc)},
-            {"Last query", query}
-          ]
+      [
+        {"The inbox", "maildir:/"},
+        {"Unread mails", "flag:unread"},
+        {"Last 7 days", "date:7d..now flag:replied"}
+      ]
 
-        false ->
-          [
-            {"The inbox", "maildir:/"},
-            {"Unread mails", "flag:unread"},
-            {"Last 7 days", "date:7d..now flag:replied"}
-          ]
-      end
-
+    query = if mc, do: mc.query, else: elem(hd(examples), 1)
     MailClient.snooze()
 
     {
       :noreply,
       socket
       |> assign(
-        default_query: examples |> hd() |> elem(1),
+        default_query: query,
+        query_examples: examples,
+        page_title: "Search",
+        info: "Search",
+        home_link: "#",
+        buttons: [
+          {:button, "\u{2716}", "close_dialog", false}
+        ]
+      )
+    }
+  end
+
+  def handle_params(
+        _params,
+        _url,
+        %Socket{
+          assigns: %{
+            live_action: :search,
+            mail_docid: docid,
+            mail_client: mc
+          }
+        } = socket
+      ) do
+    examples =
+      [
+        {"Same thread", MailClient.solo_query(mc, docid)},
+        {"Same sender", MailClient.from_query(mc, docid)},
+        {"Last query", mc.query}
+      ]
+
+    query = if mc, do: mc.query, else: elem(hd(examples), 1)
+    MailClient.snooze()
+
+    {
+      :noreply,
+      socket
+      |> assign(
+        default_query: query,
         query_examples: examples,
         page_title: "Search",
         info: "Search",
@@ -593,7 +414,7 @@ defmodule LivWeb.MailLive do
   def handle_params(
         %{"to" => to},
         _url,
-        %Socket{assigns: %{live_action: :write, mail_opened: false}} = socket
+        %Socket{assigns: %{live_action: :write, mail_docid: 0}} = socket
       ) do
     {recipients, subject, text} = MailClient.parse_mailto(to)
     {d_subject, d_recipients, d_text, msgid, refs} = DraftServer.get_draft()
@@ -614,7 +435,7 @@ defmodule LivWeb.MailLive do
         home_link: "#",
         recipients: recipients,
         subject: subject || d_subject || "",
-        write_text: MailClient.quoted_text(nil, text) || d_text || "",
+        write_text: MailClient.quoted_text(nil, 0, text) || d_text || "",
         write_attachments: [],
         replying_msgid: msgid,
         replying_references: refs,
@@ -634,10 +455,12 @@ defmodule LivWeb.MailLive do
   def handle_params(
         %{"to" => to},
         _url,
-        %Socket{assigns: %{live_action: :write, mail_client: mc, mail_text: text}} = socket
+        %Socket{
+          assigns: %{live_action: :write, mail_client: mc, mail_docid: docid, mail_text: text}
+        } = socket
       ) do
     {msgid, refs} =
-      case MailClient.mail_meta(mc, mc.docid) do
+      case MailClient.mail_meta(mc, docid) do
         %{msgid: msgid, references: refs} -> {msgid, refs}
         _ -> {nil, []}
       end
@@ -649,9 +472,9 @@ defmodule LivWeb.MailLive do
         page_title: "Write",
         info: "",
         home_link: "#",
-        recipients: MailClient.default_recipients(mc, to),
-        subject: MailClient.reply_subject(mc),
-        write_text: MailClient.quoted_text(mc, text),
+        recipients: MailClient.default_recipients(mc, docid, to),
+        subject: MailClient.reply_subject(mc, docid),
+        write_text: MailClient.quoted_text(mc, docid, text),
         write_attachments: [],
         replying_msgid: msgid,
         replying_references: refs,
@@ -764,25 +587,16 @@ defmodule LivWeb.MailLive do
     }
   end
 
-  def handle_params(
-        _params,
-        _url,
-        %Socket{
-          assigns: %{
-            recover_query: query
-          }
-        } = socket
-      ) do
-    query = query || @default_query
-    {:noreply, push_patch(socket, to: Routes.mail_path(Endpoint, :find, query))}
+  def handle_params(_params, _url, socket) do
+    {:noreply, push_patch(socket, to: Routes.mail_path(Endpoint, :find, @default_query))}
   end
 
   def handle_event(
         "boomerang_submit",
         %{"hours" => hours},
-        %Socket{assigns: %{mail_client: mc}} = socket
+        %Socket{assigns: %{mail_docid: docid}} = socket
       ) do
-    DelayMarker.flag(mc.docid, String.to_integer(hours) * 3600)
+    DelayMarker.flag(docid, String.to_integer(hours) * 3600)
     {:noreply, push_patch(socket, to: close_action(socket))}
   end
 
@@ -793,7 +607,6 @@ defmodule LivWeb.MailLive do
       |> fetch_token(values)
       |> fetch_tz_offset(values)
       |> fetch_locale(values)
-      |> fetch_recover_query(values)
     }
   end
 
@@ -1240,9 +1053,9 @@ defmodule LivWeb.MailLive do
   def handle_event(
         "backward_message",
         _params,
-        %Socket{assigns: %{mail_client: mc}} = socket
+        %Socket{assigns: %{mail_client: mc, mail_docid: docid}} = socket
       ) do
-    case MailClient.previous(mc, mc.docid) do
+    case MailClient.previous(mc, docid) do
       nil ->
         {:noreply, put_flash(socket, :warning, "Already at the beginning")}
 
@@ -1250,7 +1063,7 @@ defmodule LivWeb.MailLive do
         {
           :noreply,
           socket
-          |> assign(mail_opened: false)
+          |> assign(mail_docid: 0, mail_client: MailClient.close(mc, docid))
           |> push_patch(to: Routes.mail_path(Endpoint, :view, prev))
         }
     end
@@ -1259,9 +1072,9 @@ defmodule LivWeb.MailLive do
   def handle_event(
         "forward_message",
         _params,
-        %Socket{assigns: %{mail_client: mc}} = socket
+        %Socket{assigns: %{mail_client: mc, mail_docid: docid}} = socket
       ) do
-    case MailClient.next(mc, mc.docid) do
+    case MailClient.next(mc, docid) do
       nil ->
         {:noreply, put_flash(socket, :warning, "Already at the end")}
 
@@ -1269,7 +1082,7 @@ defmodule LivWeb.MailLive do
         {
           :noreply,
           socket
-          |> assign(mail_opened: false)
+          |> assign(mail_docid: 0, mail_client: MailClient.close(mc, docid))
           |> push_patch(to: Routes.mail_path(Endpoint, :view, next))
         }
     end
@@ -1278,7 +1091,7 @@ defmodule LivWeb.MailLive do
   def handle_event(
         "ack_attachment_chunk",
         %{"ref" => ref},
-        %Socket{assigns: %{mail_chunk_ref: ref}} = socket
+        %Socket{assigns: %{mail_docid: ref}} = socket
       ) do
     {
       :noreply,
@@ -1296,7 +1109,7 @@ defmodule LivWeb.MailLive do
   def handle_event(
         "update_attachment_url",
         %{"ref" => ref, "seq" => seq, "url" => url},
-        %Socket{assigns: %{mail_chunk_ref: ref, mail_attachment_metas: atts}} = socket
+        %Socket{assigns: %{mail_docid: ref, mail_attachment_metas: atts}} = socket
       ) do
     atts =
       Enum.map(atts, fn
@@ -1356,7 +1169,7 @@ defmodule LivWeb.MailLive do
   def handle_event(
         "clear_flash",
         %{"key" => key},
-        %Socket{assigns: %{new_mail_count: 0}} = socket
+        %Socket{assigns: %{mail_client: nil}} = socket
       ) do
     {:noreply, clear_flash(socket, key)}
   end
@@ -1364,13 +1177,13 @@ defmodule LivWeb.MailLive do
   def handle_event(
         "clear_flash",
         %{"key" => "info"},
-        %Socket{assigns: %{live_action: :find, last_query: query}} = socket
+        %Socket{assigns: %{live_action: :find, mail_client: mc}} = socket
       ) do
     {
       :noreply,
       socket
       |> clear_flash(:info)
-      |> push_patch(to: Routes.mail_path(Endpoint, :find, query))
+      |> push_patch(to: Routes.mail_path(Endpoint, :find, mc.query))
     }
   end
 
@@ -1447,14 +1260,16 @@ defmodule LivWeb.MailLive do
     {:noreply, assign(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
   end
 
-  def handle_info(:new_mail, %Socket{assigns: %{new_mail_count: c}} = socket) do
-    c = c + 1
+  def handle_info(:new_mail, %Socket{assigns: %{mail_client: nil}} = socket) do
+    {:noreply, put_flash(socket, :info, "You've got new mails")}
+  end
 
+  def handle_info(:new_mail, %Socket{assigns: %{mail_client: mc}} = socket) do
     {
       :noreply,
       socket
-      |> put_flash(:info, "You've got #{c} new mails")
-      |> assign(new_mail_count: c)
+      |> put_flash(:info, "You've got new mails")
+      |> assign(mail_client: MailClient.set_stale(mc))
     }
   end
 
@@ -1484,16 +1299,16 @@ defmodule LivWeb.MailLive do
     }
   end
 
-  defp close_action(%Socket{assigns: %{mail_client: mc, mail_opened: true}}) do
-    Routes.mail_path(Endpoint, :view, mc.docid)
-  end
-
-  defp close_action(%Socket{assigns: %{last_query: ""}}) do
+  defp close_action(%Socket{assigns: %{mail_docid: 0, mail_client: nil}}) do
     Routes.mail_path(Endpoint, :find, @default_query)
   end
 
-  defp close_action(%Socket{assigns: %{last_query: query}}) do
-    Routes.mail_path(Endpoint, :find, query)
+  defp close_action(%Socket{assigns: %{mail_docid: 0, mail_client: mc}}) do
+    Routes.mail_path(Endpoint, :find, mc.query)
+  end
+
+  defp close_action(%Socket{assigns: %{mail_docid: docid}}) do
+    Routes.mail_path(Endpoint, :view, docid)
   end
 
   defp fetch_token(socket, %{"token" => token}) do
@@ -1552,23 +1367,64 @@ defmodule LivWeb.MailLive do
     end
   end
 
-  defp fetch_recover_query(socket, %{"recoverQuery" => query}) do
-    assign(socket, recover_query: query)
+  defp mail_not_found(socket, mc) do
+    query = if mc, do: mc.query, else: @default_query
+
+    socket
+    |> put_flash(:error, "Mail not found")
+    |> assign(
+      info: "Mail not found",
+      home_link: Routes.mail_path(Endpoint, :find, query),
+      page_title: "Mail not found",
+      buttons: [
+        {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
+        {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), true},
+        {:button, "\u{25C0}", "backward_message", true},
+        {:button, "\u{25B6}", "forward_message", true}
+      ]
+    )
   end
 
-  defp fetch_recover_query(socket, _), do: assign(socket, recover_query: @default_query)
+  defp mail_unchanged(socket, mc, docid) do
+    meta = MailClient.mail_meta(mc, docid)
 
-  defp open_mail(socket, meta) do
+    socket
+    |> assign(
+      info: "",
+      home_link: Routes.mail_path(Endpoint, :find, mc.query),
+      page_title: meta.subject,
+      buttons: [
+        {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
+        {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), false},
+        {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, docid)},
+        {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, docid)}
+      ]
+    )
+  end
+
+  defp mail_found(socket, mc, docid) do
+    meta = MailClient.mail_meta(mc, docid)
+
     socket
     |> push_event("clear_attachments", %{})
     |> assign(
-      mail_opened: true,
       mail_meta: meta,
       mail_text: "",
       mail_chunk_outstanding: false,
       mail_attachments: [],
       mail_attachment_offset: 0,
-      mail_attachment_metas: []
+      mail_attachment_metas: [],
+      info: "",
+      home_link: Routes.mail_path(Endpoint, :find, mc.query),
+      page_title: meta.subject,
+      mail_client: mc,
+      mail_docid: docid,
+      buttons: [
+        {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
+        {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), false},
+        {:button, "\u{25C0}", "backward_message", MailClient.is_first(mc, docid)},
+        {:button, "\u{25B6}", "forward_message", MailClient.is_last(mc, docid)}
+      ]
     )
   end
 
@@ -1595,6 +1451,7 @@ defmodule LivWeb.MailLive do
   defp stream_attachments(
          %Socket{
            assigns: %{
+             mail_docid: ref,
              mail_attachments: [{name, <<"text/", _::binary>> = type, content} | tail],
              mail_attachment_metas: atts,
              mail_attachment_offset: 0
@@ -1603,7 +1460,6 @@ defmodule LivWeb.MailLive do
        )
        when byte_size(content) <= @chunk_size do
     seq = Enum.count(atts)
-    ref = ref_string()
 
     socket
     |> push_event("attachment_start", %{type: type})
@@ -1611,7 +1467,6 @@ defmodule LivWeb.MailLive do
     |> push_event("attachment_end", %{ref: ref, seq: seq, name: name})
     |> assign(
       mail_chunk_outstanding: true,
-      mail_chunk_ref: ref,
       mail_attachments: tail,
       mail_attachment_metas: atts ++ [{seq, name, type, byte_size(content), 0, ""}]
     )
@@ -1620,6 +1475,7 @@ defmodule LivWeb.MailLive do
   defp stream_attachments(
          %Socket{
            assigns: %{
+             mail_docid: ref,
              mail_attachments: [{name, <<"text/", _::binary>> = type, content} | tail] = list,
              mail_attachment_metas: atts,
              mail_attachment_offset: offset
@@ -1632,7 +1488,6 @@ defmodule LivWeb.MailLive do
     push_size = min(content_size - offset, @chunk_size >>> 2)
     chunk = String.slice(content, offset, push_size)
     seq = Enum.count(atts)
-    ref = ref_string()
     atts = atts ++ [{seq, name, type, content_size, offset, ""}]
     offset = offset + push_size
     last? = offset == content_size
@@ -1645,7 +1500,6 @@ defmodule LivWeb.MailLive do
     |> maybe_push(last?, "attachment_end", %{ref: ref, seq: seq, name: name})
     |> assign(
       mail_chunk_outstanding: true,
-      mail_chunk_ref: ref,
       mail_attachments: atts_in,
       mail_attachment_offset: offset,
       mail_attachment_metas: atts
@@ -1655,6 +1509,7 @@ defmodule LivWeb.MailLive do
   defp stream_attachments(
          %Socket{
            assigns: %{
+             mail_docid: ref,
              mail_attachments: [{name, type, content} | tail],
              mail_attachment_metas: atts,
              mail_attachment_offset: 0
@@ -1663,7 +1518,6 @@ defmodule LivWeb.MailLive do
        )
        when byte_size(content) <= @chunk_size do
     seq = Enum.count(atts)
-    ref = ref_string()
 
     socket
     |> push_event("attachment_start", %{type: type})
@@ -1671,7 +1525,6 @@ defmodule LivWeb.MailLive do
     |> push_event("attachment_end", %{ref: ref, seq: seq, name: name})
     |> assign(
       mail_chunk_outstanding: true,
-      mail_chunk_ref: ref,
       mail_attachments: tail,
       mail_attachment_metas: atts ++ [{seq, name, type, byte_size(content), 0, ""}]
     )
@@ -1680,6 +1533,7 @@ defmodule LivWeb.MailLive do
   defp stream_attachments(
          %Socket{
            assigns: %{
+             mail_docid: ref,
              mail_attachments: [{name, type, content} | tail] = list,
              mail_attachment_metas: atts,
              mail_attachment_offset: offset
@@ -1692,7 +1546,6 @@ defmodule LivWeb.MailLive do
     push_size = min(content_size - offset, @chunk_size)
     chunk = Base.encode64(binary_part(content, offset, push_size))
     seq = Enum.count(atts)
-    ref = ref_string()
     atts = atts ++ [{seq, name, type, content_size, offset, ""}]
     offset = offset + push_size
     last? = offset == content_size
@@ -1705,14 +1558,11 @@ defmodule LivWeb.MailLive do
     |> maybe_push(last?, "attachment_end", %{ref: ref, seq: seq, name: name})
     |> assign(
       mail_chunk_outstanding: true,
-      mail_chunk_ref: ref,
       mail_attachments: atts_in,
       mail_attachment_offset: offset,
       mail_attachment_metas: atts
     )
   end
-
-  defp ref_string(), do: make_ref() |> :erlang.ref_to_list() |> to_string()
 
   defp maybe_push(socket, true, name, payload), do: push_event(socket, name, payload)
   defp maybe_push(socket, false, _, _), do: socket
