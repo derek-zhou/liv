@@ -11,6 +11,7 @@ defmodule LivWeb.MailLive do
     Main,
     Find,
     Search,
+    ViewHeader,
     View,
     Login,
     Guardian,

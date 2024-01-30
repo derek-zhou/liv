@@ -20,10 +20,10 @@
 		 book={@address_book} sorted_by={@sorted_by} desc={@sorted_desc}
 		 delete="delete_address"/>
     <Boomerang :if={@auth == :logged_in && @live_action == :boomerang} submit="boomerang_submit" />
+    <ViewHeader :if={@auth == :logged_in && @live_action == :view}
+		meta={@mail_meta} attachments={@mail_attachment_metas} tz_offset={@tz_offset} />
+    <View hidden={@live_action != :view} />
     <div class="fill" :if={@auth == :logged_in} hidden={@live_action != :find}>
 	<Find mails={@list_mails} tree={@list_tree} tz_offset={@tz_offset} />
-    </div>
-    <div class="fill" :if={@auth == :logged_in} hidden={@live_action != :view}>
-	<View meta={@mail_meta} attachments={@mail_attachment_metas} tz_offset={@tz_offset} />
     </div>
 </Main>

@@ -1,46 +1,5 @@
-<div :if={@meta != nil} class="box" id="message-view" :hook>
-    <div class="line">
-	From:
-	<LivePatch to={Routes.mail_path(Endpoint, :write, tl(@meta.from))}
-	      class="email-addr">{email_name(@meta.from)}</LivePatch>
-    </div>
-    <div class="line">
-	To:
-	{#for addr <- @meta.to}
-	<LivePatch to={Routes.mail_path(Endpoint, :write, tl(addr))}
-		   class="email-addr">{email_name(addr)}</LivePatch>
-	{/for}
-    </div>
-    <div :if={length(@meta.cc) > 0} class="line">
-	Cc:
-	{#for addr <- @meta.cc}
-	<LivePatch to={Routes.mail_path(Endpoint, :write, tl(addr))}
-		   class="email-addr">{email_name(addr)}</LivePatch>
-	{/for}
-    </div>
-    <div :if={length(@meta.bcc) > 0} class="line">
-	Bcc:
-	{#for addr <- @meta.bcc}
-	<LivePatch to={Routes.mail_path(Endpoint, :write, tl(addr))}
-		   class="email-addr">{email_name(addr)}</LivePatch>
-	{/for}
-    </div>
-    <div class="line">
-	Subject: <span class="subject">{@meta.subject}</span>
-    </div>
-    <div class="line">
-	Flags: <span class="flags">{flags_string(@meta.flags)}</span>
-    </div>
-    <div class="line">
-	Date: <span class="date">{date_string(@meta.date, @tz_offset)}</span>
-    </div>
-    <ul :if={!Enum.empty?(@attachments)} class="attachments">
-	{#for {seq, name, type, size, offset, url} <- @attachments}
-	<Attachment seq={seq} name={name} type={type}
-		    size={size} offset={offset} url={url} />
-	{/for}
-    </ul>
-    <div phx-update="ignore" id="view-content">
+<div class="fill" id="message-view" hidden={@hidden} :hook>
+    <div phx-update="ignore" class="box" id="view-content">
 	<pre></pre>
 	<div hidden class="desc"></div>
     </div>

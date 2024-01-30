@@ -545,7 +545,6 @@ ul.attachments li .progress-box .progress {
 .content .box {
   display: flow-root;
   width: 100%;
-  flex-grow: 1;
   overflow-x: hidden;
   background-color: rgb(255 255 255);
   padding: 0.5rem;
