@@ -14,8 +14,7 @@ defmodule Liv.MailClient do
     :tree,
     mails: %{},
     query: nil,
-    stale?: false,
-    ref: nil
+    stale?: false
   ]
 
   @doc """
@@ -84,19 +83,19 @@ defmodule Liv.MailClient do
   end
 
   @doc """
-  close a message. clear the ref, mark the old message seen
+  close a message, mark the old message seen
   """
   def close(nil, _), do: nil
 
   def close(%__MODULE__{mails: mails} = mc, docid) do
     case Map.get(mails, docid) do
       nil ->
-        %{mc | ref: nil}
+        mc
 
       %{flags: flags} ->
         case Enum.member?(flags, :seen) do
           true ->
-            %{mc | ref: nil}
+            mc
 
           false ->
             case MaildirCommander.flag(docid, "+S") do
@@ -109,7 +108,7 @@ defmodule Liv.MailClient do
                   {:seen_message, docid, m}
                 )
 
-                %{mc | mails: %{mails | docid => m}, ref: nil}
+                %{mc | mails: %{mails | docid => m}}
 
               {:error, msg} ->
                 Logger.warning("docid: #{docid} #{msg}")
@@ -133,22 +132,14 @@ defmodule Liv.MailClient do
 
       {:ok, %{path: path, msgid: msgid} = meta} ->
         Logger.debug("streaming #{path}")
+        MaildirCommander.stream_mail(path, docid)
 
-        case MaildirCommander.stream_mail(path) do
-          {:error, reason} ->
-            Logger.warning("docid: #{docid} path: #{path} not found: #{reason}")
-            reindex()
-            nil
-
-          {:ok, ref} ->
-            %__MODULE__{
-              tree: MCTree.single(docid),
-              mails: %{docid => meta},
-              query: "msgid:#{msgid}",
-              stale?: true,
-              ref: ref
-            }
-        end
+        %__MODULE__{
+          tree: MCTree.single(docid),
+          mails: %{docid => meta},
+          query: "msgid:#{msgid}",
+          stale?: true
+        }
     end
   end
 
@@ -159,16 +150,8 @@ defmodule Liv.MailClient do
 
       %{path: path} ->
         Logger.debug("streaming #{path}")
-
-        case MaildirCommander.stream_mail(path) do
-          {:error, reason} ->
-            Logger.warning("docid: #{docid} path: #{path} not found: #{reason}")
-            reindex()
-            %{mc | ref: nil}
-
-          {:ok, ref} ->
-            %{mc | ref: ref}
-        end
+        MaildirCommander.stream_mail(path, docid)
+        mc
     end
   end
 
@@ -508,17 +491,17 @@ defmodule Liv.MailClient do
   @doc """
   receive parts into data structure.
   """
-  def receive_part(%__MODULE__{ref: ref}, ref, :eof), do: :eof
+  def receive_part(:eof), do: :eof
 
-  def receive_part(%__MODULE__{ref: ref}, ref, %{content_type: "text/plain", body: body}) do
+  def receive_part(%{content_type: "text/plain", body: body}) do
     {"", "text/plain", body}
   end
 
-  def receive_part(%__MODULE__{ref: ref}, ref, %{content_type: "text/html", body: body}) do
+  def receive_part(%{content_type: "text/html", body: body}) do
     {"", "text/html", body}
   end
 
-  def receive_part(%__MODULE__{ref: ref}, ref, %{
+  def receive_part(%{
         content_type: type,
         disposition_params: %{"filename" => filename},
         body: body
@@ -527,7 +510,7 @@ defmodule Liv.MailClient do
     {filename, type, body}
   end
 
-  def receive_part(%__MODULE__{ref: ref}, ref, %{
+  def receive_part(%{
         content_type: type,
         content_type_params: %{"name" => filename},
         disposition: "attachment",
@@ -537,7 +520,7 @@ defmodule Liv.MailClient do
     {filename, type, body}
   end
 
-  def receive_part(_, _, _), do: nil
+  def receive_part(_), do: nil
 
   @doc """
   archiving job. Always return :ok. will log and do side effects

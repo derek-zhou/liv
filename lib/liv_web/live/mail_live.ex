@@ -1195,12 +1195,12 @@ defmodule LivWeb.MailLive do
         {:mail_part, ref, part},
         %Socket{
           assigns: %{
-            mail_client: mc,
+            mail_docid: ref,
             mail_attachments: attachments
           }
         } = socket
       ) do
-    case MailClient.receive_part(mc, ref, part) do
+    case MailClient.receive_part(part) do
       nil ->
         {:noreply, socket}
 
@@ -1227,6 +1227,8 @@ defmodule LivWeb.MailLive do
         }
     end
   end
+
+  def handle_info({:mail_part, _, _}, socket), do: {:noreply, socket}
 
   def handle_info(
         {:delete_message, docid},
