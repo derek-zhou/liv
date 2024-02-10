@@ -20,6 +20,10 @@ defmodule Liv.Application do
       Liv.DelayMarker,
       # the orbit gen server
       Liv.Orbit,
+      # start the registry for shadows
+      {Registry, keys: :unique, name: Liv.Shadows},
+      # start the supervisor for shadows
+      {DynamicSupervisor, strategy: :one_for_one, name: Liv.ShadowSupervisor},
       # Start the Endpoint (http/https)
       LivWeb.Endpoint
       # Start a worker by calling: Liv.Worker.start_link(arg)
