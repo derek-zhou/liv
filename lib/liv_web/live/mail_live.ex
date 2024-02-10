@@ -29,20 +29,29 @@ defmodule LivWeb.MailLive do
   alias Phoenix.PubSub
   import Bitwise
 
-  # client side state
+  # client side state, no need to shadow
   # nil, logged_in, logged_out
   data auth, :atom, default: nil
   data token, :any, default: nil
   data tz_offset, :integer, default: 0
 
-  # the mail client app state
-  data mail_client, :map, default: nil
-
-  # for login
+  # for login, no need to shadow
   data password_hash, :string, default: ""
   data saved_password, :string, default: ""
   data password_prompt, :string, default: "Enter your password: "
   data saved_path, :string, default: "/"
+
+  # for the viewer, don't shadow, because it need to be in sync with client state
+  data mail_docid, :integer, default: 0
+  data mail_attachments, :list, default: []
+  data mail_attachment_offset, :integer, default: 0
+  data mail_attachment_metas, :list, default: []
+  data mail_chunk_outstanding, :boolean, default: false
+  data mail_meta, :any, default: nil
+  data mail_text, :string, default: ""
+
+  # the mail client app state
+  data mail_client, :map, default: nil
 
   # for the header
   data info, :string, default: "Loading..."
@@ -52,15 +61,6 @@ defmodule LivWeb.MailLive do
   # for finder
   data list_mails, :map, default: %{}
   data list_tree, :tuple, default: nil
-
-  # for the viewer
-  data mail_docid, :integer, default: 0
-  data mail_attachments, :list, default: []
-  data mail_attachment_offset, :integer, default: 0
-  data mail_attachment_metas, :list, default: []
-  data mail_chunk_outstanding, :boolean, default: false
-  data mail_meta, :any, default: nil
-  data mail_text, :string, default: ""
 
   # for search
   data default_query, :string, default: @default_query
@@ -205,10 +205,10 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
+      |> assign(mail_docid: 0)
       |> Shadow.assign(
         info: "#{MailClient.unread_count(mc)} unread/#{MailClient.mail_count(mc)}",
         home_link: Routes.mail_path(Endpoint, :find, query),
-        mail_docid: 0,
         page_title: query,
         list_mails: MailClient.mails_of(mc),
         list_tree: MailClient.tree_of(mc),
@@ -1059,7 +1059,8 @@ defmodule LivWeb.MailLive do
         {
           :noreply,
           socket
-          |> Shadow.assign(mail_docid: 0, mail_client: MailClient.close(mc, docid))
+          |> assign(mail_docid: 0)
+          |> Shadow.assign(mail_client: MailClient.close(mc, docid))
           |> push_patch(to: Routes.mail_path(Endpoint, :view, prev))
         }
     end
@@ -1078,7 +1079,8 @@ defmodule LivWeb.MailLive do
         {
           :noreply,
           socket
-          |> Shadow.assign(mail_docid: 0, mail_client: MailClient.close(mc, docid))
+          |> assign(mail_docid: 0)
+          |> Shadow.assign(mail_client: MailClient.close(mc, docid))
           |> push_patch(to: Routes.mail_path(Endpoint, :view, next))
         }
     end
@@ -1092,7 +1094,7 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
-      |> Shadow.assign(mail_chunk_outstanding: false)
+      |> assign(mail_chunk_outstanding: false)
       |> stream_attachments()
     }
   end
@@ -1113,7 +1115,7 @@ defmodule LivWeb.MailLive do
         v -> v
       end)
 
-    {:noreply, Shadow.assign(socket, mail_attachment_metas: atts)}
+    {:noreply, assign(socket, mail_attachment_metas: atts)}
   end
 
   def handle_event("update_attachment_url", _params, socket) do
@@ -1211,10 +1213,7 @@ defmodule LivWeb.MailLive do
         {
           :noreply,
           socket
-          |> Shadow.assign(
-            mail_text: body,
-            mail_attachments: attachments ++ [{"", "text/plain", body}]
-          )
+          |> assign(mail_text: body, mail_attachments: attachments ++ [{"", "text/plain", body}])
           |> stream_attachments()
         }
 
@@ -1222,7 +1221,7 @@ defmodule LivWeb.MailLive do
         {
           :noreply,
           socket
-          |> Shadow.assign(mail_attachments: attachments ++ [{name, type, body}])
+          |> assign(mail_attachments: attachments ++ [{name, type, body}])
           |> stream_attachments()
         }
     end
@@ -1414,18 +1413,20 @@ defmodule LivWeb.MailLive do
 
     socket
     |> push_event("clear_attachments", %{})
-    |> Shadow.assign(
+    |> assign(
       mail_meta: meta,
       mail_text: "",
       mail_chunk_outstanding: false,
       mail_attachments: [],
       mail_attachment_offset: 0,
       mail_attachment_metas: [],
+      mail_docid: docid
+    )
+    |> Shadow.assign(
       info: "",
       home_link: Routes.mail_path(Endpoint, :find, mc.query),
       page_title: meta.subject,
       mail_client: mc,
-      mail_docid: docid,
       buttons: [
         {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
         {:patch, "\u{23F3}", Routes.mail_path(Endpoint, :boomerang), false},
@@ -1472,7 +1473,7 @@ defmodule LivWeb.MailLive do
     |> push_event("attachment_start", %{type: type})
     |> push_event("attachment_chunk", %{ref: ref, chunk: content})
     |> push_event("attachment_end", %{ref: ref, seq: seq, name: name})
-    |> Shadow.assign(
+    |> assign(
       mail_chunk_outstanding: true,
       mail_attachments: tail,
       mail_attachment_metas: atts ++ [{seq, name, type, byte_size(content), 0, ""}]
@@ -1505,7 +1506,7 @@ defmodule LivWeb.MailLive do
     |> maybe_push(first?, "attachment_start", %{type: type})
     |> push_event("attachment_chunk", %{ref: ref, chunk: chunk})
     |> maybe_push(last?, "attachment_end", %{ref: ref, seq: seq, name: name})
-    |> Shadow.assign(
+    |> assign(
       mail_chunk_outstanding: true,
       mail_attachments: atts_in,
       mail_attachment_offset: offset,
@@ -1530,7 +1531,7 @@ defmodule LivWeb.MailLive do
     |> push_event("attachment_start", %{type: type})
     |> push_event("attachment_chunk", %{ref: ref, chunk: Base.encode64(content)})
     |> push_event("attachment_end", %{ref: ref, seq: seq, name: name})
-    |> Shadow.assign(
+    |> assign(
       mail_chunk_outstanding: true,
       mail_attachments: tail,
       mail_attachment_metas: atts ++ [{seq, name, type, byte_size(content), 0, ""}]
@@ -1563,7 +1564,7 @@ defmodule LivWeb.MailLive do
     |> maybe_push(first?, "attachment_start", %{type: type})
     |> push_event("attachment_chunk", %{ref: ref, chunk: chunk})
     |> maybe_push(last?, "attachment_end", %{ref: ref, seq: seq, name: name})
-    |> Shadow.assign(
+    |> assign(
       mail_chunk_outstanding: true,
       mail_attachments: atts_in,
       mail_attachment_offset: offset,
