@@ -1,12 +1,11 @@
 defmodule Liv.Shadow do
   @moduledoc """
-  a shadow server for a liveview socket to store all assings on the side for backup
+  a shadow server to store all assings on the side for backup
   """
 
   require Logger
   use GenServer, restart: :transient
   alias Liv.{ShadowSupervisor, Shadows}
-  alias Phoenix.LiveView.Socket
 
   def child_spec(name) do
     %{id: name, start: {__MODULE__, :start_link, [name]}, restart: :transient}
@@ -17,26 +16,26 @@ defmodule Liv.Shadow do
   end
 
   @doc """
-  restore all data from the shadow, create a shadow if one is missing.
-  return the updated socket
+  load the data from the shadow, create a shadow if one is missing.
   """
-  def restore(%Socket{assigns: %{token: token} = assigns} = socket) do
+  def get(token) do
     case Registry.lookup(Shadows, token) do
       [{pid, _}] ->
-        %{socket | assigns: Map.merge(assigns, GenServer.call(pid, :get))}
+        GenServer.call(pid, :get)
 
       _ ->
         start(token)
-        socket
+        %{}
     end
   end
 
   @doc """
-  add assigns to the shadow and to socket
+  add assigns to the shadow, returns :ok
   """
-  def assign(%Socket{assigns: %{token: token}} = socket, keyword) do
+  def assign(nil, _), do: :ok
+
+  def assign(token, keyword) do
     GenServer.cast({:via, Registry, {Shadows, token}}, {:assign, keyword})
-    Phoenix.Component.assign(socket, keyword)
   end
 
   @doc """

@@ -29,19 +29,19 @@ defmodule LivWeb.MailLive do
   alias Phoenix.PubSub
   import Bitwise
 
-  # client side state, no need to shadow
+  # client side state
   # nil, logged_in, logged_out
   data auth, :atom, default: nil
   data token, :any, default: nil
   data tz_offset, :integer, default: 0
 
-  # for login, no need to shadow
+  # for login
   data password_hash, :string, default: ""
   data saved_password, :string, default: ""
   data password_prompt, :string, default: "Enter your password: "
   data saved_path, :string, default: "/"
 
-  # for the viewer, don't shadow, because it need to be in sync with client state
+  # for the viewer
   data mail_docid, :integer, default: 0
   data mail_attachments, :list, default: []
   data mail_attachment_offset, :integer, default: 0
@@ -134,7 +134,7 @@ defmodule LivWeb.MailLive do
       socket
       |> clear_flash()
       |> push_event("set_value", %{key: "token", value: ""})
-      |> assign(
+      |> shadow_assign(
         auth: :logged_out,
         token: nil,
         home_link: "#",
@@ -156,7 +156,7 @@ defmodule LivWeb.MailLive do
         {
           :noreply,
           socket
-          |> assign(auth: :logged_in, saved_path: uri.path)
+          |> shadow_assign(auth: :logged_in, saved_path: uri.path)
           |> push_patch(to: Routes.mail_path(Endpoint, :set_password))
         }
 
@@ -164,7 +164,7 @@ defmodule LivWeb.MailLive do
         {
           :noreply,
           socket
-          |> assign(password_hash: hash, saved_path: uri.path)
+          |> shadow_assign(password_hash: hash, saved_path: uri.path)
           |> push_patch(to: Routes.mail_path(Endpoint, :login))
         }
     end
@@ -177,7 +177,7 @@ defmodule LivWeb.MailLive do
       :noreply,
       socket
       |> clear_flash()
-      |> assign(
+      |> shadow_assign(
         info: "Set password of #{user}",
         home_link: "#",
         page_title: "Set password of #{user}",
@@ -205,8 +205,8 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
-      |> assign(mail_docid: 0)
-      |> Shadow.assign(
+      |> shadow_assign(
+        mail_docid: 0,
         info: "#{MailClient.unread_count(mc)} unread/#{MailClient.mail_count(mc)}",
         home_link: Routes.mail_path(Endpoint, :find, query),
         page_title: query,
@@ -276,7 +276,7 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
-      |> Shadow.assign(
+      |> shadow_assign(
         default_query: query,
         query_examples: examples,
         page_title: "Search",
@@ -313,7 +313,7 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
-      |> Shadow.assign(
+      |> shadow_assign(
         default_query: query,
         query_examples: examples,
         page_title: "Search",
@@ -336,7 +336,7 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
-      |> Shadow.assign(
+      |> shadow_assign(
         page_title: "Config",
         info: "Config",
         my_addr: Configer.default(:my_address),
@@ -363,7 +363,7 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
-      |> Shadow.assign(
+      |> shadow_assign(
         page_title: "Draft",
         info: subject || "",
         home_link: "#",
@@ -391,7 +391,7 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
-      |> Shadow.assign(
+      |> shadow_assign(
         page_title: "Write",
         info: "",
         home_link: "#",
@@ -432,7 +432,7 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
-      |> Shadow.assign(
+      |> shadow_assign(
         page_title: "Write",
         info: "",
         home_link: "#",
@@ -471,7 +471,7 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
-      |> Shadow.assign(
+      |> shadow_assign(
         page_title: "Write",
         info: "",
         home_link: "#",
@@ -528,7 +528,7 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
-      |> Shadow.assign(
+      |> shadow_assign(
         page_title: "My address book",
         info: "#{Enum.count(book)} correspondents",
         home_link: "#",
@@ -558,7 +558,7 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
-      |> Shadow.assign(
+      |> shadow_assign(
         page_title: "My address book",
         info: "#{Enum.count(book)} correspondents",
         home_link: "#",
@@ -579,7 +579,7 @@ defmodule LivWeb.MailLive do
       ) do
     {
       :noreply,
-      Shadow.assign(socket,
+      shadow_assign(socket,
         info: "Boomerang a Mail",
         home_link: "#",
         page_title: "Boomerang a Mail",
@@ -620,7 +620,7 @@ defmodule LivWeb.MailLive do
       :noreply,
       socket
       |> clear_flash()
-      |> assign(
+      |> shadow_assign(
         saved_password: password,
         password_prompt: "Re-enter the password: "
       )
@@ -640,7 +640,7 @@ defmodule LivWeb.MailLive do
       :noreply,
       socket
       |> clear_flash()
-      |> assign(password_hash: hash)
+      |> shadow_assign(password_hash: hash)
       |> push_patch(to: path)
     }
   end
@@ -650,7 +650,7 @@ defmodule LivWeb.MailLive do
       :noreply,
       socket
       |> put_flash(:error, "Passwords do not match")
-      |> assign(
+      |> shadow_assign(
         saved_password: "",
         password_prompt: "Enter your password: "
       )
@@ -672,7 +672,7 @@ defmodule LivWeb.MailLive do
           socket
           |> clear_flash()
           |> push_event("set_value", %{key: "token", value: Base.url_encode64(token)})
-          |> assign(auth: :logged_in, token: token)
+          |> shadow_assign(auth: :logged_in, token: token)
           |> push_patch(to: path)
         }
 
@@ -689,13 +689,13 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
-      |> Shadow.assign(mail_client: nil)
+      |> shadow_assign(mail_client: nil)
       |> push_patch(to: Routes.mail_path(Endpoint, :find, query))
     }
   end
 
   def handle_event("pick_search_example", %{"query" => query}, socket) do
-    {:noreply, Shadow.assign(socket, default_query: query)}
+    {:noreply, shadow_assign(socket, default_query: query)}
   end
 
   def handle_event(
@@ -707,7 +707,7 @@ defmodule LivWeb.MailLive do
     book = Enum.reject(book, fn entry -> entry.addr == addr end)
 
     {:noreply,
-     Shadow.assign(socket,
+     shadow_assign(socket,
        info: "#{Enum.count(book)} correspondents",
        address_book: book
      )}
@@ -747,7 +747,7 @@ defmodule LivWeb.MailLive do
 
     {
       :noreply,
-      Shadow.assign(socket,
+      shadow_assign(socket,
         recipients: recipients,
         subject: subject,
         addr_options: completion_list,
@@ -782,7 +782,7 @@ defmodule LivWeb.MailLive do
 
     {
       :noreply,
-      Shadow.assign(socket,
+      shadow_assign(socket,
         recipients: recipients,
         subject: subject,
         write_text: text,
@@ -819,7 +819,7 @@ defmodule LivWeb.MailLive do
           :noreply,
           socket
           |> put_flash(:info, "Mail sent.")
-          |> Shadow.assign(
+          |> shadow_assign(
             recipients: [],
             write_text: "",
             subject: "",
@@ -848,7 +848,7 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
-      |> Shadow.assign(
+      |> shadow_assign(
         recipients: [],
         write_text: "",
         subject: "",
@@ -981,7 +981,7 @@ defmodule LivWeb.MailLive do
 
     {
       :noreply,
-      Shadow.assign(
+      shadow_assign(
         socket,
         my_addr: my_addr,
         my_addrs: my_addrs,
@@ -1059,8 +1059,7 @@ defmodule LivWeb.MailLive do
         {
           :noreply,
           socket
-          |> assign(mail_docid: 0)
-          |> Shadow.assign(mail_client: MailClient.close(mc, docid))
+          |> shadow_assign(mail_docid: 0, mail_client: MailClient.close(mc, docid))
           |> push_patch(to: Routes.mail_path(Endpoint, :view, prev))
         }
     end
@@ -1079,8 +1078,7 @@ defmodule LivWeb.MailLive do
         {
           :noreply,
           socket
-          |> assign(mail_docid: 0)
-          |> Shadow.assign(mail_client: MailClient.close(mc, docid))
+          |> shadow_assign(mail_docid: 0, mail_client: MailClient.close(mc, docid))
           |> push_patch(to: Routes.mail_path(Endpoint, :view, next))
         }
     end
@@ -1094,7 +1092,7 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
-      |> assign(mail_chunk_outstanding: false)
+      |> shadow_assign(mail_chunk_outstanding: false)
       |> stream_attachments()
     }
   end
@@ -1115,7 +1113,7 @@ defmodule LivWeb.MailLive do
         v -> v
       end)
 
-    {:noreply, assign(socket, mail_attachment_metas: atts)}
+    {:noreply, shadow_assign(socket, mail_attachment_metas: atts)}
   end
 
   def handle_event("update_attachment_url", _params, socket) do
@@ -1131,7 +1129,7 @@ defmodule LivWeb.MailLive do
     {
       :noreply,
       socket
-      |> Shadow.assign(incoming_attachments: [{name, size} | atts])
+      |> shadow_assign(incoming_attachments: [{name, size} | atts])
       |> accept_streaming()
     }
   end
@@ -1150,7 +1148,7 @@ defmodule LivWeb.MailLive do
         _params,
         %Socket{assigns: %{current_attachment: nil}} = socket
       ) do
-    {:noreply, Shadow.assign(socket, write_attachments: [], info: "")}
+    {:noreply, shadow_assign(socket, write_attachments: [], info: "")}
   end
 
   def handle_event(
@@ -1160,7 +1158,7 @@ defmodule LivWeb.MailLive do
       ) do
     {
       :noreply,
-      Shadow.assign(socket,
+      shadow_assign(socket,
         write_attachments: [],
         current_attachment: {name, 0, offset, data},
         info: ""
@@ -1213,7 +1211,10 @@ defmodule LivWeb.MailLive do
         {
           :noreply,
           socket
-          |> assign(mail_text: body, mail_attachments: attachments ++ [{"", "text/plain", body}])
+          |> shadow_assign(
+            mail_text: body,
+            mail_attachments: attachments ++ [{"", "text/plain", body}]
+          )
           |> stream_attachments()
         }
 
@@ -1221,7 +1222,7 @@ defmodule LivWeb.MailLive do
         {
           :noreply,
           socket
-          |> assign(mail_attachments: attachments ++ [{name, type, body}])
+          |> shadow_assign(mail_attachments: attachments ++ [{name, type, body}])
           |> stream_attachments()
         }
     end
@@ -1233,35 +1234,35 @@ defmodule LivWeb.MailLive do
         {:delete_message, docid},
         %Socket{assigns: %{mail_client: mc}} = socket
       ) do
-    {:noreply, Shadow.assign(socket, mail_client: MailClient.set_meta(mc, docid, nil))}
+    {:noreply, shadow_assign(socket, mail_client: MailClient.set_meta(mc, docid, nil))}
   end
 
   def handle_info(
         {:mark_message, docid, mail},
         %Socket{assigns: %{mail_client: mc}} = socket
       ) do
-    {:noreply, Shadow.assign(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
+    {:noreply, shadow_assign(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
   end
 
   def handle_info(
         {:unmark_message, docid, mail},
         %Socket{assigns: %{mail_client: mc}} = socket
       ) do
-    {:noreply, Shadow.assign(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
+    {:noreply, shadow_assign(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
   end
 
   def handle_info(
         {:archive_message, docid, mail},
         %Socket{assigns: %{mail_client: mc}} = socket
       ) do
-    {:noreply, Shadow.assign(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
+    {:noreply, shadow_assign(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
   end
 
   def handle_info(
         {:seen_message, docid, mail},
         %Socket{assigns: %{mail_client: mc}} = socket
       ) do
-    {:noreply, Shadow.assign(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
+    {:noreply, shadow_assign(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
   end
 
   def handle_info(:new_mail, %Socket{assigns: %{mail_client: nil}} = socket) do
@@ -1273,7 +1274,7 @@ defmodule LivWeb.MailLive do
       :noreply,
       socket
       |> put_flash(:info, "You've got new mails")
-      |> Shadow.assign(mail_client: MailClient.set_stale(mc))
+      |> shadow_assign(mail_client: MailClient.set_stale(mc))
     }
   end
 
@@ -1283,7 +1284,7 @@ defmodule LivWeb.MailLive do
       ) do
     {
       :noreply,
-      Shadow.assign(socket,
+      shadow_assign(socket,
         recipients: recipients || MailClient.default_recipients(),
         info: subject || "",
         subject: subject || "",
@@ -1295,12 +1296,24 @@ defmodule LivWeb.MailLive do
   def handle_info({:draft_update, subject, recipients, body}, socket) do
     {
       :noreply,
-      Shadow.assign(socket,
+      shadow_assign(socket,
         recipients: recipients || MailClient.default_recipients(),
         subject: subject || "",
         write_text: body || ""
       )
     }
+  end
+
+  defp shadow_assign(%Socket{assigns: %{token: token}} = socket, keyword) do
+    Shadow.assign(token, keyword)
+    assign(socket, keyword)
+  end
+
+  defp restore(%Socket{assigns: %{token: token} = assigns} = socket) do
+    # load everything from the shadow
+    socket = %{socket | assigns: Map.merge(assigns, Shadow.get(token))}
+    # mail view has client state, which could be damaged. clear docid to force reload
+    shadow_assign(socket, mail_docid: 0)
   end
 
   defp close_action(%Socket{assigns: %{mail_docid: 0, mail_client: nil}}) do
@@ -1319,18 +1332,18 @@ defmodule LivWeb.MailLive do
     with {:ok, key} <- Base.url_decode64(token),
          true <- Guardian.valid_token?(key) do
       socket
-      |> assign(auth: :logged_in, token: key)
-      |> Shadow.restore()
+      |> shadow_assign(auth: :logged_in, token: key)
+      |> restore()
     else
       _ ->
-        assign(socket, auth: :logged_out, token: nil)
+        shadow_assign(socket, auth: :logged_out, token: nil)
     end
   end
 
-  defp fetch_token(socket, _), do: assign(socket, auth: :logged_out, token: nil)
+  defp fetch_token(socket, _), do: shadow_assign(socket, auth: :logged_out, token: nil)
 
   defp fetch_tz_offset(socket, %{"timezoneOffset" => offset}) do
-    assign(socket, tz_offset: offset)
+    shadow_assign(socket, tz_offset: offset)
   end
 
   defp fetch_tz_offset(socket, _), do: socket
@@ -1378,7 +1391,7 @@ defmodule LivWeb.MailLive do
 
     socket
     |> put_flash(:error, "Mail not found")
-    |> Shadow.assign(
+    |> shadow_assign(
       info: "Mail not found",
       home_link: Routes.mail_path(Endpoint, :find, query),
       page_title: "Mail not found",
@@ -1395,7 +1408,7 @@ defmodule LivWeb.MailLive do
     meta = MailClient.mail_meta(mc, docid)
 
     socket
-    |> Shadow.assign(
+    |> shadow_assign(
       info: "",
       home_link: Routes.mail_path(Endpoint, :find, mc.query),
       page_title: meta.subject,
@@ -1413,7 +1426,7 @@ defmodule LivWeb.MailLive do
 
     socket
     |> push_event("clear_attachments", %{})
-    |> assign(
+    |> shadow_assign(
       mail_meta: meta,
       mail_text: "",
       mail_chunk_outstanding: false,
@@ -1422,7 +1435,7 @@ defmodule LivWeb.MailLive do
       mail_attachment_metas: [],
       mail_docid: docid
     )
-    |> Shadow.assign(
+    |> shadow_assign(
       info: "",
       home_link: Routes.mail_path(Endpoint, :find, mc.query),
       page_title: meta.subject,
@@ -1473,7 +1486,7 @@ defmodule LivWeb.MailLive do
     |> push_event("attachment_start", %{type: type})
     |> push_event("attachment_chunk", %{ref: ref, chunk: content})
     |> push_event("attachment_end", %{ref: ref, seq: seq, name: name})
-    |> assign(
+    |> shadow_assign(
       mail_chunk_outstanding: true,
       mail_attachments: tail,
       mail_attachment_metas: atts ++ [{seq, name, type, byte_size(content), 0, ""}]
@@ -1506,7 +1519,7 @@ defmodule LivWeb.MailLive do
     |> maybe_push(first?, "attachment_start", %{type: type})
     |> push_event("attachment_chunk", %{ref: ref, chunk: chunk})
     |> maybe_push(last?, "attachment_end", %{ref: ref, seq: seq, name: name})
-    |> assign(
+    |> shadow_assign(
       mail_chunk_outstanding: true,
       mail_attachments: atts_in,
       mail_attachment_offset: offset,
@@ -1531,7 +1544,7 @@ defmodule LivWeb.MailLive do
     |> push_event("attachment_start", %{type: type})
     |> push_event("attachment_chunk", %{ref: ref, chunk: Base.encode64(content)})
     |> push_event("attachment_end", %{ref: ref, seq: seq, name: name})
-    |> assign(
+    |> shadow_assign(
       mail_chunk_outstanding: true,
       mail_attachments: tail,
       mail_attachment_metas: atts ++ [{seq, name, type, byte_size(content), 0, ""}]
@@ -1564,7 +1577,7 @@ defmodule LivWeb.MailLive do
     |> maybe_push(first?, "attachment_start", %{type: type})
     |> push_event("attachment_chunk", %{ref: ref, chunk: chunk})
     |> maybe_push(last?, "attachment_end", %{ref: ref, seq: seq, name: name})
-    |> assign(
+    |> shadow_assign(
       mail_chunk_outstanding: true,
       mail_attachments: atts_in,
       mail_attachment_offset: offset,
@@ -1581,7 +1594,7 @@ defmodule LivWeb.MailLive do
          } = socket,
          _chunk
        ) do
-    Shadow.assign(socket,
+    shadow_assign(socket,
       current_attachment: nil,
       write_chunk_outstanding: false,
       info: attachments_info(atts, 0)
@@ -1613,7 +1626,7 @@ defmodule LivWeb.MailLive do
       offset == size ->
         atts = [{name, size, data} | atts]
 
-        Shadow.assign(socket,
+        shadow_assign(socket,
           info: attachments_info(atts, 0),
           write_attachments: atts,
           current_attachment: nil,
@@ -1621,7 +1634,7 @@ defmodule LivWeb.MailLive do
         )
 
       true ->
-        Shadow.assign(socket,
+        shadow_assign(socket,
           info: attachments_info(atts, offset),
           current_attachment: {name, size, offset, data},
           write_chunk_outstanding: false
@@ -1656,7 +1669,7 @@ defmodule LivWeb.MailLive do
     {atts, [{name, size}]} = Enum.split(atts, -1)
 
     socket
-    |> Shadow.assign(
+    |> shadow_assign(
       current_attachment: {name, size, 0, []},
       incoming_attachments: atts,
       write_chunk_outstanding: true
@@ -1668,7 +1681,7 @@ defmodule LivWeb.MailLive do
          %Socket{assigns: %{current_attachment: {name, _size, offset, _data}}} = socket
        ) do
     socket
-    |> Shadow.assign(write_chunk_outstanding: true)
+    |> shadow_assign(write_chunk_outstanding: true)
     |> push_event("read_attachment", %{name: name, offset: offset})
   end
 
