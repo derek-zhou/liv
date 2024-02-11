@@ -18,13 +18,13 @@ defmodule Liv.Shadow do
   @doc """
   load the data from the shadow, create a shadow if one is missing.
   """
-  def get(token) do
-    case Registry.lookup(Shadows, token) do
+  def get(name) do
+    case Registry.lookup(Shadows, name) do
       [{pid, _}] ->
         GenServer.call(pid, :get)
 
       _ ->
-        start(token)
+        start(name)
         %{}
     end
   end
@@ -34,21 +34,21 @@ defmodule Liv.Shadow do
   """
   def assign(nil, _), do: :ok
 
-  def assign(token, keyword) do
-    GenServer.cast({:via, Registry, {Shadows, token}}, {:assign, keyword})
+  def assign(name, keyword) do
+    GenServer.cast({:via, Registry, {Shadows, name}}, {:assign, keyword})
   end
 
   @doc """
   start the shadow server
   """
-  def start(token) do
-    DynamicSupervisor.start_child(ShadowSupervisor, {__MODULE__, token})
+  def start(name) do
+    DynamicSupervisor.start_child(ShadowSupervisor, {__MODULE__, name})
   end
 
   @doc """
   stop the shadow server
   """
-  def stop(token), do: GenServer.cast({:via, Registry, {Shadows, token}}, :stop)
+  def stop(name), do: GenServer.cast({:via, Registry, {Shadows, name}}, :stop)
 
   # server
   @impl true

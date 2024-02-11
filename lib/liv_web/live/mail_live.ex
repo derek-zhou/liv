@@ -1310,10 +1310,17 @@ defmodule LivWeb.MailLive do
   end
 
   defp restore(%Socket{assigns: %{token: token} = assigns} = socket) do
-    # load everything from the shadow
-    socket = %{socket | assigns: Map.merge(assigns, Shadow.get(token))}
-    # mail view has client state, which could be damaged. clear docid to force reload
-    shadow_assign(socket, mail_docid: 0)
+    # load everything from the shadow, except the ones that depends on client state
+    data =
+      token
+      |> Shadow.get()
+      |> Map.delete(:mail_docid)
+      |> Map.delete(:mail_chunk_outstanding)
+      |> Map.delete(:mail_attachments)
+      |> Map.delete(:mail_attachment_offset)
+      |> Map.delete(:mail_attachment_metas)
+
+    %{socket | assigns: Map.merge(assigns, data)}
   end
 
   defp close_action(%Socket{assigns: %{mail_docid: 0, mail_client: nil}}) do
@@ -1433,9 +1440,7 @@ defmodule LivWeb.MailLive do
       mail_attachments: [],
       mail_attachment_offset: 0,
       mail_attachment_metas: [],
-      mail_docid: docid
-    )
-    |> shadow_assign(
+      mail_docid: docid,
       info: "",
       home_link: Routes.mail_path(Endpoint, :find, mc.query),
       page_title: meta.subject,
