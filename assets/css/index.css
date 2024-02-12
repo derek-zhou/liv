@@ -549,6 +549,10 @@ ul.attachments li .progress-box .progress {
   background-color: rgb(255 255 255);
   padding: 0.5rem;
 }
+.content .draft {
+  width: 100%;
+  flex-grow: 1;
+}
 .box .line {
   width: 100%;
 }

@@ -1,1 +1,1 @@
-<iframe class="box" srcdoc={html_draft(@text)} sandbox />
+<iframe class="draft" srcdoc={html_draft(@text)} sandbox />
