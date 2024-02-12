@@ -590,8 +590,12 @@ defmodule LivWeb.MailLive do
     }
   end
 
-  def handle_params(_params, _url, socket) do
-    {:noreply, push_patch(socket, to: Routes.mail_path(Endpoint, :find, @default_query))}
+  def handle_params(_params, _url, %Socket{assigns: %{mail_client: mc}} = socket) do
+    if mc && mc.query do
+      {:noreply, push_patch(socket, to: Routes.mail_path(Endpoint, :find, mc.query))}
+    else
+      {:noreply, push_patch(socket, to: Routes.mail_path(Endpoint, :find, @default_query))}
+    end
   end
 
   def handle_event(
