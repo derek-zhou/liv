@@ -9,13 +9,7 @@ defmodule Liv.MailClient do
 
   alias :maildir_commander, as: MaildirCommander
   alias :mc_tree, as: MCTree
-
-  defstruct [
-    :tree,
-    mails: %{},
-    query: nil,
-    stale?: false
-  ]
+  defstruct tree: nil, mails: %{}
 
   @doc """
   reindex in the background
@@ -30,17 +24,9 @@ defmodule Liv.MailClient do
   def snooze(), do: MaildirCommander.snooze()
 
   @doc """
-  set it stale, force search next time
-  """
-  def set_stale(%__MODULE__{stale?: true} = mc), do: mc
-  def set_stale(%__MODULE__{} = mc), do: %{mc | stale?: true}
-
-  @doc """
   run a query. query can be a query string
   """
-  def search(%__MODULE__{stale?: false, query: query} = mc, query), do: mc
-
-  def search(_, query) do
+  def search(query) do
     # we piggy back pop to new mail query
     if String.match?(query, ~r/flag:unread/), do: pop_all()
 
@@ -52,11 +38,8 @@ defmodule Liv.MailClient do
            false,
            String.match?(query, ~r/^msgid:/)
          ) do
-      {:error, msg} ->
-        raise(msg)
-
-      {:ok, tree, mails} ->
-        %__MODULE__{tree: MCTree.collapse(tree), mails: mails, query: query}
+      {:error, msg} -> raise(msg)
+      {:ok, tree, mails} -> %__MODULE__{tree: MCTree.collapse(tree), mails: mails}
     end
   end
 
@@ -123,35 +106,32 @@ defmodule Liv.MailClient do
   open a message. if the mc is nil, make a minimum mc first.
   then stream the content of the mail
   """
-  def open(nil, docid) do
+  def open(docid) do
     case MaildirCommander.view(docid) do
       {:error, msg} ->
         Logger.warning("docid: #{docid} not found: #{msg}")
         reindex()
         nil
 
-      {:ok, %{path: path, msgid: msgid} = meta} ->
+      {:ok, %{path: path} = meta} ->
         Logger.debug("streaming #{path}")
         MaildirCommander.stream_mail(path, docid)
-
-        %__MODULE__{
-          tree: MCTree.single(docid),
-          mails: %{docid => meta},
-          query: "msgid:#{msgid}",
-          stale?: true
-        }
+        %__MODULE__{tree: MCTree.single(docid), mails: %{docid => meta}}
     end
   end
 
-  def open(%__MODULE__{mails: mails} = mc, docid) do
+  @doc """
+  open a message. then stream the content of the mail. return true if opened
+  """
+  def open(%__MODULE__{mails: mails}, docid) do
     case Map.get(mails, docid) do
       nil ->
-        open(nil, docid)
+        false
 
       %{path: path} ->
         Logger.debug("streaming #{path}")
         MaildirCommander.stream_mail(path, docid)
-        mc
+        true
     end
   end
 

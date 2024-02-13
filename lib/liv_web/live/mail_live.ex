@@ -50,8 +50,10 @@ defmodule LivWeb.MailLive do
   data mail_meta, :any, default: nil
   data mail_text, :string, default: ""
 
-  # the mail client app state
-  data mail_client, :map, default: nil
+  # the mail client holds the result from last query
+  data mail_client, :any, default: nil
+  data last_query, :string, default: @default_query
+  data result_stale?, :boolean, default: true
 
   # for the header
   data info, :string, default: "Loading..."
@@ -114,6 +116,8 @@ defmodule LivWeb.MailLive do
           |> fetch_token(values)
           |> fetch_tz_offset(values)
           |> fetch_locale(values)
+          |> restore()
+          |> shadow(result_stale?: true)
         }
 
       true ->
@@ -196,11 +200,21 @@ defmodule LivWeb.MailLive do
           assigns: %{
             live_action: :find,
             mail_client: mc,
+            result_stale?: stale?,
+            last_query: last_query,
             mail_docid: docid
           }
         } = socket
       ) do
-    mc = mc |> MailClient.close(docid) |> MailClient.search(query)
+    mc = MailClient.close(mc, docid)
+
+    mc =
+      cond do
+        mc == nil -> MailClient.search(query)
+        stale? -> MailClient.search(query)
+        query == last_query -> mc
+        true -> MailClient.search(query)
+      end
 
     {
       :noreply,
@@ -213,6 +227,8 @@ defmodule LivWeb.MailLive do
         list_mails: MailClient.mails_of(mc),
         list_tree: MailClient.tree_of(mc),
         mail_client: mc,
+        last_query: query,
+        result_stale?: false,
         buttons: [
           {:patch, "\u{1F527}", Routes.mail_path(Endpoint, :config), false},
           {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
@@ -229,26 +245,44 @@ defmodule LivWeb.MailLive do
         %Socket{
           assigns: %{
             live_action: :view,
+            mail_client: nil
+          }
+        } = socket
+      ) do
+    case Integer.parse(docid) do
+      {0, ""} -> {:noreply, mail_not_found(socket, @default_query)}
+      {docid, ""} -> {:noreply, open_one_mail(socket, docid)}
+      _ -> {:noreply, mail_not_found(socket, @default_query)}
+    end
+  end
+
+  def handle_params(
+        %{"docid" => docid},
+        _url,
+        %Socket{
+          assigns: %{
+            live_action: :view,
             mail_client: mc,
+            last_query: query,
             mail_docid: old_docid
           }
         } = socket
       ) do
     case Integer.parse(docid) do
       {0, ""} ->
-        {:noreply, mail_not_found(socket, mc)}
+        {:noreply, mail_not_found(socket, query)}
 
       {^old_docid, ""} ->
-        {:noreply, mail_unchanged(socket, mc, old_docid)}
+        {:noreply, mail_unchanged(socket, query, mc, old_docid)}
 
       {docid, ""} ->
         case MailClient.open(mc, docid) do
-          nil -> {:noreply, mail_not_found(socket, mc)}
-          mc -> {:noreply, mail_found(socket, mc, docid)}
+          true -> {:noreply, mail_found(socket, query, mc, docid)}
+          false -> {:noreply, open_one_mail(socket, docid)}
         end
 
       _ ->
-        {:noreply, mail_not_found(socket, mc)}
+        {:noreply, mail_not_found(socket, query)}
     end
   end
 
@@ -259,7 +293,7 @@ defmodule LivWeb.MailLive do
           assigns: %{
             live_action: :search,
             mail_docid: 0,
-            mail_client: mc
+            last_query: query
           }
         } = socket
       ) do
@@ -270,7 +304,6 @@ defmodule LivWeb.MailLive do
         {"Last 7 days", "date:7d..now flag:replied"}
       ]
 
-    query = if mc, do: mc.query, else: elem(hd(examples), 1)
     MailClient.snooze()
 
     {
@@ -296,7 +329,8 @@ defmodule LivWeb.MailLive do
           assigns: %{
             live_action: :search,
             mail_docid: docid,
-            mail_client: mc
+            mail_client: mc,
+            last_query: query
           }
         } = socket
       ) do
@@ -304,10 +338,9 @@ defmodule LivWeb.MailLive do
       [
         {"Same thread", MailClient.solo_query(mc, docid)},
         {"Same sender", MailClient.from_query(mc, docid)},
-        {"Last query", mc.query}
+        {"Last query", query}
       ]
 
-    query = if mc, do: mc.query, else: elem(hd(examples), 1)
     MailClient.snooze()
 
     {
@@ -590,12 +623,8 @@ defmodule LivWeb.MailLive do
     }
   end
 
-  def handle_params(_params, _url, %Socket{assigns: %{mail_client: mc}} = socket) do
-    if mc && mc.query do
-      {:noreply, push_patch(socket, to: Routes.mail_path(Endpoint, :find, mc.query))}
-    else
-      {:noreply, push_patch(socket, to: Routes.mail_path(Endpoint, :find, @default_query))}
-    end
+  def handle_params(_params, _url, %Socket{assigns: %{last_query: query}} = socket) do
+    {:noreply, push_patch(socket, to: Routes.mail_path(Endpoint, :find, query))}
   end
 
   def handle_event(
@@ -1181,13 +1210,13 @@ defmodule LivWeb.MailLive do
   def handle_event(
         "clear_flash",
         %{"key" => "info"},
-        %Socket{assigns: %{live_action: :find, mail_client: mc}} = socket
+        %Socket{assigns: %{live_action: :find, last_query: query}} = socket
       ) do
     {
       :noreply,
       socket
       |> clear_flash(:info)
-      |> push_patch(to: Routes.mail_path(Endpoint, :find, mc.query))
+      |> push_patch(to: Routes.mail_path(Endpoint, :find, query))
     }
   end
 
@@ -1269,16 +1298,12 @@ defmodule LivWeb.MailLive do
     {:noreply, shadow(socket, mail_client: MailClient.set_meta(mc, docid, mail))}
   end
 
-  def handle_info(:new_mail, %Socket{assigns: %{mail_client: nil}} = socket) do
-    {:noreply, put_flash(socket, :info, "You've got new mails")}
-  end
-
-  def handle_info(:new_mail, %Socket{assigns: %{mail_client: mc}} = socket) do
+  def handle_info(:new_mail, socket) do
     {
       :noreply,
       socket
       |> put_flash(:info, "You've got new mails")
-      |> shadow(mail_client: MailClient.set_stale(mc))
+      |> shadow(result_stale?: true)
     }
   end
 
@@ -1317,12 +1342,8 @@ defmodule LivWeb.MailLive do
     %{socket | assigns: Map.merge(assigns, Shadow.get(token))}
   end
 
-  defp close_action(%Socket{assigns: %{mail_docid: 0, mail_client: nil}}) do
-    Routes.mail_path(Endpoint, :find, @default_query)
-  end
-
-  defp close_action(%Socket{assigns: %{mail_docid: 0, mail_client: mc}}) do
-    Routes.mail_path(Endpoint, :find, mc.query)
+  defp close_action(%Socket{assigns: %{mail_docid: 0, last_query: query}}) do
+    Routes.mail_path(Endpoint, :find, query)
   end
 
   defp close_action(%Socket{assigns: %{mail_docid: docid}}) do
@@ -1332,12 +1353,9 @@ defmodule LivWeb.MailLive do
   defp fetch_token(socket, %{"token" => token}) do
     with {:ok, key} <- Base.url_decode64(token),
          true <- Guardian.valid_token?(key) do
-      socket
-      |> assign(auth: :logged_in, token: key)
-      |> restore()
+      assign(socket, auth: :logged_in, token: key)
     else
-      _ ->
-        assign(socket, auth: :logged_out, token: nil)
+      _ -> assign(socket, auth: :logged_out, token: nil)
     end
   end
 
@@ -1387,9 +1405,7 @@ defmodule LivWeb.MailLive do
     end
   end
 
-  defp mail_not_found(socket, mc) do
-    query = if mc, do: mc.query, else: @default_query
-
+  defp mail_not_found(socket, query) do
     socket
     |> put_flash(:error, "Mail not found")
     |> shadow(
@@ -1405,13 +1421,13 @@ defmodule LivWeb.MailLive do
     )
   end
 
-  defp mail_unchanged(socket, mc, docid) do
+  defp mail_unchanged(socket, query, mc, docid) do
     meta = MailClient.mail_meta(mc, docid)
 
     socket
     |> shadow(
       info: "",
-      home_link: Routes.mail_path(Endpoint, :find, mc.query),
+      home_link: Routes.mail_path(Endpoint, :find, query),
       page_title: meta.subject,
       buttons: [
         {:patch, "\u{1F50D}", Routes.mail_path(Endpoint, :search), false},
@@ -1422,7 +1438,24 @@ defmodule LivWeb.MailLive do
     )
   end
 
-  defp mail_found(socket, mc, docid) do
+  defp open_one_mail(socket, docid) do
+    case MailClient.open(docid) do
+      nil ->
+        {:noreply, mail_not_found(socket, @default_query)}
+
+      mc ->
+        query = MailClient.solo_query(mc, docid)
+
+        {
+          :noreply,
+          socket
+          |> shadow(result_stale?: false, last_query: query)
+          |> mail_found(query, mc, docid)
+        }
+    end
+  end
+
+  defp mail_found(socket, query, mc, docid) do
     meta = MailClient.mail_meta(mc, docid)
 
     # mail_streaming related assigns cannot be shadowed, because client state will be lost
@@ -1440,7 +1473,7 @@ defmodule LivWeb.MailLive do
       mail_meta: meta,
       mail_text: "",
       info: "",
-      home_link: Routes.mail_path(Endpoint, :find, mc.query),
+      home_link: Routes.mail_path(Endpoint, :find, query),
       page_title: meta.subject,
       mail_client: mc,
       buttons: [
