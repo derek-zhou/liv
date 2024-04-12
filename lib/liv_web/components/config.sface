@@ -70,23 +70,6 @@
     <RemoteMailBox index={i} box={box} />
     {/for}
     <section>
-    	 <Field name="orbit_api_key" class="field">
-	 	<Label>Orbit API key</Label>
-		<TextInput value={@orbit_api_key} class="long"
-			     opts={"phx-debounce": "blur"} />
-	 </Field>
-    	 <Field name="orbit_workspace" class="field">
-	 	<Label>Orbit Workspace</Label>
-		<TextInput value={@orbit_workspace}
-			     opts={"phx-debounce": "blur"} />
-	 </Field>
-	 <Label :if={@orbit_workspace != ""}>
-	 	Your Orbit is <a href={"https://app.orbit.love/#{@orbit_workspace}"}>
-	 	https://app.orbit.love/{@orbit_workspace}
-		</a>
-	 </Label>
-    </section>
-    <section>
 	<Field name="reset_password" class="long field alert alert-danger">
 	    <Label>Danger! Type "reset password" to reset password</Label>
 	    <TextInput value={@reset_password}

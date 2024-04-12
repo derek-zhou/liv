@@ -88,8 +88,6 @@ defmodule LivWeb.MailLive do
   data my_lists, :list, default: []
   data archive_days, :integer, default: 30
   data archive_maildir, :string, default: ""
-  data orbit_api_key, :string, default: ""
-  data orbit_workspace, :string, default: ""
   # :local, :remote or :sendgrid
   data sending_method, :atom, default: :local
   data sending_data, :map, default: %{username: "", password: "", hostname: "", api_key: ""}
@@ -377,8 +375,6 @@ defmodule LivWeb.MailLive do
         my_lists: Configer.default(:my_email_lists),
         archive_days: Configer.default(:archive_days),
         archive_maildir: Configer.default(:archive_maildir),
-        orbit_api_key: Configer.default(:orbit_api_key),
-        orbit_workspace: Configer.default(:orbit_workspace),
         remote_mail_boxes: Configer.default(:remote_mail_boxes),
         sending_method: sending_method,
         sending_data: sending_data,
@@ -907,8 +903,6 @@ defmodule LivWeb.MailLive do
           "my_lists" => lists,
           "archive_days" => days,
           "archive_maildir" => maildir,
-          "orbit_api_key" => orbit_api_key,
-          "orbit_workspace" => workspace,
           "sending_method" => sending_method,
           "username" => username,
           "password" => password,
@@ -929,8 +923,6 @@ defmodule LivWeb.MailLive do
     my_addrs = String.split(String.trim(addrs), "\n")
     my_lists = String.split(String.trim(lists), "\n")
     archive_maildir = String.trim(maildir)
-    orbit_api_key = String.trim(orbit_api_key)
-    orbit_workspace = String.trim(workspace)
 
     archive_days =
       case Integer.parse(days) do
@@ -1021,8 +1013,6 @@ defmodule LivWeb.MailLive do
         my_lists: my_lists,
         archive_days: archive_days,
         archive_maildir: archive_maildir,
-        orbit_api_key: orbit_api_key,
-        orbit_workspace: orbit_workspace,
         sending_method: sending_method,
         sending_data: sending_data,
         reset_password: reset_password,
@@ -1041,8 +1031,6 @@ defmodule LivWeb.MailLive do
             my_lists: my_lists,
             archive_days: archive_days,
             archive_maildir: archive_maildir,
-            orbit_api_key: orbit_api_key,
-            orbit_workspace: orbit_workspace,
             sending_method: sending_method,
             sending_data: sending_data,
             reset_password: reset_password,
@@ -1056,8 +1044,6 @@ defmodule LivWeb.MailLive do
     |> SelfConfiger.set_env(:my_email_lists, my_lists)
     |> SelfConfiger.set_env(:archive_days, archive_days)
     |> SelfConfiger.set_env(:archive_maildir, archive_maildir)
-    |> SelfConfiger.set_env(:orbit_api_key, orbit_api_key)
-    |> SelfConfiger.set_env(:orbit_workspace, orbit_workspace)
     |> Configer.update_remote_mail_boxes(remote_mail_boxes)
     |> Configer.update_sending_method(sending_method, sending_data)
 

@@ -21,8 +21,6 @@ defmodule LivWeb.Config do
   prop my_lists, :list, required: true
   prop days, :integer, required: true
   prop maildir, :string, required: true
-  prop orbit_api_key, :string, required: true
-  prop orbit_workspace, :string, required: true
   prop sending_method, :atom, required: true
   prop sending_data, :map, required: true
   prop reset_password, :string, default: ""

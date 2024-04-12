@@ -205,10 +205,6 @@ The marking of conversations to be archived is done as soon as possible. The mar
 
 Archived emails are still searchable, just not in the inbox so my inbox stays in constant size. If the archive target is left empty in the config page, archiving would be disabled, however marking and deleting will still be done. 
 
-## Orbit integration
-
-The folks at [Orbit](https://orbit.love) are kind enough to provide free services to anyone that has reasonably low volume of traffic. Orbit is a tool to analize activities, so you can find out who among your corespondances are actively engaged with you, and who are drifting away. You need to fill out the Orbit API key and the Orbit workspace in the configuration page. Both can be found from your Orbit profile. 
-
 ## Disclaimer
 
 LIV is beta quality software, the implementation is incomplete and may never be. I use it everyday though. If you don't see a point of running your email server you do not need LIV. If you run your own email server and want to add webmail functionality to it, you are welcome to try it and give me feedback.

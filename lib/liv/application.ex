@@ -18,8 +18,6 @@ defmodule Liv.Application do
       Liv.DraftServer,
       # the delay marker
       Liv.DelayMarker,
-      # the orbit gen server
-      Liv.Orbit,
       # start the registry for shadows
       {Registry, keys: :unique, name: Liv.Shadows},
       # start the supervisor for shadows

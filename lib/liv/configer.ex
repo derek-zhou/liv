@@ -12,8 +12,6 @@ defmodule Liv.Configer do
   def default(:saved_addresses), do: default_value(:saved_addresses, [])
   def default(:archive_days), do: default_value(:archive_days, 30)
   def default(:archive_maildir), do: default_value(:archive_maildir, "/.Archive")
-  def default(:orbit_api_key), do: default_value(:orbit_api_key, "")
-  def default(:orbit_workspace), do: default_value(:orbit_workspace, "")
   def default(:token_ttl), do: default_value(:token_ttl, 30 * 24 * 3600)
   def default(:compose_debounce), do: default_value(:compose_debounce, 1000)
 
