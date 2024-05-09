@@ -1427,17 +1427,14 @@ defmodule LivWeb.MailLive do
   defp open_one_mail(socket, docid) do
     case MailClient.open(docid) do
       nil ->
-        {:noreply, mail_not_found(socket, @default_query)}
+        mail_not_found(socket, @default_query)
 
       mc ->
         query = MailClient.solo_query(mc, docid)
 
-        {
-          :noreply,
-          socket
-          |> shadow(result_stale?: false, last_query: query)
-          |> mail_found(query, mc, docid)
-        }
+        socket
+        |> shadow(result_stale?: false, last_query: query)
+        |> mail_found(query, mc, docid)
     end
   end
 
