@@ -9,7 +9,7 @@ const tagSet = new Set(['A', 'ABBR', 'ADDR', 'ARTICLE', 'ASIDE', 'AUDIO', 'B', '
 			'LABEL', 'LI', 'LINK', 'MAIN', 'MARK', 'NAV', 'OL', 'P', 'PICTURE',
 			'PRE', 'Q', 'S', 'SAMP', 'SECTION', 'SMALL', 'SOURCE', 'SPAN', 'STRONG',
 			'SUB', 'SUP', 'SVG', 'TABLE', 'TBODY', 'TD', 'TFOOT', 'TH', 'THEAD',
-			'TIME', 'TR', 'TRACK', 'U', 'UL', 'VIDEO', 'WBR']);
+			'TIME', 'TR', 'TRACK', 'U', 'UL', 'VIDEO', 'WBR', 'CENTER']);
 
 function setup(elem) {
     iframe = elem;
